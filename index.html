@@ -7,276 +7,108 @@
 <meta name="theme-color" content="#000000">
 <title>Media + – Gerät wählen</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M14 7h4v7h7v4h-7v7h-4v-7H7v-4h7z' fill='white'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
 <style>
 :root{
-  --bg:#000;
-  --fg:#ededed;
-  --fg-2:#a1a1a1;
-  --fg-3:#6e6e6e;
-  --border:#232323;
-  --border-hi:#3f3f3f;
-  --card-a:#0b0b0b;
-  --card-b:#040404;
-  --r:14px;
-  --ease:cubic-bezier(.2,.8,.2,1);
+  --bg:#fff;--bg-2:#fafafa;--bg-3:#f2f2f2;
+  --fg:#000;--fg-2:#333;--fg-3:#666;--fg-4:#999;
+  --border:#eaeaea;--border-2:#d4d4d4;
+  --accent:#0070f3;--accent-fg:#fff;
+  --r:8px;--r-sm:6px;--r-lg:12px;
+  --hh:64px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#000;--bg-2:#0a0a0a;--bg-3:#161616;
+  --fg:#fff;--fg-2:#ccc;--fg-3:#888;--fg-4:#666;
+  --border:#1f1f1f;--border-2:#333;
+  --accent:#3291ff;--accent-fg:#fff;
   color-scheme:dark;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
-body{
-  min-height:100dvh;
-  display:flex;flex-direction:column;
-  background:var(--bg);
-  color:var(--fg);
-  font-family:"Geist Sans",Geist,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  font-size:15px;line-height:1.55;
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-  overflow-x:hidden;
-}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh;display:flex;flex-direction:column}
 a{color:inherit;text-decoration:none}
-:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:6px}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.fill{fill:currentColor;stroke:none}
+.icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border:0;background:transparent;border-radius:var(--r-sm);color:var(--fg-2);transition:background .12s,color .12s}
+.icon-btn:hover{background:var(--bg-3);color:var(--fg)}
 
-/* ---------- Hintergrund ---------- */
-.bg-grid{
-  position:fixed;inset:0;z-index:-2;
-  background-image:
-    linear-gradient(to right,#161616 1px,transparent 1px),
-    linear-gradient(to bottom,#161616 1px,transparent 1px);
-  background-size:64px 64px;
-  -webkit-mask-image:radial-gradient(ellipse 90% 65% at 50% 0%,#000 30%,transparent 100%);
-  mask-image:radial-gradient(ellipse 90% 65% at 50% 0%,#000 30%,transparent 100%);
-}
-.bg-glow{
-  position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:
-    radial-gradient(600px 320px at 50% -8%,rgba(0,112,243,.20),transparent 70%),
-    radial-gradient(700px 400px at 85% 110%,rgba(120,80,255,.10),transparent 70%);
-}
+/* Header */
+.top{height:var(--hh);display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.015em;margin-right:auto}
+.logo .mark{width:28px;height:28px;border-radius:var(--r-sm);background:var(--fg);color:var(--bg);display:grid;place-items:center}
+.logo small{font-weight:500;color:var(--fg);font-size:15px;margin-left:2px}
 
-/* ---------- Header ---------- */
-.top{
-  width:100%;max-width:1160px;margin:0 auto;
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-  padding:22px 24px;
-}
-.brand{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.02em}
-.brand .mark{
-  width:26px;height:26px;border-radius:7px;
-  background:var(--fg);color:#000;
-  display:grid;place-items:center;
-  font-size:17px;font-weight:700;line-height:1;
-  padding-bottom:1px;
-}
-.brand em{font-style:normal;color:var(--fg-3);font-weight:500}
-.tag{
-  font-size:11.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;
-  color:var(--fg-3);
-  border:1px solid var(--border);
-  border-radius:999px;padding:4px 11px;
-  white-space:nowrap;
-}
+/* Main */
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px 60px;max-width:720px;width:100%;margin:0 auto}
+h1{font-size:24px;line-height:1.2;letter-spacing:-.025em;font-weight:600;margin:0 0 8px;text-align:center}
+.lead{color:var(--fg-3);font-size:14px;text-align:center;margin:0 0 32px;max-width:44ch}
 
-/* ---------- Main ---------- */
-main{
-  flex:1;width:100%;max-width:880px;margin:0 auto;
-  padding:clamp(28px,6vw,72px) 24px 56px;
-  display:flex;flex-direction:column;justify-content:center;
-}
+/* Choices */
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+.choice{display:flex;flex-direction:column;padding:20px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);transition:border-color .12s,background .12s;min-height:170px}
+.choice:hover{border-color:var(--border-2);background:var(--bg-2)}
+.choice .icon-wrap{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--fg);margin-bottom:16px;transition:border-color .12s,background .12s}
+.choice:hover .icon-wrap{border-color:var(--border-2);background:var(--bg-3)}
+.choice .icon-wrap svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.choice h2{font-size:14px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
+.choice p{font-size:12.5px;color:var(--fg-3);margin:0;line-height:1.5}
+.choice .go{margin-top:auto;padding-top:16px;font-size:12.5px;font-weight:500;color:var(--fg-3);display:inline-flex;align-items:center;gap:4px;transition:color .12s}
+.choice:hover .go{color:var(--fg)}
+.choice .go svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .12s}
+.choice:hover .go svg{transform:translateX(2px)}
 
-.hero{text-align:center;margin-bottom:clamp(32px,5vw,52px)}
-.eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--fg-3);margin-bottom:20px;
-}
-.eyebrow::before{
-  content:"";width:6px;height:6px;border-radius:50%;
-  background:#0070f3;box-shadow:0 0 12px 2px rgba(0,112,243,.7);
-}
-h1{
-  font-size:clamp(30px,5.6vw,52px);
-  line-height:1.06;
-  letter-spacing:-.042em;
-  font-weight:600;
-  text-wrap:balance;
-  margin-bottom:18px;
-}
-.lead{
-  font-size:clamp(14.5px,1.6vw,16.5px);
-  color:var(--fg-2);
-  max-width:46ch;margin:0 auto;
-  text-wrap:pretty;
-}
+.hint{margin-top:20px;font-size:12.5px;color:var(--fg-4);text-align:center;min-height:18px}
+.hint b{color:var(--fg-2);font-weight:500}
 
-/* ---------- Auswahlkarten ---------- */
-.choices{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:16px;
-}
-.choice{
-  position:relative;isolation:isolate;
-  display:flex;flex-direction:column;
-  min-height:266px;
-  padding:26px 26px 22px;
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  background:linear-gradient(180deg,var(--card-a),var(--card-b));
-  transition:border-color .2s var(--ease),transform .2s var(--ease),box-shadow .2s var(--ease);
-  overflow:hidden;
-  -webkit-tap-highlight-color:transparent;
-}
-/* Spotlight, das dem Zeiger folgt */
-.choice::before{
-  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.075),transparent 65%);
-  opacity:0;transition:opacity .3s var(--ease);
-}
-.choice:hover,.choice:focus-visible{
-  border-color:var(--border-hi);
-  transform:translateY(-3px);
-  box-shadow:0 18px 40px -22px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.03);
-}
-.choice:hover::before,.choice:focus-visible::before{opacity:1}
+/* Footer */
+footer{padding:20px;text-align:center;font-size:12px;color:var(--fg-4);border-top:1px solid var(--border)}
 
-.icon{
-  width:46px;height:46px;flex:none;
-  display:grid;place-items:center;
-  border:1px solid var(--border);
-  border-radius:12px;
-  background:#0e0e0e;
-  color:var(--fg);
-  margin-bottom:22px;
-  transition:border-color .2s var(--ease),background .2s var(--ease),transform .25s var(--ease);
-}
-.icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.choice:hover .icon{border-color:var(--border-hi);background:#151515;transform:translateY(-1px)}
-
-.choice h2{
-  font-size:18px;font-weight:600;letter-spacing:-.022em;
-  margin-bottom:6px;
-}
-.choice p{
-  font-size:13.5px;line-height:1.5;color:var(--fg-2);
-  max-width:30ch;
-}
-.go{
-  margin-top:auto;padding-top:26px;
-  display:inline-flex;align-items:center;gap:7px;
-  font-size:13.5px;font-weight:500;
-  color:var(--fg-3);
-  transition:color .2s var(--ease);
-}
-.go svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s var(--ease)}
-.choice:hover .go,.choice:focus-visible .go{color:#fff}
-.choice:hover .go svg{transform:translateX(4px)}
-
-/* Empfohlen-Badge */
-.pill{
-  position:absolute;top:16px;right:16px;
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:#fff;
-  background:rgba(0,112,243,.16);
-  border:1px solid rgba(0,112,243,.45);
-  border-radius:999px;padding:3px 9px;
-  animation:pop .35s var(--ease) both;
-}
-.pill::before{content:"";width:5px;height:5px;border-radius:50%;background:#3b9dff;box-shadow:0 0 8px #0070f3}
-.pill[hidden]{display:none}
-@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
-
-/* Hinweis */
-.hint{
-  margin-top:22px;text-align:center;
-  font-size:12.5px;color:var(--fg-3);
-  min-height:19px;
-}
-.hint b{color:var(--fg-2);font-weight:600}
-
-/* ---------- Footer ---------- */
-footer{
-  padding:22px 24px 30px;
-  text-align:center;
-  font-size:12px;color:#4d4d4d;line-height:1.6;
-}
-footer a{color:#6e6e6e;border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
-footer a:hover{color:var(--fg-2);border-color:var(--border-hi)}
-
-/* ---------- Animation ---------- */
-@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.eyebrow{animation:up .55s var(--ease) .04s both}
-h1{animation:up .55s var(--ease) .1s both}
-.lead{animation:up .55s var(--ease) .16s both}
-.choices{animation:up .6s var(--ease) .24s both}
-.hint{animation:up .6s var(--ease) .32s both}
-
-/* ---------- Responsive ---------- */
-@media(max-width:640px){
-  .top{padding:16px 18px}
-  .tag{display:none}
-  main{padding:24px 18px 40px}
-  .choices{grid-template-columns:1fr;gap:12px}
-  .choice{min-height:0;padding:22px 22px 18px}
-  .icon{margin-bottom:16px}
-  .go{padding-top:18px}
-  footer{padding:18px 18px 26px}
-}
-
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-  .choice:hover{transform:none}
+@media(max-width:600px){
+  .top{padding:0 16px}
+  main{padding:28px 16px 40px}
+  h1{font-size:20px}
+  .choices{grid-template-columns:1fr;gap:10px}
+  .choice{min-height:0;padding:18px}
 }
 </style>
 </head>
 <body>
 
-<div class="bg-grid" aria-hidden="true"></div>
-<div class="bg-glow" aria-hidden="true"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect width="20" height="15" x="2" y="7" rx="2"/><path d="m17 2-5 5-5-5"/></symbol>
+  <symbol id="i-devices" viewBox="0 0 24 24"><rect x="2" y="4" width="13" height="9.5" rx="1.6"/><path d="M5 17.5h5M7.5 13.5v4"/><rect x="16.5" y="9.5" width="5.5" height="10.5" rx="1.6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+</svg>
 
 <header class="top">
-  <a class="brand" href="./" aria-label="Media + Startseite">
-    <span class="mark" aria-hidden="true">+</span>
-    <span>Media<em>&nbsp;+</em></span>
+  <a class="logo" href="./" aria-label="Startseite">
+    <span class="mark" id="logoMark"></span>
+    <span>Media<small>+</small></span>
   </a>
-  <span class="tag">Gerät wählen</span>
+  <button class="icon-btn" id="theme" aria-label="Design wechseln"></button>
 </header>
 
 <main>
-  <section class="hero">
-    <p class="eyebrow">Willkommen</p>
-    <h1>Auf welchem Gerät<br>schaust du gerade?</h1>
-    <p class="lead">Wähle dein Gerät aus – wir passen die Oberfläche an deinen Bildschirm und deine Steuerung an.</p>
-  </section>
+  <h1>Auf welchem Gerät schaust du?</h1>
+  <p class="lead">Wähle dein Gerät aus, damit die Oberfläche zu deinem Bildschirm passt.</p>
 
   <div class="choices">
     <a class="choice" href="tv.html" data-device="tv">
-      <span class="pill" hidden>Empfohlen</span>
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="m17 2-5 5-5-5"/></svg>
-      </span>
+      <span class="icon-wrap"><svg aria-hidden="true"><use href="#i-tv"/></svg></span>
       <h2>Fernseher</h2>
-      <p>Smart-TV, Apple TV, Fire TV oder Spielkonsole</p>
-      <span class="go">Weiter
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </span>
+      <p>Smart-TV, Streaming-Box oder Konsole</p>
+      <span class="go">Weiter <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"/></svg></span>
     </a>
-
     <a class="choice" href="mobile.html" data-device="mobile">
-      <span class="pill" hidden>Empfohlen</span>
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <rect x="2" y="4" width="13" height="9.5" rx="1.6"/>
-          <path d="M5 17.5h5M7.5 13.5v4"/>
-          <rect x="16.5" y="9.5" width="5.5" height="10.5" rx="1.6"/>
-        </svg>
-      </span>
+      <span class="icon-wrap"><svg aria-hidden="true"><use href="#i-devices"/></svg></span>
       <h2>Mobil &amp; Desktop</h2>
       <p>Handy, Tablet, Laptop oder PC</p>
-      <span class="go">Weiter
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </span>
+      <span class="go">Weiter <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"/></svg></span>
     </a>
   </div>
 
@@ -284,69 +116,59 @@ h1{animation:up .55s var(--ease) .1s both}
 </main>
 
 <footer>
-  Inoffizielles Projekt · nicht mit der ARD verbunden<br>
-  Du kannst die Ansicht jederzeit über <a href="tv.html">tv.html</a> oder <a href="mobile.html">mobile.html</a> wechseln.
+  Inoffizielles Projekt · nicht mit der ARD verbunden
 </footer>
 
 <script>
 'use strict';
 
-/* ---------- Geräteerkennung ---------- */
-function detectTV() {
-  const ua = navigator.userAgent || '';
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('mt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('mt:' + k, JSON.stringify(v)); } catch {} }
+};
 
-  // Eindeutige TV-/Konsolen-Kennungen
-  const tvUA = /(smart-?tv|smarttv|hbbtv|netcast|web0s|webos|tizen|bravia|viera|aquos|googletv|appletv|crkey|firetv|aft[a-z]\b|roku|dangbei|vidaa|opera tv|playstation|xbox|nintendo switch)/i;
-  if (tvUA.test(ua)) return true;
-
-  // Tablets ausschließen (groß, aber kein Fernseher)
-  const isTablet = /iPad|Tablet|PlayBook|Silk|Android(?!.*Mobile)/i.test(ua);
-  if (isTablet) return false;
-
-  // Heuristik: großer Bildschirm, kein Zeiger, kein Hover
-  const noHover = matchMedia('(hover: none)').matches && matchMedia('(pointer: coarse)').matches;
-  const noPointer = matchMedia('(pointer: none)').matches;
-  const big = window.innerWidth >= 1280;
-
-  if (big && noHover) return true;
-  if (window.innerWidth >= 1920 && noPointer) return true;
-
-  return false;
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  document.getElementById('theme').innerHTML =
+    `<svg class="ic" aria-hidden="true"><use href="#i-${t === 'dark' ? 'sun' : 'moon'}"/></svg>`;
+  const meta = document.querySelector('meta[name=theme-color]');
+  if (meta) meta.content = t === 'dark' ? '#000000' : '#ffffff';
 }
 
-const isTV = detectTV();
-const cards = document.querySelectorAll('.choice');
-const hint = document.getElementById('hint');
+function detectTV() {
+  const ua = navigator.userAgent || '';
+  const tvUA = /(smart-?tv|smarttv|hbbtv|netcast|web0s|webos|tizen|bravia|viera|aquos|googletv|appletv|crkey|firetv|aft[a-z]\b|roku|vidaa|playstation|xbox|nintendo switch)/i;
+  if (tvUA.test(ua)) return true;
+  if (/iPad|Tablet|PlayBook|Silk|Android(?!.*Mobile)/i.test(ua)) return false;
+  const noHover = matchMedia('(hover: none)').matches && matchMedia('(pointer: coarse)').matches;
+  return window.innerWidth >= 1280 && noHover;
+}
 
-cards.forEach(card => {
-  const device = card.dataset.device;
-  const recommended = (device === 'tv') === isTV;
+// Init
+document.getElementById('logoMark').innerHTML =
+  '<svg class="ic fill" style="width:16px;height:16px" aria-hidden="true"><use href="#i-plus"/></svg>';
+setTheme(store.get('theme', 'dark'));
 
-  if (recommended) {
-    card.querySelector('.pill').hidden = false;
-    card.setAttribute('aria-describedby', 'hint');
-  }
-
-  // Spotlight-Effekt
-  card.addEventListener('pointermove', e => {
-    const r = card.getBoundingClientRect();
-    card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-    card.style.setProperty('--my', (e.clientY - r.top) + 'px');
-  });
-
-  // Wahl merken (nur Komfort, keine Weiterleitung)
-  card.addEventListener('click', () => {
-    try { localStorage.setItem('mt:device', device); } catch (e) {}
-  });
+document.getElementById('theme').addEventListener('click', () => {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  store.set('theme', t);
+  setTheme(t);
 });
 
-hint.innerHTML = isTV
-  ? 'Sieht nach einem <b>Fernseher</b> aus – bitte bestätige deine Auswahl.'
-  : 'Sieht nach <b>Mobil oder Desktop</b> aus – bitte bestätige deine Auswahl.';
+// Auswahl merken
+document.querySelectorAll('.choice').forEach(a => {
+  a.addEventListener('click', () => store.set('device', a.dataset.device));
+});
 
-/* ---------- Tastatur-Shortcuts ---------- */
+// Hinweis
+document.getElementById('hint').innerHTML = detectTV()
+  ? 'Sieht nach einem <b>Fernseher</b> aus.'
+  : 'Sieht nach <b>Mobil oder Desktop</b> aus.';
+
+// Tastatur: 1 = TV, 2 = Mobil
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/input|textarea|select/i.test(e.target.tagName)) return;
   const k = e.key.toLowerCase();
   if (k === '1') location.href = 'tv.html';
   if (k === '2') location.href = 'mobile.html';
