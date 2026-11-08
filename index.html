@@ -218,6 +218,24 @@ body.pinned main{margin-left:var(--sw)}
 .pmenu-btn.on{background:#fff;color:#000;font-weight:600}
 .pmenu-div{height:1px;background:rgba(255,255,255,.1);margin:4px 6px}
 
+/* Sticky Player */
+.sticky-player{position:fixed;top:var(--hh);left:0;right:0;z-index:45;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transform:translateY(-100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);overflow:hidden;box-shadow:var(--shadow-sm)}
+.sticky-player.show{transform:translateY(0)}
+.sticky-inner{max-width:1720px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:10px 28px;height:64px}
+@media(max-width:700px){.sticky-inner{padding:10px 16px;height:56px}}
+.sticky-thumb{width:72px;aspect-ratio:16/9;border-radius:var(--r-sm);background:var(--bg-3);flex:none;overflow:hidden;display:grid;place-items:center;position:relative}
+.sticky-thumb .ic{width:16px;height:16px;color:#fff;opacity:.5}
+.sticky-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.sticky-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;color:var(--fg)}
+.sticky-sub{font-size:12.5px;color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.sticky-actions{display:flex;gap:8px;align-items:center;flex:none;opacity:0;transform:translateX(16px);transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.sticky-player.show .sticky-actions{opacity:1;transform:translateX(0);transition-delay:.15s}
+.sticky-actions .btn{height:36px;font-size:13px;padding:0 12px;background:var(--bg)}
+.sticky-actions .icon-btn{width:36px;height:36px;border:1px solid var(--border);background:var(--bg)}
+.sticky-actions .icon-btn:hover{background:var(--bg-3)}
+.sticky-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--border)}
+.sticky-progress-fill{height:100%;background:var(--accent);width:0;transition:width .1s linear}
+
 /* Toast */
 #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:.2s;z-index:100;box-shadow:var(--shadow-lg)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
@@ -928,6 +946,74 @@ async function Watch(id) {
       h('a', { class:'who', href:ch.id ? '#/channel/' + ch.id : '#/' }, Avatar(ch), h('div', {}, h('b', {}, ch.name), h('span', {}, e.topic || ''))),
       acts),
     descBox);
+
+  /* Sticky Player */
+  const sticky = h('div', { class:'sticky-player' },
+    h('div', { class:'sticky-inner' },
+      h('div', { class:'sticky-thumb', style:`background:${ch.color}` }, icon('play', 'fill')),
+      h('div', { class:'sticky-info' },
+        h('div', { class:'sticky-title' }, e.title),
+        h('div', { class:'sticky-sub' }, ch.name + (e.topic ? ' · ' + e.topic : ''))
+      ),
+      h('div', { class:'sticky-actions' },
+        h('button', { class:'btn', onclick: () => saveBtn.click() }, icon('bookmark'), 'Merken'),
+        h('button', { class:'icon-btn play-toggle', onclick: () => video.paused ? video.play() : video.pause() }, icon('play', 'fill'))
+      )
+    ),
+    h('div', { class:'sticky-progress' },
+      h('div', { class:'sticky-progress-fill' })
+    )
+  );
+  document.body.append(sticky);
+
+  const stickySaveBtn = sticky.querySelector('.btn');
+  const stickyPlayBtn = sticky.querySelector('.play-toggle');
+  const stickyProgress = sticky.querySelector('.sticky-progress-fill');
+
+  const syncStickySave = () => {
+    const saved = isSaved(e.id);
+    stickySaveBtn.className = 'btn' + (saved ? ' on' : '');
+    stickySaveBtn.replaceChildren(icon('bookmark'), saved ? 'Gemerkt' : 'Merken');
+  };
+
+  const origSave = saveBtn.onclick;
+  saveBtn.onclick = () => {
+    origSave();
+    syncStickySave();
+  };
+  syncStickySave();
+
+  const syncStickyPlay = () => {
+    stickyPlayBtn.replaceChildren(icon(video.paused ? 'play' : 'pause', 'fill'));
+  };
+  ['play', 'pause', 'ended'].forEach(t => video.addEventListener(t, syncStickyPlay));
+  syncStickyPlay();
+
+  video.addEventListener('timeupdate', () => {
+    const pct = video.duration ? (video.currentTime / video.duration) * 100 : 0;
+    stickyProgress.style.width = pct + '%';
+  });
+
+  const observer = new IntersectionObserver(([entry]) => {
+    sticky.classList.toggle('show', !entry.isIntersecting);
+  }, { rootMargin: '-80px 0px 0px 0px', threshold: 0 });
+  
+  observer.observe(player);
+
+  cleanups.push(() => {
+    observer.disconnect();
+    sticky.remove();
+  });
+
+  setTimeout(() => {
+    grabFrame(e).then(cv => {
+      if (cv && sticky) {
+        const thumbContainer = sticky.querySelector('.sticky-thumb');
+        thumbContainer.replaceChildren(cv);
+        cv.style.cssText = 'width:100%;height:100%;object-fit:cover;animation:none';
+      }
+    }).catch(()=>{});
+  }, 3000);
 
   /* Ähnliche Videos */
   const relList = h('div', { class:'list' });
