@@ -294,6 +294,40 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 .nextup .btn.primary{background:#fff;color:#000;border-color:#fff}
 .nextup .btn.primary:hover{background:#fff;color:#000}
 
+/* Zurück-Leiste im Player */
+.ptop{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:6px;padding:8px 10px 26px;background:linear-gradient(rgba(0,0,0,.7),transparent);color:#fff;pointer-events:none;transition:opacity .22s,transform .22s}
+.ptop .pb{pointer-events:auto}
+.ptop span{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.player.idle.playing .ptop{opacity:0;transform:translateY(-8px)}
+.player.idle.playing .ptop .pb{pointer-events:none}
+
+/* Miniplayer */
+.mini{position:fixed;left:0;top:0;z-index:48;border-radius:var(--r);overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.18);box-shadow:var(--shadow-lg);touch-action:none;transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s,height .28s}
+.mini[hidden]{display:none}
+.mini.drag,.mini.na{transition:none}
+.mini.xs{border-radius:var(--r-sm)}
+.mv,.mv video{position:absolute;inset:0;width:100%;height:100%}
+.mv video{display:block;object-fit:contain;background:#000}
+.mshield{position:absolute;inset:0;z-index:1;touch-action:none;cursor:grab}
+.mini.drag .mshield{cursor:grabbing}
+.mctl{position:absolute;inset:0;z-index:2;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .15s}
+.mini.ctl .mctl{opacity:1}
+.mini.xs .mctl{display:none}
+.mbtn{position:absolute;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;color:#fff;background:rgba(0,0,0,.55);pointer-events:none}
+.mini.ctl .mbtn{pointer-events:auto}
+.mbtn:hover{background:rgba(255,255,255,.22)}
+.mbtn.tl{top:4px;left:4px}.mbtn.tr{top:4px;right:4px}.mbtn.br{bottom:6px;right:4px}
+.mbtn.c{left:50%;top:50%;margin:-20px 0 0 -20px;width:40px;height:40px;background:rgba(255,255,255,.92);color:#000}
+.mbtn.c:hover{background:#fff}
+.mprog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.25);z-index:3}
+.mprog i{display:block;height:100%;width:0;background:#fff}
+#mtab{position:fixed;z-index:48;width:24px;height:56px;display:grid;place-items:center;background:var(--bg);color:var(--fg);border:1px solid var(--border-2);box-shadow:var(--shadow)}
+#mtab[hidden]{display:none}
+#mtab[data-s=l]{left:0;border-left:0;border-radius:0 var(--r) var(--r) 0}
+#mtab[data-s=l] .ic{transform:rotate(-90deg)}
+#mtab[data-s=r]{right:0;border-right:0;border-radius:var(--r) 0 0 var(--r)}
+#mtab[data-s=r] .ic{transform:rotate(90deg)}
+
 /* Toast */
 #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:.2s;z-index:100;box-shadow:var(--shadow-lg)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
@@ -322,6 +356,8 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-min" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
   <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
   <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
@@ -920,7 +956,10 @@ function buildPlayer(video, perr) {
   ['pointermove', 'pointerdown', 'keydown'].forEach(t => root.addEventListener(t, wake));
   root.addEventListener('pointerleave', () => root.classList.add('idle'));
 
-  root.append(video, rl, rr, spin, big, perr, pmenu, h('div', { class:'pc' }, seek, row));
+  const ptitle = h('span', {});
+  const backBtn = ib('left', 'Zurück', () => document.fullscreenElement ? document.exitFullscreen() : (history.length > 1 ? history.back() : (location.hash = '#/')));
+  root.setTitle = t => { ptitle.textContent = t; };
+  root.append(video, rl, rr, spin, big, perr, pmenu, h('div', { class:'ptop' }, backBtn, ptitle), h('div', { class:'pc' }, seek, row));
   root.ccBtn = cc;
   root.setQualities = (qs, cur, fn) => { qualities = qs; currentQ = cur; onQuality = fn; if (!pmenu.hidden) renderMenu(); };
   root.setSubs = (track, onToggle) => {
@@ -934,6 +973,7 @@ function buildPlayer(video, perr) {
 }
 
 async function Watch(id) {
+  Mini.close();
   const tok = routeToken;
   let e = cache.get(id) || loadSaved(id);
   const wrap = h('div', { class:'watch' });
@@ -952,6 +992,7 @@ async function Watch(id) {
   const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieses Video lässt sich hier nicht abspielen. Manche Sender erlauben die Einbettung außerhalb ihrer Mediathek nicht.'),
     e.url_website ? h('a', { class:'btn primary', href:e.url_website, target:'_blank', rel:'noopener noreferrer' }, icon('external'), 'Bei der ARD ansehen') : null);
   const player = buildPlayer(video, perr);
+  player.setTitle(e.title);
 
   /* Quellen */
   const srcs = [['HD', e.url_video_hd], ['SD', e.url_video], ['LQ', e.url_video_low]].filter(s => s[1]);
@@ -977,7 +1018,12 @@ async function Watch(id) {
   video.addEventListener('error', () => {
     if (!triedOrig && curUrl && curUrl !== secure(curUrl)) { triedOrig = true; video.src = curUrl; } else fail();
   });
-  cleanups.push(() => { killHls(); video.pause(); video.removeAttribute('src'); video.load(); document.removeEventListener('keydown', onKey); });
+  cleanups.push(() => {
+    document.removeEventListener('keydown', onKey);
+    const kill = () => { killHls(); video.pause(); video.removeAttribute('src'); video.load(); };
+    if (!/^#\/watch\//.test(location.hash) && video.currentSrc && !perr.classList.contains('show') && !video.ended) Mini.open({ video, e, kill });
+    else kill();
+  });
 
   const pr = getProg(e.id);
   const startAt = pr && pr.pos > 15 && pr.pos < (pr.dur || e.duration) - 30 ? pr.pos : 0;
@@ -1197,6 +1243,89 @@ async function Watch(id) {
 /* =========================================================
    Router, Sidebar, Header
    ========================================================= */
+const Mini = (() => {
+  const M = 12;
+  let v = null, e = null, kill = null, corner = store.get('minicorner', 'br'), xs = false, docked = null, wasPlaying = false, pos = { x:0, y:0 }, ct;
+  const slot = h('div', { class:'mv' }), shield = h('div', { class:'mshield' }), bar = h('i');
+  const ib = (ic, label, fn, cls) => h('button', { class:'mbtn ' + cls, type:'button', 'aria-label':label, title:label, onclick:fn }, icon(ic, ic === 'play' || ic === 'pause' ? 'fill' : ''));
+  const pp = ib('pause', 'Pause / Abspielen', () => v && (v.paused ? v.play() : v.pause()), 'c');
+  const ctl = h('div', { class:'mctl' },
+    ib('min', 'Ganz klein', () => { xs = true; ctlOff(); layout(); }, 'tl'),
+    ib('x', 'Schließen', () => close(), 'tr'), pp,
+    ib('full', 'Vergrößern', () => { location.hash = '#/watch/' + encodeURIComponent(e.id); }, 'br'));
+  const el = h('div', { class:'mini', hidden:true }, slot, shield, ctl, h('div', { class:'mprog' }, bar));
+  const tab = h('button', { id:'mtab', hidden:true, 'aria-label':'Miniplayer öffnen', onclick:() => undock() }, icon('chev'));
+  document.body.append(el, tab);
+
+  const size = () => { const w = xs ? 104 : Math.min(264, innerWidth * .62); return { w, h:w * 9 / 16 }; };
+  const topY = () => (document.querySelector('.top')?.offsetHeight || 46) + M;
+  const spot = c => { const { w, h } = size(); return { x:c[1] === 'l' ? M : innerWidth - w - M, y:c[0] === 't' ? topY() : innerHeight - h - M }; };
+  const apply = () => { el.style.transform = `translate(${pos.x}px,${pos.y}px)`; };
+  function layout(anim = true) {
+    if (!anim) el.classList.add('na');
+    const { w, h } = size();
+    el.style.width = w + 'px'; el.style.height = h + 'px'; el.classList.toggle('xs', xs);
+    if (!docked) { pos = spot(corner); apply(); }
+    if (!anim) { void el.offsetWidth; el.classList.remove('na'); }
+  }
+  const ctlOff = () => { clearTimeout(ct); el.classList.remove('ctl'); };
+  const ctlOn = () => { el.classList.add('ctl'); clearTimeout(ct); ct = setTimeout(ctlOff, 3200); };
+  const sync = () => v && pp.replaceChildren(icon(v.paused ? 'play' : 'pause', 'fill'));
+  const prog = () => { bar.style.width = (v && v.duration ? v.currentTime / v.duration * 100 : 0) + '%'; };
+
+  function dock(side) {
+    const { w, h } = size();
+    docked = side; wasPlaying = !v.paused; v.pause(); ctlOff();
+    pos.x = side === 'l' ? -w - 24 : innerWidth + 24; apply();
+    tab.dataset.s = side; tab.style.top = Math.max(topY(), Math.min(innerHeight - 70, pos.y + h / 2 - 28)) + 'px'; tab.hidden = false;
+  }
+  function undock() {
+    const side = docked; docked = null; tab.hidden = true;
+    corner = (pos.y + size().h / 2 < innerHeight / 2 ? 't' : 'b') + side;
+    layout(); if (wasPlaying) v.play().catch(() => {});
+  }
+  function release() {
+    const { w, h } = size(), cx = pos.x + w / 2, cy = pos.y + h / 2;
+    pos.y = Math.max(topY(), Math.min(innerHeight - h - M, pos.y));
+    if (pos.x < -w * .3) return dock('l');
+    if (pos.x + w > innerWidth + w * .3) return dock('r');
+    corner = (cy < innerHeight / 2 ? 't' : 'b') + (cx < innerWidth / 2 ? 'l' : 'r');
+    store.set('minicorner', corner); layout();
+  }
+  let sx, sy, ox, oy, drag = false, moved = false;
+  shield.addEventListener('pointerdown', ev => { drag = true; moved = false; sx = ev.clientX; sy = ev.clientY; ox = pos.x; oy = pos.y; shield.setPointerCapture(ev.pointerId); });
+  shield.addEventListener('pointermove', ev => {
+    if (!drag) return;
+    const dx = ev.clientX - sx, dy = ev.clientY - sy;
+    if (!moved && Math.hypot(dx, dy) < 6) return;
+    if (!moved) { moved = true; el.classList.add('drag'); ctlOff(); }
+    pos = { x:ox + dx, y:oy + dy }; apply();
+  });
+  const up = () => {
+    if (!drag) return; drag = false; el.classList.remove('drag');
+    if (moved) return release();
+    if (xs) { xs = false; layout(); ctlOn(); } else el.classList.contains('ctl') ? ctlOff() : ctlOn();
+  };
+  shield.addEventListener('pointerup', up); shield.addEventListener('pointercancel', up);
+  addEventListener('resize', () => { if (v && !docked) layout(false); });
+
+  function open(o) {
+    close(); v = o.video; e = o.e; kill = o.kill;
+    const pl = !v.paused;
+    slot.replaceChildren(v); xs = false; docked = null; tab.hidden = true; ctlOff();
+    ['play', 'pause', 'ended'].forEach(t => v.addEventListener(t, sync)); v.addEventListener('timeupdate', prog);
+    el.hidden = false; sync(); prog(); layout(false);
+    if (pl) v.play().catch(() => {});
+  }
+  function close() {
+    if (!v) return;
+    ['play', 'pause', 'ended'].forEach(t => v.removeEventListener(t, sync)); v.removeEventListener('timeupdate', prog);
+    try { if (!v.ended && v.currentTime > 3) saveProg(e, v.currentTime, v.duration); } catch {}
+    kill && kill(); v = null; slot.replaceChildren(); el.hidden = true; tab.hidden = true; docked = null; ctlOff();
+  }
+  return { open, close };
+})();
+
 function route() {
   routeToken++; cleanups.forEach(f => f()); cleanups = [];
   thumbQueue.length = 0;
