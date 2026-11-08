@@ -219,12 +219,12 @@ body.pinned main{margin-left:var(--sw)}
 .pmenu-div{height:1px;background:rgba(255,255,255,.1);margin:4px 6px}
 
 /* Sticky Player */
-.sticky-player{position:fixed;top:var(--hh);left:0;right:0;z-index:45;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transform:translateY(-100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);overflow:hidden;box-shadow:var(--shadow-sm)}
+.sticky-player{position:fixed;top:var(--hh);left:0;right:0;z-index:45;background:var(--bg);border-bottom:1px solid var(--border);transform:translateY(-100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);overflow:hidden;box-shadow:var(--shadow-sm)}
 .sticky-player.show{transform:translateY(0)}
 .sticky-inner{max-width:1720px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:10px 28px;height:64px}
 @media(max-width:700px){.sticky-inner{padding:10px 16px;height:56px}}
-.sticky-thumb{width:72px;aspect-ratio:16/9;border-radius:var(--r-sm);background:var(--bg-3);flex:none;overflow:hidden;display:grid;place-items:center;position:relative}
-.sticky-thumb .ic{width:16px;height:16px;color:#fff;opacity:.5}
+.sticky-video{width:96px;height:54px;border-radius:var(--r-sm);background:#000;flex:none;overflow:hidden;position:relative}
+.sticky-video video{width:100%;height:100%;object-fit:cover;display:block}
 .sticky-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .sticky-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;color:var(--fg)}
 .sticky-sub{font-size:12.5px;color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
@@ -950,7 +950,7 @@ async function Watch(id) {
   /* Sticky Player */
   const sticky = h('div', { class:'sticky-player' },
     h('div', { class:'sticky-inner' },
-      h('div', { class:'sticky-thumb', style:`background:${ch.color}` }, icon('play', 'fill')),
+      h('div', { class:'sticky-video' }), // Container für das Video
       h('div', { class:'sticky-info' },
         h('div', { class:'sticky-title' }, e.title),
         h('div', { class:'sticky-sub' }, ch.name + (e.topic ? ' · ' + e.topic : ''))
@@ -966,6 +966,7 @@ async function Watch(id) {
   );
   document.body.append(sticky);
 
+  const stickyVideoContainer = sticky.querySelector('.sticky-video');
   const stickySaveBtn = sticky.querySelector('.btn');
   const stickyPlayBtn = sticky.querySelector('.play-toggle');
   const stickyProgress = sticky.querySelector('.sticky-progress-fill');
@@ -995,25 +996,31 @@ async function Watch(id) {
   });
 
   const observer = new IntersectionObserver(([entry]) => {
-    sticky.classList.toggle('show', !entry.isIntersecting);
+    const show = !entry.isIntersecting;
+    sticky.classList.toggle('show', show);
+    
+    if (show) {
+      if (video.parentElement !== stickyVideoContainer) {
+        stickyVideoContainer.appendChild(video);
+        player.classList.add('video-moved');
+      }
+    } else {
+      if (video.parentElement === stickyVideoContainer) {
+        player.insertBefore(video, player.firstChild);
+        player.classList.remove('video-moved');
+      }
+    }
   }, { rootMargin: '-80px 0px 0px 0px', threshold: 0 });
   
   observer.observe(player);
 
   cleanups.push(() => {
     observer.disconnect();
+    if (video.parentElement === stickyVideoContainer) {
+      player.insertBefore(video, player.firstChild);
+    }
     sticky.remove();
   });
-
-  setTimeout(() => {
-    grabFrame(e).then(cv => {
-      if (cv && sticky) {
-        const thumbContainer = sticky.querySelector('.sticky-thumb');
-        thumbContainer.replaceChildren(cv);
-        cv.style.cssText = 'width:100%;height:100%;object-fit:cover;animation:none';
-      }
-    }).catch(()=>{});
-  }, 3000);
 
   /* Ähnliche Videos */
   const relList = h('div', { class:'list' });
