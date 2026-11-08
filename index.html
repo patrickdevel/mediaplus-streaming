@@ -328,6 +328,18 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 #mtab[data-s=r]{right:0;border-right:0;border-radius:var(--r) 0 0 var(--r)}
 #mtab[data-s=r] .ic{transform:rotate(90deg)}
 
+/* Player: Höhe begrenzen, Blur beim automatischen Weiterspielen, Mobile-Leiste */
+.player{max-height:calc(100vh - var(--hf) - 12px);max-height:calc(100dvh - var(--hf) - 12px)}
+.player:fullscreen{max-height:none}
+.player video{transition:filter .5s,transform .5s}
+.player.nexting video{filter:blur(18px) brightness(.55);transform:scale(1.08)}
+.player.nexting .pc,.player.nexting .ptop,.player.nexting .big-play,.player.nexting .ripple{opacity:0;pointer-events:none}
+.player.nexting .ptop .pb{pointer-events:none}
+.player.nexting .nextup{right:auto;bottom:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 32px));align-items:center;text-align:center;background:transparent;border:0;backdrop-filter:none}
+.player.nexting .nextup b{font-size:17px}
+.player.nexting .nextup .r{justify-content:center}
+@media(max-width:700px){.pb{width:34px;height:34px}.vwrap,.pb.pipb{display:none}.pt{padding:0 6px;font-size:12px}.pc{padding:48px 8px 6px}}
+
 /* Toast */
 #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:.2s;z-index:100;box-shadow:var(--shadow-lg)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
@@ -921,7 +933,7 @@ function buildPlayer(video, perr) {
   });
 
   const cc = ib('captions', 'Untertitel', () => { root.toggleSubs && root.toggleSubs(); }); cc.hidden = true;
-  const pip = document.pictureInPictureEnabled ? ib('pip', 'Bild-in-Bild', () => (document.pictureInPictureElement ? document.exitPictureInPicture() : video.requestPictureInPicture()).catch(() => {})) : null;
+  const pip = document.pictureInPictureEnabled ? ib('pip', 'Bild-in-Bild', () => (document.pictureInPictureElement ? document.exitPictureInPicture() : video.requestPictureInPicture()).catch(() => {}), 'pipb') : null;
   const fsb = ib('full', 'Vollbild (F)', fs);
   document.addEventListener('fullscreenchange', () => fsb.classList.toggle('on', document.fullscreenElement === root));
 
@@ -1021,7 +1033,7 @@ async function Watch(id) {
   cleanups.push(() => {
     document.removeEventListener('keydown', onKey);
     const kill = () => { killHls(); video.pause(); video.removeAttribute('src'); video.load(); };
-    if (!/^#\/watch\//.test(location.hash) && video.currentSrc && !perr.classList.contains('show') && !video.ended) Mini.open({ video, e, kill });
+    if (!/^#\/watch\//.test(location.hash) && video.currentSrc && !perr.classList.contains('show') && !video.ended) Mini.open({ video, e, kill, from:video.getBoundingClientRect() });
     else kill();
   });
 
@@ -1057,7 +1069,7 @@ async function Watch(id) {
   let nextE = null, nt = null;
   const nextBox = h('div', { class:'nextup' });
   player.append(nextBox);
-  const stopNext = () => { clearInterval(nt); nextBox.classList.remove('show'); };
+  const stopNext = () => { clearInterval(nt); nextBox.classList.remove('show'); player.classList.remove('nexting'); };
   const goNext = () => { if (nextE) location.hash = '#/watch/' + encodeURIComponent(nextE.id); else toast('Kein weiteres Video'); };
   video.addEventListener('play', stopNext);
   video.addEventListener('ended', () => {
@@ -1065,7 +1077,7 @@ async function Watch(id) {
     let n = 6;
     const draw = () => nextBox.replaceChildren(h('small', {}, `Nächstes Video in ${n} s`), h('b', {}, nextE.title),
       h('div', { class:'r' }, h('button', { class:'btn primary', onclick:goNext }, 'Jetzt'), h('button', { class:'btn', onclick:stopNext }, 'Abbrechen')));
-    draw(); nextBox.classList.add('show');
+    draw(); nextBox.classList.add('show'); player.classList.add('nexting');
     nt = setInterval(() => { n--; if (n <= 0) { stopNext(); goNext(); } else draw(); }, 1000);
   });
   cleanups.push(stopNext);
@@ -1225,6 +1237,13 @@ async function Watch(id) {
   const relList = h('div', { class:'list' });
   const related = h('aside', { class:'related' }, h('h2', {}, e.topic ? 'Mehr aus „' + e.topic + '“' : 'Weitere Videos'), relList);
   wrap.append(h('div', {}, player, info), related);
+  const from = Mini.takeRect();
+  if (from && !matchMedia('(prefers-reduced-motion:reduce)').matches) {
+    const to = player.getBoundingClientRect();
+    player.style.zIndex = 49;
+    player.animate([{ transform:`translate(${from.left - to.left}px,${from.top - to.top}px) scale(${from.width / to.width},${from.height / to.height})`, transformOrigin:'0 0' },
+      { transform:'none', transformOrigin:'0 0' }], { duration:320, easing:'cubic-bezier(.2,.8,.2,1)' }).finished.then(() => { player.style.zIndex = ''; }).catch(() => {});
+  }
 
   (async () => {
     try {
@@ -1245,19 +1264,19 @@ async function Watch(id) {
    ========================================================= */
 const Mini = (() => {
   const M = 12;
-  let v = null, e = null, kill = null, corner = store.get('minicorner', 'br'), xs = false, docked = null, wasPlaying = false, pos = { x:0, y:0 }, ct;
+  let v = null, e = null, kill = null, corner = store.get('minicorner', 'br'), xs = false, docked = null, wasPlaying = false, pos = { x:0, y:0 }, ct, fromRect = null, lastTap = 0;
   const slot = h('div', { class:'mv' }), shield = h('div', { class:'mshield' }), bar = h('i');
   const ib = (ic, label, fn, cls) => h('button', { class:'mbtn ' + cls, type:'button', 'aria-label':label, title:label, onclick:fn }, icon(ic, ic === 'play' || ic === 'pause' ? 'fill' : ''));
   const pp = ib('pause', 'Pause / Abspielen', () => v && (v.paused ? v.play() : v.pause()), 'c');
   const ctl = h('div', { class:'mctl' },
     ib('min', 'Ganz klein', () => { xs = true; ctlOff(); layout(); }, 'tl'),
     ib('x', 'Schließen', () => close(), 'tr'), pp,
-    ib('full', 'Vergrößern', () => { location.hash = '#/watch/' + encodeURIComponent(e.id); }, 'br'));
+    ib('full', 'Vergrößern', () => expand(), 'br'));
   const el = h('div', { class:'mini', hidden:true }, slot, shield, ctl, h('div', { class:'mprog' }, bar));
   const tab = h('button', { id:'mtab', hidden:true, 'aria-label':'Miniplayer öffnen', onclick:() => undock() }, icon('chev'));
   document.body.append(el, tab);
 
-  const size = () => { const w = xs ? 104 : Math.min(264, innerWidth * .62); return { w, h:w * 9 / 16 }; };
+  const size = () => { const nar = innerWidth < 700, w = xs ? (nar ? 88 : 104) : Math.min(264, innerWidth * (nar ? .5 : .62)); return { w, h:w * 9 / 16 }; };
   const topY = () => (document.querySelector('.top')?.offsetHeight || 46) + M;
   const spot = c => { const { w, h } = size(); return { x:c[1] === 'l' ? M : innerWidth - w - M, y:c[0] === 't' ? topY() : innerHeight - h - M }; };
   const apply = () => { el.style.transform = `translate(${pos.x}px,${pos.y}px)`; };
@@ -1304,11 +1323,13 @@ const Mini = (() => {
   const up = () => {
     if (!drag) return; drag = false; el.classList.remove('drag');
     if (moved) return release();
+    const n = Date.now(); if (!xs && n - lastTap < 320) { lastTap = 0; return expand(); } lastTap = n;
     if (xs) { xs = false; layout(); ctlOn(); } else el.classList.contains('ctl') ? ctlOff() : ctlOn();
   };
   shield.addEventListener('pointerup', up); shield.addEventListener('pointercancel', up);
   addEventListener('resize', () => { if (v && !docked) layout(false); });
 
+  function expand() { fromRect = el.getBoundingClientRect(); location.hash = '#/watch/' + encodeURIComponent(e.id); }
   function open(o) {
     close(); v = o.video; e = o.e; kill = o.kill;
     const pl = !v.paused;
@@ -1316,6 +1337,11 @@ const Mini = (() => {
     ['play', 'pause', 'ended'].forEach(t => v.addEventListener(t, sync)); v.addEventListener('timeupdate', prog);
     el.hidden = false; sync(); prog(); layout(false);
     if (pl) v.play().catch(() => {});
+    if (o.from && !matchMedia('(prefers-reduced-motion:reduce)').matches) {
+      const { w, h } = size();
+      el.animate([{ transform:`translate(${o.from.left}px,${o.from.top}px) scale(${o.from.width / w},${o.from.height / h})`, transformOrigin:'0 0' },
+        { transform:`translate(${pos.x}px,${pos.y}px) scale(1)`, transformOrigin:'0 0' }], { duration:300, easing:'cubic-bezier(.2,.8,.2,1)' });
+    }
   }
   function close() {
     if (!v) return;
@@ -1323,7 +1349,7 @@ const Mini = (() => {
     try { if (!v.ended && v.currentTime > 3) saveProg(e, v.currentTime, v.duration); } catch {}
     kill && kill(); v = null; slot.replaceChildren(); el.hidden = true; tab.hidden = true; docked = null; ctlOff();
   }
-  return { open, close };
+  return { open, close, takeRect:() => { const r = fromRect; fromRect = null; return r; } };
 })();
 
 function route() {
