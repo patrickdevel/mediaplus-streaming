@@ -270,6 +270,13 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 .hrow::-webkit-scrollbar{display:none}
 .hrow .card{flex:0 0 min(260px,72vw);scroll-snap-align:start}
 .hrow .thumb{margin:0;border:1px solid var(--border);border-radius:var(--r-sm)}
+.stile{flex:0 0 min(210px,62vw);display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg-2);scroll-snap-align:start;transition:border-color .12s,background .12s}
+.stile:hover{border-color:var(--border-2);background:var(--bg-3)}
+.stile .avatar{margin-bottom:8px}
+.stile b{font-size:14px;line-height:1.35;font-weight:600;letter-spacing:-.005em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stile .sub{font-size:12.5px;color:var(--fg-3)}
+.who .topic-link{display:block;font-size:12.5px;color:var(--fg-3)}
+.who a:hover b,.who .topic-link:hover{text-decoration:underline}
 
 /* Suchverlauf */
 .sugg{position:fixed;z-index:60;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:6px}
@@ -475,7 +482,7 @@ async function api(path, body) {
   return j.result;
 }
 
-async function search({ text = '', channel = null, topic = null, sort = 'timestamp', order = 'desc', offset = 0, size = PAGE, min = 0, max = 0 } = {}) {
+async function search({ text = '', channel = null, topic = null, sort = 'timestamp', order = 'desc', offset = 0, size = PAGE, min = 0, max = 0, exact = '' } = {}) {
   const queries = (channel ? channel.q : ALL_Q).map(q => ({ fields:['channel'], query:q }));
   if (text)  queries.push({ fields:['title', 'topic'], query:text });
   if (topic) queries.push({ fields:['topic'], query:topic });
@@ -487,7 +494,7 @@ async function search({ text = '', channel = null, topic = null, sort = 'timesta
   const raw = res.results || [];
   const total = res.queryInfo ? res.queryInfo.totalResults : 0;
   const showHidden = HIDE_RE.test(text);
-  const items = raw.filter(e => (channel ? channel.re.test((e.channel || '').trim()) : isArd(e.channel)) && (showHidden || !HIDE_RE.test(e.title || '')));
+  const items = raw.filter(e => (channel ? channel.re.test((e.channel || '').trim()) : isArd(e.channel)) && (showHidden || !HIDE_RE.test(e.title || '')) && (!exact || e.topic === exact));
   items.forEach(e => cache.set(e.id, e));
   return { items, raw: raw.length, total, done: raw.length < size || offset + raw.length >= total };
 }
@@ -631,6 +638,45 @@ function StaticList(host, items, emptyText) {
 /* =========================================================
    Seiten
    ========================================================= */
+function groupShows(items, q) {
+  const m = new Map(), words = (q || '').toLowerCase().split(/\s+/).filter(Boolean);
+  for (const e of items) {
+    if (!e.topic) continue;
+    const k = (e.channel || '') + '|' + e.topic, x = m.get(k) || { topic:e.topic, ch:chanOf(e.channel), n:0 };
+    x.n++; m.set(k, x);
+  }
+  let l = [...m.values()];
+  if (words.length) l = l.filter(x => words.every(w => x.topic.toLowerCase().includes(w)));
+  return l.sort((a, b) => b.n - a.n).slice(0, 14);
+}
+function ShowTile(x) {
+  return h('a', { class:'stile', href:'#/show/' + (x.ch.id || '_') + '/' + encodeURIComponent(x.topic) },
+    Avatar(x.ch), h('b', {}, x.topic), h('span', { class:'sub' }, x.ch.name + ' · Sendung'));
+}
+function ShowsRow(slot, load, q) {
+  load().then(r => {
+    if (!slot.isConnected) return;
+    const l = groupShows(r.items, q);
+    if (l.length) slot.append(h('h2', { class:'rowh' }, 'Sendungen'), h('div', { class:'hrow' }, l.map(ShowTile)));
+  }).catch(() => {});
+}
+function Show(arg) {
+  const i = arg.indexOf('/'), chid = i < 0 ? '' : arg.slice(0, i), topic = i < 0 ? arg : arg.slice(i + 1);
+  const ch = chanById(chid) || null, c = ch || { id:'', name:'ARD', short:'ARD', color:'#666' };
+  document.title = `${topic} – Media +`;
+  const host = h('div'); let order = 'desc';
+  const sel = h('select', { class:'pick', 'aria-label':'Sortierung', onchange:ev => { order = ev.target.value; run(); } },
+    h('option', { value:'desc' }, 'Neueste zuerst'), h('option', { value:'asc' }, 'Älteste zuerst'));
+  main.append(h('div', { class:'page-h' }, Avatar(c, true),
+    h('div', {}, h('h1', {}, topic), h('a', { class:'sub', href:ch ? '#/channel/' + ch.id : '#/' }, c.name + ' · Sendung')),
+    h('span', { class:'grow' }), sel), host);
+  function run() {
+    host.replaceChildren(); routeToken++; cleanups.forEach(f => f()); cleanups = [];
+    Feed(host, off => search({ channel:ch, topic, exact:topic, order, offset:off }), { emptyText:'Keine Folgen gefunden.' });
+  }
+  run();
+}
+
 function Continue() {
   const p = store.get('prog', {});
   const items = Object.entries(p).filter(([, v]) => v.pos > 15 && v.dur && v.pos < v.dur - 30).sort((a, b) => b[1].t - a[1].t)
@@ -654,17 +700,18 @@ let sortKey = 'rel', durKey = 'all';
 function Search(q) {
   document.title = `${q} – Media +`;
   $('#q').value = q;
-  const host = h('div'), sub = h('span', { class:'sub' });
+  const host = h('div'), slot = h('div'), sub = h('span', { class:'sub' });
   const sel = h('select', { class:'pick', 'aria-label':'Sortierung', onchange:ev => { sortKey = ev.target.value; run(); } },
     Object.entries(SORTS).map(([k, v]) => h('option', { value:k, selected:k === sortKey }, v[0])));
   const dsel = h('select', { class:'pick', 'aria-label':'Dauer', onchange:ev => { durKey = ev.target.value; run(); } },
     Object.entries(DURS).map(([k, v]) => h('option', { value:k, selected:k === durKey }, v[0])));
-  main.append(h('div', { class:'page-h' }, h('h1', {}, `Ergebnisse für „${q}“`), sub, h('span', { class:'grow' }), dsel, sel), host);
+  main.append(h('div', { class:'page-h' }, h('h1', {}, `Ergebnisse für „${q}“`), sub, h('span', { class:'grow' }), dsel, sel), slot, h('h2', { class:'rowh' }, 'Folgen und Videos'), host);
   function run() {
     host.replaceChildren(); routeToken++; cleanups.forEach(f => f()); cleanups = [];
     Feed(host, async off => { const r = await search({ text:q, offset:off, ...SORTS[sortKey][1], ...DURS[durKey][1] }); if (r.total) sub.textContent = r.total.toLocaleString('de-DE') + ' Treffer'; return r; }, { emptyText:`Nichts gefunden für „${q}“.` });
   }
   run();
+  ShowsRow(slot, () => search({ text:q, size:150 }), q);
 }
 
 function Channel(id) {
@@ -672,7 +719,9 @@ function Channel(id) {
   if (!ch) return main.append(emptyBox('tv', 'Sender nicht gefunden.'));
   document.title = `${ch.name} – Media +`;
   const host = h('div');
-  main.append(h('div', { class:'page-h' }, Avatar(ch, true), h('div', {}, h('h1', {}, ch.name), h('span', { class:'sub' }, 'Neueste Videos')), h('span', { class:'grow' })), host);
+  const slot = h('div');
+  main.append(h('div', { class:'page-h' }, Avatar(ch, true), h('div', {}, h('h1', {}, ch.name), h('span', { class:'sub' }, 'Sender'))), slot, h('h2', { class:'rowh' }, 'Neueste Videos'), host);
+  ShowsRow(slot, () => search({ channel:ch, min:300, size:150 }), '');
   Feed(host, off => search({ channel:ch, min:300, offset:off }));
 }
 
@@ -1036,7 +1085,9 @@ async function Watch(id) {
   const info = h('div', { class:'winfo' },
     h('h1', {}, e.title),
     h('div', { class:'wrow' },
-      h('a', { class:'who', href:ch.id ? '#/channel/' + ch.id : '#/' }, Avatar(ch), h('div', {}, h('b', {}, ch.name), h('span', {}, e.topic || ''))),
+      h('div', { class:'who' }, h('a', { href:ch.id ? '#/channel/' + ch.id : '#/' }, Avatar(ch)),
+        h('div', {}, h('a', { href:ch.id ? '#/channel/' + ch.id : '#/' }, h('b', {}, ch.name)),
+          e.topic ? h('a', { class:'topic-link', href:'#/show/' + (ch.id || '_') + '/' + encodeURIComponent(e.topic) }, e.topic) : null)),
       acts),
     descBox);
 
@@ -1151,6 +1202,7 @@ function route() {
     case 'watch':   Watch(arg); break;
     case 'search':  Search(arg); break;
     case 'channel': Channel(arg); break;
+    case 'show':    Show(arg); break;
     case 'library': Library(arg); break;
     case 'browse':  Browse(arg); break;
     default:        Browse('Neu');
@@ -1167,7 +1219,7 @@ function applyPin() {
 function markNav() {
   document.querySelectorAll('#side [data-cnt]').forEach(n => { const v = store.get(n.dataset.cnt, []).length; n.textContent = v || ''; });
   const hsh = location.hash || '#/';
-  document.querySelectorAll('#side .nav[data-href]').forEach(n => n.classList.toggle('active', n.dataset.href === hsh || (n.dataset.href === '#/' && /^#\/(browse|)/.test(hsh) && !/^#\/(watch|search|channel|library)/.test(hsh))));
+  document.querySelectorAll('#side .nav[data-href]').forEach(n => n.classList.toggle('active', n.dataset.href === hsh || (n.dataset.href === '#/' && /^#\/(browse|)/.test(hsh) && !/^#\/(watch|search|channel|library|show)/.test(hsh))));
 }
 
 function buildSide() {
