@@ -533,6 +533,7 @@ main{padding:calc(var(--hf) + 1.5rem) var(--pad) 5rem}
 .player.nexting .nextup b{font-size:1.6rem}
 
 /* ---------- Mini-Leiste oben (Video läuft beim Stöbern weiter) ---------- */
+.sticky-player{display:none!important}
 .sticky-inner{height:6.5rem;padding:.6rem var(--pad);gap:1.5rem}
 .sticky-video{width:10.4rem;height:5.85rem;border-radius:.6rem}
 .sticky-title{font-size:1.2rem}
@@ -1360,7 +1361,7 @@ async function Watch(id) {
       h('div', { class:'sticky-progress-fill' })
     )
   );
-  document.body.append(sticky);
+  /* TV: keine Mini-Leiste oben */
 
   const stickyVideoContainer = sticky.querySelector('.sticky-video');
   const stickySaveBtn = sticky.querySelector('.btn');
@@ -1409,7 +1410,7 @@ async function Watch(id) {
     }
   }, { rootMargin: '-120px 0px 0px 0px', threshold: 0 });
   
-  observer.observe(player);
+  /* TV: Video bleibt immer im Player */
 
   cleanups.push(() => {
     observer.disconnect();
