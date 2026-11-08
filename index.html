@@ -638,16 +638,18 @@ function StaticList(host, items, emptyText) {
 /* =========================================================
    Seiten
    ========================================================= */
+const norm = t => (t || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 function groupShows(items, q) {
-  const m = new Map(), words = (q || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const m = new Map(), nq = norm(q), words = nq.split(' ').filter(Boolean);
   for (const e of items) {
     if (!e.topic) continue;
-    const k = (e.channel || '') + '|' + e.topic, x = m.get(k) || { topic:e.topic, ch:chanOf(e.channel), n:0 };
+    const k = (e.channel || '') + '|' + e.topic, x = m.get(k) || { topic:e.topic, ch:chanOf(e.channel), n:0, nt:norm(e.topic) };
     x.n++; m.set(k, x);
   }
   let l = [...m.values()];
-  if (words.length) l = l.filter(x => words.every(w => x.topic.toLowerCase().includes(w)));
-  return l.sort((a, b) => b.n - a.n).slice(0, 14);
+  if (words.length) l = l.filter(x => words.every(w => x.nt.includes(w)));
+  const rank = x => x.nt === nq ? 0 : x.nt.startsWith(nq) ? 1 : 2;
+  return l.sort((a, b) => rank(a) - rank(b) || b.n - a.n).slice(0, 14);
 }
 function ShowTile(x) {
   return h('a', { class:'stile', href:'#/show/' + (x.ch.id || '_') + '/' + encodeURIComponent(x.topic) },
@@ -700,6 +702,7 @@ let sortKey = 'rel', durKey = 'all';
 function Search(q) {
   document.title = `${q} – Media +`;
   $('#q').value = q;
+  const qc = q.replace(/[.…!?,:;"“„”]+/g, ' ').replace(/\s+/g, ' ').trim() || q;
   const host = h('div'), slot = h('div'), sub = h('span', { class:'sub' });
   const sel = h('select', { class:'pick', 'aria-label':'Sortierung', onchange:ev => { sortKey = ev.target.value; run(); } },
     Object.entries(SORTS).map(([k, v]) => h('option', { value:k, selected:k === sortKey }, v[0])));
@@ -708,10 +711,14 @@ function Search(q) {
   main.append(h('div', { class:'page-h' }, h('h1', {}, `Ergebnisse für „${q}“`), sub, h('span', { class:'grow' }), dsel, sel), slot, h('h2', { class:'rowh' }, 'Folgen und Videos'), host);
   function run() {
     host.replaceChildren(); routeToken++; cleanups.forEach(f => f()); cleanups = [];
-    Feed(host, async off => { const r = await search({ text:q, offset:off, ...SORTS[sortKey][1], ...DURS[durKey][1] }); if (r.total) sub.textContent = r.total.toLocaleString('de-DE') + ' Treffer'; return r; }, { emptyText:`Nichts gefunden für „${q}“.` });
+    Feed(host, async off => { const r = await search({ text:qc, offset:off, ...SORTS[sortKey][1], ...DURS[durKey][1] }); if (r.total) sub.textContent = r.total.toLocaleString('de-DE') + ' Treffer'; return r; }, { emptyText:`Nichts gefunden für „${q}“.` });
   }
   run();
-  ShowsRow(slot, () => search({ text:q, size:150 }), q);
+  ShowsRow(slot, async () => {
+    const [a, b] = await Promise.all([search({ text:qc, size:150 }), search({ topic:qc, size:150 })]);
+    const ids = new Set(a.items.map(x => x.id));
+    return { items:[...a.items, ...b.items.filter(x => !ids.has(x.id))] };
+  }, qc);
 }
 
 function Channel(id) {
