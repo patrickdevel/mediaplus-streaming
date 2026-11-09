@@ -368,8 +368,6 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 
 /* =========================================================
    TV-MODUS v2 – 10-Fuß-Oberfläche
-   1rem = ca. 22 px bei 1920 px Breite, skaliert mit dem Bildschirm.
-   Kein Cursor, keine Touch-Gesten, Bedienung nur per Fernbedienung.
    ========================================================= */
 html{font-size:clamp(10px,1.15vw,48px);scrollbar-width:none;cursor:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
@@ -565,7 +563,6 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 #scrim{display:none!important}
 .chips{top:0}
 
-/* Sidebar: standardmäßig nur Icons, expandiert bei Fokus/Hover */
 #side{
   top:0;bottom:0;transform:none!important;
   width:var(--sw-collapsed);z-index:40;
@@ -575,7 +572,6 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
   transition:width .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s;
 }
 #side::-webkit-scrollbar{display:none}
-/* Fix: Einträge dürfen in der Flex-Spalte nicht schrumpfen, sonst werden die oberen (Logo, Suche, Startseite …) auf 0 gequetscht */
 #side>*{flex:none}
 #side{border-right:1px solid var(--border)}
 #side{scroll-padding:2rem 0}
@@ -583,8 +579,6 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
   width:var(--sw);
   box-shadow:4px 0 28px rgba(0,0,0,.25);
 }
-
-/* Innenabstände (Sidebar hat horizontal 0 Padding) */
 #side>.side-logo{padding:0 1.6rem 1.6rem;margin:0;overflow:hidden;white-space:nowrap}
 #side>.nav{padding:0 1.4rem;gap:1.4rem;white-space:nowrap;overflow:hidden}
 #side>.nav .cnt{margin-left:auto;flex:none}
@@ -599,7 +593,6 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 #side>.side-foot{padding:1.8rem 1.4rem .6rem}
 #side>hr.sep{margin:.8rem 1.4rem}
 
-/* Kollabiert: Text weg, Icons zentriert */
 #side:not(:focus-within):not(:hover)>.side-logo{padding:0 0 1.6rem;gap:0;justify-content:center}
 #side:not(:focus-within):not(:hover)>.nav{padding:0;gap:0;justify-content:center}
 #side:not(:focus-within):not(:hover)>.side-logo .t,
@@ -613,10 +606,8 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
   display:none;
 }
 
-/* Kanal-Liste einspaltig, damit Namen nicht abgeschnitten/gequetscht werden */
 .chgrid{grid-template-columns:1fr;gap:.6rem;padding:.6rem 0 1rem}
 
-/* Main schiebt sich mit, wenn die Sidebar aufklappt */
 main{
   margin-left:var(--sw-collapsed);
   padding:3rem var(--pad) 6rem;
@@ -655,7 +646,6 @@ body[data-route=suche]{--pad:3rem}
 .sres .txt h3{font-size:1.5rem}
 .sres .txt p{font-size:1.15rem}
 
-/* Suchscreen: Tastatur bleibt starr stehen, nur die Ergebnisse rechts scrollen */
 body[data-route=suche] .sscreen{display:block}
 body[data-route=suche] .sleft{
   position:fixed;top:0;bottom:0;left:calc(var(--sw-collapsed) + 1rem);width:35rem;box-sizing:border-box;padding:3rem 2rem;
@@ -674,11 +664,10 @@ body[data-route=suche] .skb{position:static}
 body[data-route=suche] .sres{margin-left:34.4rem;transition:margin-left .3s cubic-bezier(.2,.8,.2,1)}
 body:has(#side:hover)[data-route=suche] .sleft,
 body:has(#side:focus-within)[data-route=suche] .sleft{left:calc(var(--sw) + 1rem)}
-/* Fokus im Ergebnisbereich: Tastatur schiebt sich bis auf einen schmalen Rand aus dem Bild */
 body.sk-away[data-route=suche] .sleft{transform:translateX(-34rem);opacity:.5}
 body.sk-away[data-route=suche] .sres{margin-left:1rem}
 
-/* In-Seiten-Dialoge (ersetzen Browser-Dialoge) */
+/* In-Seiten-Dialoge */
 .dlg-back{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:2em;opacity:0;transition:opacity .2s;font-size:16px}
 html[data-input=remote] .dlg-back{font-size:1.8rem}
 .dlg-back.show{opacity:1}
@@ -713,12 +702,10 @@ body[data-route=watch] .player{position:fixed;inset:0;width:100vw;height:100vh;a
 .mpanel .rowh{margin:0 0 .6rem;color:#fff}
 .mpanel .txt h3{color:#fff}.mpanel .txt p{color:#bbb}
 .player.panel .pc{opacity:1!important;transform:none!important;pointer-events:auto!important}
-/* Panels: Ein-/Ausblend-Animation statt display:none */
 .ipanel,.mpanel{transition:opacity .25s,transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s}
 .ipanel[hidden],.mpanel[hidden]{display:block!important;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .22s,transform .28s cubic-bezier(.4,0,1,1),visibility 0s .28s}
 .ipanel[hidden]{transform:translateY(2.5rem)}
 .mpanel[hidden]{transform:translateY(100%)}
-/* Weitere Inhalte: von unten, ohne schwarzen Balken */
 .mpanel{top:0;bottom:0;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:rgba(0,0,0,.45);padding:4rem 4rem 3rem;text-shadow:0 .1rem .6rem rgba(0,0,0,.9)}
 .mpanel[hidden]{display:flex!important}
 body[data-route=watch] .player{overflow:clip}
@@ -730,7 +717,6 @@ body[data-route=watch] .player{overflow:clip}
 .mpanel .hrow{scroll-snap-type:none;padding:2.4rem 4rem 2.8rem;margin:-1rem -4rem -1rem;scroll-padding-inline:4rem}
 .mpanel .hrow::after{content:'';flex:0 0 1px}
 .ipanel .pclose{position:absolute;top:1.6rem;right:1.8rem}
-/* Steuerelemente ausblenden, solange Weitere Inhalte offen ist */
 .player.morep .pc,.player.morep .ptop{opacity:0!important;visibility:hidden;pointer-events:none!important;transform:translateY(1.2rem)!important;transition:opacity .25s,transform .25s,visibility 0s .25s}
 
 /* Fix schwarzes Bild: kein Filter/Transition auf dem Video im Normalfall */
@@ -1190,7 +1176,6 @@ function SearchScreen(q0) {
   const edit = fn => { fn(); draw(); clearTimeout(t); t = setTimeout(go, 700); };
   const key = (label, fn, cls = '') => h('button', { class:'key ' + cls, type:'button', onclick:fn }, label);
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß0123456789'.split('');
-  /* "Suchen"-Button entfernt – Suche startet automatisch nach 700 ms */
   const kb = h('div', { class:'keys' },
     letters.map(c => key(c, () => edit(() => { q += c.toLowerCase(); }))),
     key('Leerzeichen', () => edit(() => { if (q && !q.endsWith(' ')) q += ' '; }), 'w3'),
@@ -1439,11 +1424,41 @@ function buildPlayer(video, perr) {
     ct = setTimeout(toggle, 230);
   });
 
-  /* Auto-hide */
+  /* =========================================================
+     Auto-Hide: Steuerung (Play/Pause/Info/Weitere usw.)
+     blendet sich nach ein paar Sekunden automatisch aus
+     und bei jeder Eingabe wieder ein.
+     ========================================================= */
   let it;
-  const wake = () => { root.classList.remove('idle'); clearTimeout(it); it = setTimeout(() => root.classList.add('idle'), 4500); };
-  ['pointermove', 'pointerdown', 'keydown'].forEach(t => root.addEventListener(t, wake));
-  root.addEventListener('pointerleave', () => root.classList.add('idle'));
+  const HIDE_MS = 4000;
+  const isPlaying = () => !video.paused && !video.ended;
+  const armTimer = () => {
+    clearTimeout(it);
+    if (!isPlaying()) return;
+    it = setTimeout(() => { if (isPlaying() && !root.classList.contains('panel') && !root.classList.contains('morep')) root.classList.add('idle'); }, HIDE_MS);
+  };
+  const wake = () => { root.classList.remove('idle'); armTimer(); };
+  const showControls = () => { clearTimeout(it); root.classList.remove('idle'); };
+  const onAnyInput = () => { if (root.isConnected) wake(); };
+
+  /* Maus: nur im Player */
+  root.addEventListener('pointermove', wake);
+  root.addEventListener('pointerdown', wake);
+  root.addEventListener('pointerleave', () => { if (isPlaying()) { clearTimeout(it); root.classList.add('idle'); } });
+  /* TV/Tastatur: jede Taste zählt als Bedienung */
+  document.addEventListener('keydown', onAnyInput, true);
+
+  /* Abspielzustand */
+  video.addEventListener('play', wake);
+  video.addEventListener('playing', wake);
+  video.addEventListener('waiting', showControls);
+  video.addEventListener('pause', showControls);
+  video.addEventListener('ended', showControls);
+
+  cleanups.push(() => {
+    clearTimeout(it);
+    document.removeEventListener('keydown', onAnyInput, true);
+  });
 
   const ptitle = h('span', {});
   const backBtn = ib('left', 'Zurück', () => document.fullscreenElement ? document.exitFullscreen() : (history.length > 1 ? history.back() : (location.hash = '#/')));
@@ -1505,7 +1520,6 @@ async function Watch(id) {
   const order = ['HD', 'SD', 'LQ'], pref = store.get('q', 'HD');
   let cur = srcs.find(s => order.indexOf(s[0]) >= order.indexOf(pref)) || srcs[0];
   let hls = null, curUrl = '', triedOrig = false, loadT = 0, keyT = 0;
-  /* Automatischer Start (z. B. vom Handy): wird das Video direkt nach dem Laden ohne Tastendruck pausiert, sofort weiterspielen */
   const onAnyKey = () => { keyT = Date.now(); };
   document.addEventListener('keydown', onAnyKey, true);
   cleanups.push(() => document.removeEventListener('keydown', onAnyKey, true));
@@ -1540,14 +1554,13 @@ async function Watch(id) {
     document.removeEventListener('keydown', onKey);
     TV.video = TV.player = null;
     const kill = () => { killHls(); video.pause(); video.removeAttribute('src'); video.load(); };
-    if (false /* TV: kein Miniplayer, per Fernbedienung nicht bedienbar */ && !/^#\/watch\//.test(location.hash) && video.currentSrc && !perr.classList.contains('show') && !video.ended) Mini.open({ video, e, kill, from:video.getBoundingClientRect() });
+    if (false && !/^#\/watch\//.test(location.hash) && video.currentSrc && !perr.classList.contains('show') && !video.ended) Mini.open({ video, e, kill, from:video.getBoundingClientRect() });
     else kill();
   });
 
   const pr = getProg(e.id);
   const startAt = pr && pr.pos > 15 && pr.pos < (pr.dur || e.duration) - 30 ? pr.pos : 0;
 
-  /* Qualität an Player übergeben */
   player.setQualities(
     srcs.map(s => ({ label: s[0], value: s[1] })),
     cur ? cur[1] : null,
@@ -1608,9 +1621,9 @@ async function Watch(id) {
     else if (k === 'j') video.currentTime -= 10;
     else if (k === 'l') video.currentTime += 10;
     else if (/^[0-9]$/.test(k) && video.duration) video.currentTime = video.duration * (+k / 10);
-    else if (k === 'c' || kc === 403) player.toggleSubs && player.toggleSubs();   /* Rot */
-    else if (kc === 405) saveBtn.click();                                          /* Gelb */
-    else if (k === 'n' || kc === 406 || k === 'mediatracknext') goNext();          /* Blau */
+    else if (k === 'c' || kc === 403) player.toggleSubs && player.toggleSubs();
+    else if (kc === 405) saveBtn.click();
+    else if (k === 'n' || kc === 406 || k === 'mediatracknext') goNext();
   }
   document.addEventListener('keydown', onKey);
 
@@ -1950,7 +1963,7 @@ function showSugg() {
 }
 
 /* =========================================================
-   TV: Fernbedienung – Pfeiltasten, OK, Zurück, Medien- und Farbtasten
+   TV: Fernbedienung
    ========================================================= */
 const TV = { video:null, player:null, pending:true, last:null };
 const navSnd = new Audio('navigate.mp3'); navSnd.preload = 'auto';
@@ -1994,7 +2007,6 @@ function askConfirm(text, okLabel = 'Leeren') {
     dlgEl._cancel = () => fin(false);
   });
 }
-/* Native <select>-Popups abfangen */
 document.addEventListener('mousedown', ev => { const s = ev.target.closest && ev.target.closest('select'); if (s) { ev.preventDefault(); openChoice(s); } }, true);
 document.addEventListener('keydown', ev => {
   if (dlgEl && (ev.key === 'Escape')) { ev.preventDefault(); ev.stopPropagation(); (dlgEl._cancel || closeDlg)(); closeDlg(); return; }
@@ -2015,13 +2027,13 @@ function focusEl(el) {
   if (!el) return;
   el.focus({ preventScroll:true });
   const kp = el.closest('.sleft');
-  if (kp) { /* starres Tastenfeld: nur das Panel selbst scrollt, nie die Seite */
+  if (kp) {
     const a = el.getBoundingClientRect(), b = kp.getBoundingClientRect(), m = 60;
     if (a.top < b.top + m) kp.scrollBy({ top:a.top - b.top - m, behavior:'smooth' });
     else if (a.bottom > b.bottom - m) kp.scrollBy({ top:a.bottom - b.bottom + m, behavior:'smooth' });
     return;
   }
-  if (el.closest('.player')) { /* Player ist fix: nur Reihen seitlich nachziehen, nie vertikal scrollen */
+  if (el.closest('.player')) {
     const row = el.closest('.hrow');
     if (row) { const a = el.getBoundingClientRect(), b = row.getBoundingClientRect(); row.scrollBy({ left:(a.left + a.width / 2) - (b.left + b.width / 2), behavior:'smooth' }); }
     return;
@@ -2042,7 +2054,6 @@ function closeSide() {
   focusEl(t || $('#menu'));
 }
 
-/* Nächstes fokussierbares Element in Pfeilrichtung finden */
 function move(dir) {
   let cur = document.activeElement;
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
@@ -2085,12 +2096,10 @@ function move(dir) {
   const hit = scored.find(s => canFocus(s[1]));
   if (hit) { TV.colFor = hit[1]; return focusEl(hit[1]); }
 
-  /* Rand erreicht */
   if (cur.closest('#side') && dir === 'right') return closeSide();
   if (dir === 'left' && !cur.closest('#side,.pmenu,.player,.sticky-player,.sugg')) openSide();
 }
 
-/* Zurück-Taste: erst Menüs schließen, dann eine Seite zurück */
 function goBack() {
   if (dlgEl) { (dlgEl._cancel || closeDlg)(); closeDlg(); return true; }
   if (TV.player && TV.player.classList.contains('panel')) { TV.player.closePanels(); focusEl(TV.player); return true; }
@@ -2148,13 +2157,12 @@ function tvKey(ev) {
 }
 document.addEventListener('keydown', tvKey);
 
-/* Suche: Tastatur ausblenden, sobald der Fokus in den Ergebnissen liegt; zurück bei Fokus auf Tastatur */
 document.addEventListener('focusin', ev => {
   if (document.body.dataset.route !== 'suche') return;
   const t = ev.target;
   if (t.closest && t.closest('.sleft')) {
     document.body.classList.remove('sk-away');
-    if (t.classList && t.classList.contains('key')) { /* Buchstabe fokussiert: Ergebnisse rechts wieder ganz nach oben */
+    if (t.classList && t.classList.contains('key')) {
       window.scrollTo({ top:0, behavior:'smooth' });
       const sl = t.closest('.sleft'); if (sl.scrollTop) sl.scrollTo({ top:0, behavior:'smooth' });
     }
@@ -2162,24 +2170,20 @@ document.addEventListener('focusin', ev => {
   else if (main.contains(t)) document.body.classList.add('sk-away');
 });
 
-/* TV: Touch-Gesten und Zoom komplett deaktivieren */
 const killEv = ev => { if (ev.cancelable) ev.preventDefault(); ev.stopImmediatePropagation(); };
 ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, killEv, { capture:true, passive:false }));
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, ev => { if (ev.pointerType === 'touch' || ev.pointerType === 'pen') killEv(ev); }, true));
 ['contextmenu', 'dragstart'].forEach(t => document.addEventListener(t, ev => ev.preventDefault()));
 document.documentElement.dataset.input = 'remote';
 
-/* Zuletzt fokussiertes Element im Inhalt merken */
 document.addEventListener('focusin', ev => { if (main.contains(ev.target)) TV.last = ev.target; });
 
-/* Nach jedem Seitenwechsel automatisch etwas fokussieren */
 new MutationObserver(() => {
   if (!TV.pending) return;
   const t = initialTarget();
   if (t) { TV.pending = false; focusEl(t); }
 }).observe(main, { childList:true, subtree:true });
 
-/* Player-Einstellungsmenü: Fokus hineinsetzen */
 document.addEventListener('click', ev => {
   if (!TV.player || !ev.target.closest) return;
   const el = ev.target.closest('[aria-label="Einstellungen"],.pmenu-btn');
@@ -2193,7 +2197,6 @@ document.addEventListener('click', ev => {
   }, 0);
 }, true);
 
-/* Menü-Links: nach Klick Fokus zurück in den Inhalt */
 $('#side').addEventListener('click', ev => {
   if (!ev.target.closest('a')) return;
   setTimeout(() => {
@@ -2222,7 +2225,6 @@ const PLUS = (() => {
   const hd = t => h('div', { class:'page-h' }, h('h1', {}, t));
   let cur = null, sleepT = 0, sleepMin = 0, wl = null, es = null;
 
-  /* ---------- Live-TV ---------- */
   function live(arg) {
     document.title = 'Live-TV – Media +';
     let i = Math.max(0, LIVE.findIndex(c => c.id === arg)), hls = null;
@@ -2252,7 +2254,6 @@ const PLUS = (() => {
     if (IS_TV) { TV.pending = false; setTimeout(() => player.focus(), 50); }
   }
 
-  /* ---------- Abos ---------- */
   const subs = () => store.get('subs', []), sk = (c, t) => c + '/' + t;
   const isSub = (c, t) => subs().some(s => s.k === sk(c, t));
   function toggleSub(c, t) {
@@ -2287,7 +2288,6 @@ const PLUS = (() => {
     const t = now(), all = subs(); all.forEach(s => { s.seen = t; }); setTimeout(() => store.set('subs', all), 4000);
   }
 
-  /* ---------- Entdecken ---------- */
   function access(arg) {
     const V = { ad:['Audiodeskription', 'Audiodeskription'], dgs:['Gebärdensprache', 'Gebärdensprache'], ut:['Mit Untertitel', '(mit Untertitel'] };
     const v = V[arg] || V.ad; document.title = v[0] + ' – Media +';
@@ -2309,7 +2309,6 @@ const PLUS = (() => {
     } catch { toast('Das hat nicht geklappt'); }
   }
 
-  /* ---------- Daten / Optik ---------- */
   const KEYS = ['hist', 'saved', 'prog', 'subs', 'seen', 'recent'], OBJ = { prog:1, seen:1 };
   function exportData() {
     const o = { v:1 }; KEYS.forEach(k => { o[k] = store.get(k, OBJ[k] ? {} : []); });
@@ -2361,7 +2360,6 @@ const PLUS = (() => {
     main.append(hd('Mehr'), ...entdecken, ...kopplung, ...akzent, ...karten, ...daten);
   }
 
-  /* ---------- Kopplung Handy -> TV (über ntfy.sh) ---------- */
   const sendTv = async d => {
     const t = store.get('tvTopic'); if (!t) return toast('Erst mit dem TV koppeln');
     try { await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) }); toast('An TV gesendet'); } catch { toast('Senden fehlgeschlagen'); }
@@ -2373,12 +2371,12 @@ const PLUS = (() => {
     osdEl.classList.add('show'); clearTimeout(osdT); osdT = setTimeout(() => osdEl.classList.remove('show'), 1700);
   }
   function remoteKey(k) {
-    document.dispatchEvent(new KeyboardEvent('keydown', { key:'Shift', bubbles:true }));   /* zählt als Bedienung: kein Auto-Weiterspielen mehr */
+    document.dispatchEvent(new KeyboardEvent('keydown', { key:'Shift', bubbles:true }));
     const P = TV.player || (cur && cur.player), V = P && P.querySelector('video');
     const a = document.activeElement && document.activeElement !== document.body ? document.activeElement : document.body;
     const fire = (key, code) => a.dispatchEvent(new KeyboardEvent('keydown', { key, keyCode:code, bubbles:true, cancelable:true }));
     const NAV = { up:['ArrowUp',38], down:['ArrowDown',40], left:['ArrowLeft',37], right:['ArrowRight',39], back:['Escape',27] };
-    if (NAV[k]) return fire(...NAV[k]);                         /* Navigation: keine Anzeige */
+    if (NAV[k]) return fire(...NAV[k]);
     if (k === 'ok') {
       if (P && a === P && V) { P.toggle(); setTimeout(() => osd(V.paused ? 'pause' : 'play', V.paused ? 'Pause' : 'Wiedergabe'), 80); }
       else if (a !== document.body && a.click) a.click();
@@ -2456,7 +2454,6 @@ const PLUS = (() => {
     });
   }
 
-  /* ---------- Player-Extras ---------- */
   function enhance(p) {
     const v = p.querySelector('video'), row = p.querySelector('.prow'); if (!v || !row) return;
     p.dataset.plus = 1;
@@ -2490,14 +2487,11 @@ const PLUS = (() => {
   }
   const lock = async () => { try { if (navigator.wakeLock && !wl) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } } catch {} };
 
-  /* ---------- Init ---------- */
   function init() {
-    /* Sidebar */
     const nav = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href },
       icon(ic), h('span', { class:'lbl' }, label), cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
     const home = document.querySelector('#side .nav[data-href="#/"]');
     if (home) home.after(nav('tv', 'Live-TV', '#/live'), nav('plus', 'Abos', '#/subs', 'subNew'), nav('refresh', 'Überrasch mich', '#/random'), nav('settings', 'Mehr', '#/plus'));
-    /* Sprachsuche */
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
       document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend', '<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></symbol>');
@@ -2505,14 +2499,12 @@ const PLUS = (() => {
       if (btn) btn.before(h('button', { class:'icon-btn', type:'button', 'aria-label':'Sprachsuche', title:'Sprachsuche', onclick:() => {
         try { const r = new SR(); r.lang = 'de-DE'; r.onresult = ev => { $('#q').value = ev.results[0][0].transcript; $('#sf').requestSubmit(); }; r.onerror = () => toast('Sprachsuche nicht möglich'); r.start(); toast('Sprich jetzt …'); } catch { toast('Sprachsuche nicht möglich'); } } }, icon('mic')));
     }
-    /* PWA-Manifest */
     try {
       const m = { name:'Media +', short_name:'Media +', start_url:location.href.split('#')[0], display:'standalone', background_color:'#000000', theme_color:'#000000',
         icons:[{ src:document.querySelector('link[rel=icon]').href, sizes:'any', type:'image/svg+xml' }] };
       document.head.append(h('link', { rel:'manifest', href:'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(m)) }));
     } catch {}
     applyLook();
-    /* Player, Aktionen */
     new MutationObserver(() => {
       main.querySelectorAll('.player:not([data-plus])').forEach(enhance);
       main.querySelectorAll('.acts:not([data-plus])').forEach(a => {
@@ -2521,11 +2513,9 @@ const PLUS = (() => {
           const id = decodeURIComponent(location.hash.split('/')[2] || ''); const en = cache.get(id) || loadSaved(id); sendTv({ t:'w', v:id, n:document.title.replace(/ – Media \+$/, ''), e:en ? { ...slim(en), description:(en.description || '').slice(0, 300) } : undefined }); } }, icon('tv'), 'Auf TV'));
       });
     }).observe(main, { childList:true, subtree:true });
-    /* Wake Lock */
     document.addEventListener('play', lock, true);
     ['pause', 'ended'].forEach(t => document.addEventListener(t, () => { if (wl) wl.release().catch(() => {}); }, true));
     document.addEventListener('visibilitychange', () => { const v = document.querySelector('video'); if (!document.hidden && v && !v.paused) lock(); });
-    /* Fernbedienung: Zahlen, ↑/↓, CH+/CH− */
     document.addEventListener('keydown', ev => {
       if (/input|textarea|select/i.test(ev.target.tagName) || ev.ctrlKey || ev.metaKey || ev.altKey) return;
       const k = ev.key, c = ev.keyCode, up = k === 'ChannelUp' || c === 427, dn = k === 'ChannelDown' || c === 428;
@@ -2537,13 +2527,11 @@ const PLUS = (() => {
         if ((k === 'ArrowUp' || k === 'ArrowDown') && (ev.target === cur.player || ev.target === document.body)) return eat(() => cur.tune(cur.i + (k === 'ArrowUp' ? 1 : -1)));
       } else if (up || dn) eat(() => scrollBy({ top:(up ? -1 : 1) * innerHeight * .8, behavior:'smooth' }));
     }, true);
-    /* Kopplung */
     if (IS_TV) { if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); }
     else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); }
     setTimeout(refreshBadge, 3000); setInterval(refreshBadge, 600000);
   }
 
-  /* Wrapper um vorhandene Funktionen */
   const _Card = Card; Card = (e, o) => {
     const a = _Card(e, o);
     if (store.get('seen', {})[e.id]) { const t = a.querySelector('.thumb'); if (t) t.append(h('span', { class:'seenb', title:'Gesehen' }, '✓ Gesehen')); }
