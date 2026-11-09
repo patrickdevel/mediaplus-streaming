@@ -1517,16 +1517,6 @@ async function Watch(id) {
     video.play().catch(err => { if (err && err.name === 'NotAllowedError') { video.muted = true; video.play().catch(() => {}); } });
   };
   ['pause', 'canplay', 'loadeddata', 'stalled'].forEach(t => video.addEventListener(t, () => setTimeout(autoResume, 60)));
-  /* Diagnose: zeigt 12 s lang, warum das Video ohne Bedienung pausiert wurde */
-  video.addEventListener('pause', () => {
-    if (video.ended || keyT > loadT || Date.now() - loadT > 25000) return;
-    const b = video.buffered, bf = b.length ? b.end(b.length - 1).toFixed(1) : '-';
-    const msg = `PAUSE-DIAGNOSE · sichtbar=${document.visibilityState} · fokus=${document.hasFocus()} · readyState=${video.readyState} · network=${video.networkState} · muted=${video.muted} · vol=${video.volume} · t=${video.currentTime.toFixed(1)} · buf=${bf} · fehler=${video.error ? video.error.code : '-'} · seit Laden=${((Date.now() - loadT) / 1000).toFixed(1)}s`;
-    let d = document.getElementById('dbgp');
-    if (!d) { d = h('div', { id:'dbgp', style:'position:fixed;left:2rem;right:2rem;bottom:2rem;z-index:300;background:rgba(0,0,0,.85);color:#0f0;font:1.3rem/1.4 monospace;padding:1rem 1.4rem;border-radius:.8rem;white-space:pre-wrap' }); document.body.append(d); }
-    d.textContent = (d.textContent ? d.textContent + '\n' : '') + msg;
-    clearTimeout(d._t); d._t = setTimeout(() => d.remove(), 12000);
-  });
   const killHls = () => { if (hls) { hls.destroy(); hls = null; } };
   const fail = () => perr.classList.add('show');
   function load(url, t) {
