@@ -1607,8 +1607,11 @@ const PLUS = (() => {
     es.onmessage = ev => { try {
       const m = JSON.parse(ev.data); if (m.event !== 'message') return;
       const d = JSON.parse(m.message);
+      if (d.t === 'reload' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///reload')) {
+        history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return;
+      }
       if (d.t === 'q') location.hash = '#/search/' + encodeURIComponent(d.v);
-      else if (d.t === 'w') location.hash = '#/watch/' + encodeURIComponent(d.v);
+      else if (d.t === 'w') { if (d.e && d.e.id) cache.set(d.v, d.e); location.hash = '#/watch/' + encodeURIComponent(d.v); }
       toast('Vom Handy: ' + (d.n || d.v));
     } catch {} };
   }
@@ -1642,7 +1645,7 @@ const PLUS = (() => {
       h('div', { class:'side-h', style:'padding:20px 0 6px' }, 'Zuletzt angesehen'),
       ...store.get('hist', []).slice(0, 12).map(x => h('div', { style:'display:flex;gap:8px;align-items:center;padding:6px 0' },
         h('span', { style:'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, x.title),
-        h('button', { class:'btn', type:'button', onclick:() => sendTv({ t:'w', v:x.id, n:x.title }) }, icon('tv'), 'Auf TV'))));
+        h('button', { class:'btn', type:'button', onclick:() => sendTv({ t:'w', v:x.id, n:x.title, e:{ ...slim(x), description:(x.description || '').slice(0, 300) } }) }, icon('tv'), 'Auf TV'))));
   }
 
   /* ---------- Player-Extras ---------- */
@@ -1705,7 +1708,7 @@ const PLUS = (() => {
       main.querySelectorAll('.acts:not([data-plus])').forEach(a => {
         a.dataset.plus = 1;
         if (!IS_TV && store.get('tvTopic')) a.append(h('button', { class:'btn', type:'button', onclick:() => {
-          const id = decodeURIComponent(location.hash.split('/')[2] || ''); sendTv({ t:'w', v:id, n:document.title.replace(/ – Media \+$/, '') }); } }, icon('tv'), 'Auf TV'));
+          const id = decodeURIComponent(location.hash.split('/')[2] || ''); const en = cache.get(id) || loadSaved(id); sendTv({ t:'w', v:id, n:document.title.replace(/ – Media \+$/, ''), e:en ? { ...slim(en), description:(en.description || '').slice(0, 300) } : undefined }); } }, icon('tv'), 'Auf TV'));
       });
     }).observe(main, { childList:true, subtree:true });
     /* Wake Lock */
@@ -1749,7 +1752,7 @@ const PLUS = (() => {
     paint(); bar.insertBefore(b, bar.querySelector('select'));
     const l = subs(), s = l.find(x => x.k === sk(c, t)); if (s) { s.seen = now(); store.set('subs', l); setTimeout(refreshBadge, 800); }
   };
-  return { live, subsPage, access, random, more, pairPage, sendPage, init };
+  return { live, subsPage, access, random, more, pairPage, sendPage, sendTv, init };
 })();
 
 (function init() {
@@ -1776,6 +1779,7 @@ const PLUS = (() => {
   $('#sf').onsubmit = ev => {
     ev.preventDefault();
     const q = $('#q').value.trim();
+    if (q.toLowerCase() === '///reload' && store.get('tvTopic')) { PLUS.sendTv({ t:'reload' }); $('#q').value = ''; return; }
     if (q) { remember(q); location.hash = '#/search/' + encodeURIComponent(q); $('#q').blur(); }
   };
   document.addEventListener('keydown', ev => {
