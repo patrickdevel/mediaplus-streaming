@@ -374,6 +374,16 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 .pmenu.plus{max-height:78%;overflow:auto}
 .qrbox{background:#fff;color:#000;padding:1em;border-radius:1em;display:block;width:min(20em,100%);margin:1em 0}
 .qrbox svg{width:100%;height:auto;display:block}
+
+/* Hero-Karussell */
+.hero::after{display:none}
+.hero{touch-action:pan-y}
+.htrack{display:flex;width:100%;height:100%;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.hslide{flex:0 0 100%;min-width:0;position:relative;display:flex;align-items:flex-end}
+.hslide::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(to top,rgba(0,0,0,.92),rgba(0,0,0,.15) 55%,rgba(0,0,0,.05))}
+.hdots{position:absolute;right:16px;bottom:14px;z-index:3;display:flex;gap:6px}
+.hdots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:width .3s,background .3s}
+.hdots i.on{width:20px;border-radius:4px;background:#fff}
 </style>
 </head>
 <body>
@@ -841,20 +851,55 @@ function loadHls() {
 function Hero() {
   const tok = routeToken, shell = h('section', { class:'hero' });
   main.prepend(shell);
-  search({ min:1800, size:24 }).then(r => {
+  search({ min:1800, size:30 }).then(r => {
     if (tok !== routeToken) return;
-    const e = r.items.find(x => (x.description || '').length > 80) || r.items[0];
-    if (!e) return shell.remove();
-    const ch = chanOf(e.channel);
-    const bg = h('div', { class:'hbg' });
-    if (store.get('thumbs', true)) { bg._e = e; thumbIO.observe(bg); }
-    shell.append(bg, h('div', { class:'hin' },
-      h('span', { class:'hbadge' }, Avatar(ch), ch.name),
-      h('h2', {}, e.title),
-      h('p', {}, (e.description || '').trim()),
-      h('div', { class:'hact' },
-        h('a', { class:'btn primary big', href:'#/watch/' + encodeURIComponent(e.id) }, icon('play', 'fill'), 'Jetzt ansehen'),
-        h('span', { class:'sub' }, [e.duration ? fmtDur(e.duration) : '', rel(e.timestamp)].filter(Boolean).join(' · ')))));
+    const good = r.items.filter(x => (x.description || '').length > 80);
+    const list = [], tops = new Set();
+    for (const x of [...good, ...r.items]) {
+      if (list.length >= 6) break;
+      const k = x.topic || x.title;
+      if (list.includes(x) || tops.has(k)) continue;
+      tops.add(k); list.push(x);
+    }
+    if (!list.length) return shell.remove();
+    const track = h('div', { class:'htrack' }), dots = h('div', { class:'hdots' });
+    const slides = list.map((e, i) => {
+      const ch = chanOf(e.channel), bg = h('div', { class:'hbg' });
+      if (store.get('thumbs', true)) bg._e = e;
+      const link = h('a', { class:'btn primary big', href:'#/watch/' + encodeURIComponent(e.id), tabindex:i ? '-1' : null }, icon('play', 'fill'), 'Jetzt ansehen');
+      dots.append(h('i', {}));
+      return { bg, link, el:h('div', { class:'hslide' }, bg, h('div', { class:'hin' },
+        h('span', { class:'hbadge' }, Avatar(ch), ch.name),
+        h('h2', {}, e.title),
+        h('p', {}, (e.description || '').trim()),
+        h('div', { class:'hact' }, link,
+          h('span', { class:'sub' }, [e.duration ? fmtDur(e.duration) : '', rel(e.timestamp)].filter(Boolean).join(' · '))))) };
+    });
+    slides.forEach(s => track.append(s.el));
+    shell.append(track, dots);
+    const n = slides.length;
+    if (store.get('thumbs', true)) { slides.slice().reverse().forEach(s => { if (s.bg._e) thumbQueue.push(s.bg); }); pump(); }
+    let idx = 0, timer = 0, x0 = 0, y0 = 0;
+    const go = i => {
+      const prev = slides[idx];
+      idx = ((i % n) + n) % n;
+      track.style.transform = `translateX(-${idx * 100}%)`;
+      Array.from(dots.children).forEach((d, k) => d.classList.toggle('on', k === idx));
+      slides.forEach((s, k) => s.link.setAttribute('tabindex', k === idx ? '0' : '-1'));
+      if (prev !== slides[idx] && prev.el.contains(document.activeElement)) slides[idx].link.focus({ preventScroll:true });
+    };
+    const start = () => {
+      clearInterval(timer);
+      if (n < 2) return;
+      timer = setInterval(() => { if (!shell.isConnected) return clearInterval(timer); if (!document.hidden) go(idx + 1); }, 6000);
+    };
+    shell.addEventListener('touchstart', ev => { x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY; }, { passive:true });
+    shell.addEventListener('touchend', ev => {
+      const dx = ev.changedTouches[0].clientX - x0, dy = ev.changedTouches[0].clientY - y0;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { go(idx + (dx < 0 ? 1 : -1)); start(); }
+    }, { passive:true });
+    cleanups.push(() => clearInterval(timer));
+    go(0); start();
   }).catch(() => shell.remove());
 }
 
@@ -1387,6 +1432,7 @@ function route() {
     case 'access':  PLUS.access(arg); break;
     case 'send':    PLUS.sendPage(); break;
     case 'pair':    PLUS.pairPage(); break;
+    case 'connect': PLUS.connectPage(); break;
     case 'remote':  PLUS.remotePage(); break;
     default:        Browse('Neu');
   }
@@ -1590,7 +1636,7 @@ const PLUS = (() => {
     main.append(hd('Mehr'),
       ...sec('Entdecken', lnk('tv', 'Live-TV', '#/live'), lnk('refresh', 'Überrasch mich', '#/random'), lnk('captions', 'Audiodeskription', '#/access/ad'),
         lnk('captions', 'Gebärdensprache', '#/access/dgs'), lnk('captions', 'Mit Untertitel', '#/access/ut')),
-      ...sec('Kopplung Handy ↔ TV', IS_TV ? lnk('share', 'Mit Handy koppeln (QR)', '#/pair') : lnk('share', 'An TV senden', '#/send'), lnk('tv', 'Fernbedienung', '#/remote')),
+      ...sec('Kopplung Handy ↔ TV', IS_TV ? lnk('share', 'Mit Handy koppeln (QR)', '#/pair') : lnk('share', 'An TV senden', '#/send'), lnk('share', 'TV koppeln', '#/connect'), lnk('tv', 'Fernbedienung', '#/remote')),
       ...sec('Akzentfarbe', act('Standard', () => { store.set('accent', ''); applyLook(); route(); }, !store.get('accent', '')),
         ...COLORS.map(c => h('button', { class:'swatch' + (store.get('accent', '') === c ? ' on' : ''), type:'button', style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); route(); } }))),
       ...sec('Kartengröße', ...[['Klein', .8], ['Mittel', 1], ['Groß', 1.3]].map(([l, f]) => act(l, () => { store.set('cw', f); applyLook(); route(); }, store.get('cw', 1) === f))),
@@ -1638,7 +1684,7 @@ const PLUS = (() => {
   function remotePage() {
     document.title = 'Fernbedienung – Media +';
     main.append(hd('Fernbedienung'));
-    if (!store.get('tvTopic')) return main.append(emptyBox('share', 'Nicht gekoppelt. Scanne am TV unter „Mehr → Mit Handy koppeln“ den QR-Code.'));
+    if (!store.get('tvTopic')) return main.append(emptyBox('share', 'Noch nicht mit einem TV gekoppelt.', h('a', { class:'btn primary', href:'#/connect' }, 'Jetzt koppeln')));
     if (!document.getElementById('i-arr-up')) document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend',
       '<symbol id="i-arr-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>' +
       '<symbol id="i-arr-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>' +
@@ -1679,10 +1725,103 @@ const PLUS = (() => {
     /* OK-Button: Text statt Icon */
     const okb = main.querySelector('.rb.ok'); okb.replaceChildren('OK'); okb.style.fontSize = '20px';
   }
+  /* ---------- Koppeln: scannen, QR anzeigen, Code eingeben ---------- */
+  const fmtCode = t => String(t || '').slice(2).toUpperCase().replace(/(.{5})(?=.)/g, '$1 ');
+  function parseCode(t) {
+    let c = String(t || '').trim();
+    try { const v = new URL(c).searchParams.get('tv'); if (v) c = v; } catch {}
+    c = c.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (c.length === 10) c = 'mp' + c;
+    return /^mp[a-z0-9]{6,}$/.test(c) ? c : '';
+  }
+  function qrInto(box, text) {
+    new Promise((res, rej) => {
+      if (window.qrcode) return res();
+      const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      s.onload = res; s.onerror = rej; document.head.append(s);
+    }).then(() => { const q = qrcode(0, 'M'); q.addData(text); q.make(); box.innerHTML = q.createSvgTag({ cellSize:6, margin:0 }); })
+      .catch(() => { box.textContent = 'QR-Code nicht verfügbar.'; });
+  }
+  function loadJsQr() {
+    if (window.jsQR) return Promise.resolve();
+    return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'; s.onload = res; s.onerror = rej; document.head.append(s); });
+  }
+  async function scanQr(onCode) {
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false }); }
+    catch { return toast('Kamera nicht verfügbar – Code manuell eingeben'); }
+    const video = h('video', { playsinline:true, muted:true, autoplay:true, style:'position:absolute;inset:0;width:100%;height:100%;object-fit:cover' });
+    video.srcObject = stream;
+    let alive = true, timer = 0;
+    const close = () => { alive = false; clearInterval(timer); stream.getTracks().forEach(t => t.stop()); ov.remove(); };
+    const ov = h('div', { style:'position:fixed;inset:0;z-index:130;background:#000;color:#fff' }, video,
+      h('div', { style:'position:absolute;left:50%;top:50%;width:min(70vw,320px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:24px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55);pointer-events:none' }),
+      h('p', { style:'position:absolute;left:0;right:0;bottom:calc(40px + env(safe-area-inset-bottom));text-align:center;margin:0;font-size:14px' }, 'QR-Code des TVs in den Rahmen halten'),
+      h('button', { class:'icon-btn', type:'button', 'aria-label':'Schließen', style:'position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;background:rgba(0,0,0,.55);color:#fff;width:44px;height:44px', onclick:close }, icon('x')));
+    document.body.append(ov);
+    video.play().catch(() => {});
+    const canvas = document.createElement('canvas'), cx = canvas.getContext('2d', { willReadFrequently:true });
+    let det = null;
+    if (window.BarcodeDetector) { try { det = new BarcodeDetector({ formats:['qr_code'] }); } catch {} }
+    if (!det) { try { await loadJsQr(); } catch { close(); return toast('Scanner konnte nicht geladen werden'); } }
+    let busy = false;
+    timer = setInterval(async () => {
+      if (!alive || busy || video.readyState < 2) return;
+      busy = true;
+      try {
+        let raw = '';
+        if (det) { const r = await det.detect(video); raw = r[0] ? r[0].rawValue : ''; }
+        else {
+          const w = video.videoWidth, hh = video.videoHeight; if (!w) return;
+          const k = Math.min(1, 640 / w); canvas.width = Math.round(w * k); canvas.height = Math.round(hh * k);
+          cx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const r = jsQR(cx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height); raw = r ? r.data : '';
+        }
+        const code = parseCode(raw);
+        if (code && alive) { close(); onCode(code); }
+      } catch {} finally { busy = false; }
+    }, 250);
+  }
+  function connectPage() {
+    document.title = 'TV koppeln – Media +';
+    if (!document.getElementById('i-scan')) document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend',
+      '<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></symbol>' +
+      '<symbol id="i-qr" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v3M14 20h3M20 20v1"/></symbol>');
+    const cur = store.get('tvTopic', '');
+    main.append(hd('TV koppeln'));
+    const done = code => { store.set('tvTopic', code); toast('Mit TV gekoppelt'); route(); };
+    const sec = t => h('div', { class:'side-h', style:'padding:22px 0 8px' }, t);
+    main.append(h('div', { style:'max-width:460px' },
+      h('p', { style:'margin:0 0 4px;color:var(--fg-2)' }, cur ? 'Gekoppelt mit TV-Code:' : 'Noch nicht gekoppelt.'),
+      cur ? h('div', { style:'font-size:26px;font-weight:700;letter-spacing:.12em;padding:2px 0 6px' }, fmtCode(cur)) : null,
+
+      sec('QR-Code vom TV scannen'),
+      h('button', { class:'btn primary big', type:'button', onclick:() => scanQr(done) }, icon('scan'), 'QR-Code scannen'),
+
+      sec('Oder Code manuell eingeben'),
+      (() => {
+        const inp = h('input', { class:'pick', type:'text', placeholder:'Code vom TV, z. B. ABCDE FGHIJ', 'aria-label':'Kopplungscode', autocomplete:'off', autocapitalize:'characters', spellcheck:'false', style:'flex:1;min-width:0;height:40px;font-size:16px;letter-spacing:.08em' });
+        const go = () => { const c = parseCode(inp.value); if (c) done(c); else toast('Code ungültig'); };
+        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
+        return h('div', { style:'display:flex;gap:8px' }, inp, h('button', { class:'btn primary big', type:'button', onclick:go }, 'Verbinden'));
+      })(),
+
+      cur ? [
+        sec('Kopplung teilen'),
+        (() => {
+          const box = h('div', { class:'qrbox', hidden:true });
+          const url = location.href.split('#')[0].split('?')[0] + '?tv=' + cur + '#/send';
+          let built = false;
+          const btn = h('button', { class:'btn', type:'button', onclick:() => { box.hidden = !box.hidden; if (!box.hidden && !built) { built = true; qrInto(box, url); } } }, icon('qr'), 'QR-Code anzeigen');
+          return h('div', {}, btn, box, h('p', { style:'color:var(--fg-3);font-size:13px;margin:8px 0 0' }, 'Ein weiteres Handy kann diesen Code scannen und steuert denselben TV.'));
+        })(),
+        h('div', { style:'padding-top:22px' }, h('button', { class:'btn', type:'button', onclick:() => { store.set('tvTopic', ''); toast('Kopplung getrennt'); route(); } }, icon('x'), 'Trennen'))
+      ] : null));
+  }
   function sendPage() {
     document.title = 'An TV senden – Media +';
     const t = store.get('tvTopic'); main.append(hd('An TV senden'));
-    if (!t) return main.append(emptyBox('share', 'Nicht gekoppelt. Scanne am TV unter „Mehr → Mit Handy koppeln“ den QR-Code.'));
+    if (!t) return main.append(emptyBox('share', 'Noch nicht mit einem TV gekoppelt.', h('a', { class:'btn primary', href:'#/connect' }, 'Jetzt koppeln')));
     const inp = h('input', { class:'pick', type:'search', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'send', style:'width:100%;max-width:40em' });
     const go = () => { const v = inp.value.trim(); if (v) { sendTv({ t:'q', v }); inp.value = ''; } };
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
@@ -1797,7 +1936,7 @@ const PLUS = (() => {
     paint(); bar.insertBefore(b, bar.querySelector('select'));
     const l = subs(), s = l.find(x => x.k === sk(c, t)); if (s) { s.seen = now(); store.set('subs', l); setTimeout(refreshBadge, 800); }
   };
-  return { live, subsPage, access, random, more, pairPage, sendPage, remotePage, sendTv, init };
+  return { live, subsPage, access, random, more, pairPage, sendPage, remotePage, connectPage, sendTv, init };
 })();
 
 (function init() {
