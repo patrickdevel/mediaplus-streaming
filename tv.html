@@ -599,6 +599,23 @@ body[data-route=watch] .player{position:fixed;inset:0;width:100vw;height:100vh;a
 .mpanel .rowh{margin:0 0 .6rem;color:#fff}
 .mpanel .txt h3{color:#fff}.mpanel .txt p{color:#bbb}
 .player.panel .pc{opacity:1!important;transform:none!important;pointer-events:auto!important}
+
+/* Fix schwarzes Bild: kein Filter/Transition auf dem Video im Normalfall */
+.player video{filter:none;transition:none;transform:none}
+html.br .player video{filter:brightness(var(--bright,1))}
+.player.nexting video{filter:blur(18px) brightness(.55);transform:scale(1.08)}
+/* Suche: ruhigeres Design */
+.sscreen{grid-template-columns:31rem minmax(0,1fr);gap:3.4rem}
+.skb{background:var(--bg-2);border:2px solid var(--border);border-radius:1.6rem;padding:1.6rem}
+.sdisp{background:var(--bg);margin-bottom:1.2rem}
+.key{background:var(--bg-3);border:0;font-weight:600}
+.key.go{margin-top:.6rem;height:4.8rem}
+.sres .rowh:first-child,.sres>.rowh{margin-top:0}
+.sres .grid{grid-template-columns:1fr;gap:1.6rem}
+.sres .card.compact,.sres .card.sk{display:grid;grid-template-columns:20rem minmax(0,1fr);gap:1.6rem;align-items:center}
+.sres .card.compact .meta,.sres .card.sk .meta{padding-top:0}
+.sres .txt h3{font-size:1.5rem}
+.sres .txt p{font-size:1.15rem}
 </style>
 </head>
 <body>
@@ -1015,12 +1032,18 @@ function SearchScreen(q0) {
     res.replaceChildren();
     if (term.length < 2) { res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
     remember(term);
-    const grid = h('div', { class:'grid' }, skeletons(6)); res.append(grid);
+    const slot = h('div'), hd2 = h('h2', { class:'rowh' }, 'Folgen und Videos'), grid = h('div', { class:'grid' }, skeletons(4));
+    res.append(slot, hd2, grid);
+    ShowsRow(slot, async () => {
+      const [a, b] = await Promise.all([search({ text:term, size:150 }), search({ topic:term, size:150 })]);
+      const ids = new Set(a.items.map(x => x.id));
+      return { items:[...a.items, ...b.items.filter(x => !ids.has(x.id))] };
+    }, term);
     try {
       const r = await search({ text:term, size:24 });
       if (tok !== routeToken || term !== q.trim()) return;
       if (!r.items.length) { res.replaceChildren(emptyBox('search', `Nichts gefunden für „${term}“.`)); return; }
-      grid.replaceChildren(); r.items.forEach(e => grid.append(Card(e)));
+      grid.replaceChildren(); if (r.total) hd2.textContent = 'Folgen und Videos · ' + r.total.toLocaleString('de-DE') + ' Treffer'; r.items.forEach(e => grid.append(Card(e, { compact:true })));
       if (ff === true) focusEl(grid.querySelector('a'));
     } catch (err) { if (tok === routeToken) res.replaceChildren(errorBox(err, go)); }
   }
@@ -2041,7 +2064,7 @@ const PLUS = (() => {
     r.style.setProperty('--cw', IS_TV ? (19 * f) + 'rem' : (280 * f) + 'px'); r.classList.toggle('cw', f !== 1);
     const c = store.get('cue', {});
     r.style.setProperty('--cs', c.size || 1); r.style.setProperty('--cb', c.bg || 'rgba(0,0,0,.6)'); r.style.setProperty('--cf', c.fg || '#fff');
-    r.style.setProperty('--bright', store.get('bright', 1));
+    r.style.setProperty('--bright', store.get('bright', 1)); r.classList.toggle('br', store.get('bright', 1) !== 1);
   }
   function more() {
     document.title = 'Mehr – Media +';
