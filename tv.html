@@ -1446,12 +1446,22 @@ async function Watch(id) {
   const srcs = [['HD', e.url_video_hd], ['SD', e.url_video], ['LQ', e.url_video_low]].filter(s => s[1]);
   const order = ['HD', 'SD', 'LQ'], pref = store.get('q', 'HD');
   let cur = srcs.find(s => order.indexOf(s[0]) >= order.indexOf(pref)) || srcs[0];
-  let hls = null, curUrl = '', triedOrig = false;
+  let hls = null, curUrl = '', triedOrig = false, loadT = 0, keyT = 0;
+  /* Automatischer Start (z. B. vom Handy): wird das Video direkt nach dem Laden ohne Tastendruck pausiert, sofort weiterspielen */
+  const onAnyKey = () => { keyT = Date.now(); };
+  document.addEventListener('keydown', onAnyKey, true);
+  cleanups.push(() => document.removeEventListener('keydown', onAnyKey, true));
+  const autoResume = () => {
+    if (video.ended || !video.paused || keyT > loadT || Date.now() - loadT > 15000) return;
+    video.play().catch(err => { if (err && err.name === 'NotAllowedError') { video.muted = true; video.play().catch(() => {}); } });
+  };
+  ['pause', 'canplay', 'loadeddata', 'stalled'].forEach(t => video.addEventListener(t, () => setTimeout(autoResume, 60)));
+  { let n = 0; const wd = setInterval(() => { n++; autoResume(); if (n > 50 || keyT > loadT) clearInterval(wd); }, 300); cleanups.push(() => clearInterval(wd)); }
   const killHls = () => { if (hls) { hls.destroy(); hls = null; } };
   const fail = () => perr.classList.add('show');
   function load(url, t) {
     killHls(); perr.classList.remove('show');
-    curUrl = url; triedOrig = false;
+    curUrl = url; triedOrig = false; loadT = Date.now();
     const u = secure(url);
     if (/\.m3u8(\?|$)/i.test(url) && !video.canPlayType('application/vnd.apple.mpegurl')) {
       loadHls().then(() => {
@@ -2296,6 +2306,16 @@ const PLUS = (() => {
     const t = store.get('tvTopic'); if (!t) return toast('Erst mit dem TV koppeln');
     try { await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) }); toast('An TV gesendet'); } catch { toast('Senden fehlgeschlagen'); }
   };
+  function remoteKey(k) {
+    const M = { up:['ArrowUp',38], down:['ArrowDown',40], left:['ArrowLeft',37], right:['ArrowRight',39], back:['Escape',27],
+      pp:['MediaPlayPause',179], ff:['MediaFastForward',417], rew:['MediaRewind',412], next:['n',78], cc:['c',67], chup:['ChannelUp',427], chdn:['ChannelDown',428] };
+    const a = document.activeElement && document.activeElement !== document.body ? document.activeElement : document.body;
+    if (k === 'ok') { if (TV.player && a === TV.player) TV.player.toggle(); else if (a !== document.body && a.click) a.click(); return; }
+    if (k === 'mute') { if (TV.video) TV.video.muted = !TV.video.muted; return; }
+    if (k === 'vup' || k === 'vdn') { if (TV.video) { TV.video.muted = false; TV.video.volume = clamp(TV.video.volume + (k === 'vup' ? .1 : -.1), 0, 1); } return; }
+    const m = M[k]; if (!m) return;
+    a.dispatchEvent(new KeyboardEvent('keydown', { key:m[0], keyCode:m[1], bubbles:true, cancelable:true }));
+  }
   function listen() {
     const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
     if (es) es.close(); es = new EventSource('https://ntfy.sh/' + t + '/sse');
@@ -2305,6 +2325,7 @@ const PLUS = (() => {
       if (d.t === 'reload' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///reload')) {
         history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return;
       }
+      if (d.t === 'k') { remoteKey(d.v); return; }
       if (d.t === 'q') location.hash = '#/search/' + encodeURIComponent(d.v);
       else if (d.t === 'w') { if (d.e && d.e.id) cache.set(d.v, d.e); location.hash = '#/watch/' + encodeURIComponent(d.v); }
       toast('Vom Handy: ' + (d.n || d.v));
