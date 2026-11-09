@@ -650,6 +650,20 @@ body[data-route=suche]{--pad:3rem}
 .sres .txt h3{font-size:1.5rem}
 .sres .txt p{font-size:1.15rem}
 
+/* Suchscreen: Tastatur bleibt starr stehen, nur die Ergebnisse rechts scrollen */
+body[data-route=suche] .sscreen{display:block}
+body[data-route=suche] .skb{
+  position:fixed;top:3rem;left:calc(var(--sw-collapsed) + 3rem);width:31rem;
+  max-height:calc(100vh - 6rem);overflow:hidden;z-index:30;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s,left .28s cubic-bezier(.2,.8,.2,1);
+}
+body[data-route=suche] .sres{margin-left:34.4rem;transition:margin-left .3s cubic-bezier(.2,.8,.2,1)}
+body:has(#side:hover)[data-route=suche] .skb,
+body:has(#side:focus-within)[data-route=suche] .skb{left:calc(var(--sw) + 3rem)}
+/* Fokus im Ergebnisbereich: Tastatur schiebt sich bis auf einen schmalen Rand aus dem Bild */
+body.sk-away[data-route=suche] .skb{transform:translateX(-32rem);opacity:.5}
+body.sk-away[data-route=suche] .sres{margin-left:1rem}
+
 /* Player */
 body[data-route=watch]{overflow:hidden}
 body[data-route=watch] #side{display:none}
@@ -1717,7 +1731,7 @@ function route() {
   thumbQueue.length = 0;
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   const a = parts[0] || '', arg = decodeURIComponent(parts.slice(1).join('/') || '');
-  main.replaceChildren(); window.scrollTo(0, 0);
+  main.replaceChildren(); window.scrollTo(0, 0); document.body.classList.remove('sk-away');
   document.body.dataset.route = a || 'home';
   if (a !== 'search') $('#q').value = '';
   switch (a) {
@@ -1829,6 +1843,7 @@ function canFocus(el) {
 function focusEl(el) {
   if (!el) return;
   el.focus({ preventScroll:true });
+  if (el.closest('.skb')) return; /* starres Tastenfeld: Seite nie mitscrollen */
   const fixedBar = el.closest('.chips,.top,#side,.sticky-player,.pmenu,.sugg');
   el.scrollIntoView({ block:fixedBar ? 'nearest' : 'center', inline:el.closest('.chips,.hrow') ? 'center' : 'nearest', behavior:'smooth' });
 }
@@ -1851,7 +1866,8 @@ function move(dir) {
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
   const all = Array.from(document.querySelectorAll(FOCUSABLE)).filter(el =>
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
-    !(cur && (el === cur || el.contains(cur) || cur.contains(el))));
+    !(cur && (el === cur || el.contains(cur) || cur.contains(el))) &&
+    !(cur && cur.closest('.skb') && (dir === 'up' || dir === 'down') && !el.closest('.skb')));
 
   if (!cur) {
     const t = (TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : null) || initialTarget() || all.find(canFocus);
@@ -1947,6 +1963,14 @@ function tvKey(ev) {
   }
 }
 document.addEventListener('keydown', tvKey);
+
+/* Suche: Tastatur ausblenden, sobald der Fokus in den Ergebnissen liegt; zurück bei Fokus auf Tastatur */
+document.addEventListener('focusin', ev => {
+  if (document.body.dataset.route !== 'suche') return;
+  const t = ev.target;
+  if (t.closest && t.closest('.skb')) document.body.classList.remove('sk-away');
+  else if (main.contains(t)) document.body.classList.add('sk-away');
+});
 
 /* TV: Touch-Gesten und Zoom komplett deaktivieren */
 const killEv = ev => { if (ev.cancelable) ev.preventDefault(); ev.stopImmediatePropagation(); };
