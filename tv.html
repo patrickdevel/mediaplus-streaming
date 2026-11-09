@@ -2212,7 +2212,7 @@ const PLUS = (() => {
       ...grp('Untertitel-Größe', ...[['S', .8], ['M', 1], ['L', 1.4], ['XL', 1.9]].map(([l, x]) => opt(l, (st().size || 1) === x, () => setSt({ size:x })))),
       ...grp('Untertitel-Hintergrund', ...[['Aus', 'transparent'], ['Halb', 'rgba(0,0,0,.6)'], ['Schwarz', '#000']].map(([l, x]) => opt(l, (st().bg || 'rgba(0,0,0,.6)') === x, () => setSt({ bg:x })))),
       ...grp('Untertitel-Farbe', ...[['Weiß', '#fff'], ['Gelb', '#ff0'], ['Cyan', '#0ff']].map(([l, x]) => opt(l, (st().fg || '#fff') === x, () => setSt({ fg:x })))),
-      ...grp('Helligkeit', ...[['70 %', .7], ['100 %', 1], ['130 %', 1.3]].map(([l, x]) => opt(l, store.get('bright', 1) === x, () => { store.set('bright', x); applyLook(); })))),
+      ...grp('Helligkeit', ...[['70 %', .7], ['100 %', 1], ['130 %', 1.3]].map(([l, x]) => opt(l, store.get('bright', 1) === x, () => { store.set('bright', x); applyLook(); }))),
       ...((v.remote || v.webkitShowPlaybackTargetPicker) ? [h('div', { class:'pmenu-opts' }, opt('Cast / AirPlay …', false, () => { try { v.remote ? v.remote.prompt().catch(() => toast('Kein Gerät gefunden')) : v.webkitShowPlaybackTargetPicker(); } catch {} }))] : []));
     const btn = h('button', { class:'pb', type:'button', 'aria-label':'Mehr', title:'Sleep-Timer, Untertitel-Stil, Cast' }, h('span', { style:'font-size:1.5em;line-height:1' }, '⋯'));
     btn.onclick = ev => { ev.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) { draw(); setTimeout(() => { const b = menu.querySelector('.pmenu-btn.on') || menu.querySelector('.pmenu-btn'); b && b.focus(); }, 0); } };
