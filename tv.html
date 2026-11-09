@@ -654,8 +654,8 @@ body[data-route=suche]{--pad:3rem}
 /* Suchscreen: Tastatur bleibt starr stehen, nur die Ergebnisse rechts scrollen */
 body[data-route=suche] .sscreen{display:block}
 body[data-route=suche] .sleft{
-  position:fixed;top:3rem;left:calc(var(--sw-collapsed) + 3rem);width:31rem;
-  max-height:calc(100vh - 6rem);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;z-index:30;
+  position:fixed;top:0;bottom:0;left:calc(var(--sw-collapsed) + 1rem);width:35rem;box-sizing:border-box;padding:3rem 2rem;
+  overflow-x:hidden;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;z-index:30;
   transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s,left .28s cubic-bezier(.2,.8,.2,1);
 }
 body[data-route=suche] .sleft::-webkit-scrollbar{display:none}
@@ -669,9 +669,9 @@ body[data-route=suche] .skb{position:static}
 .hitem.clr{justify-content:center;background:transparent;color:var(--fg-3);font-weight:500}
 body[data-route=suche] .sres{margin-left:34.4rem;transition:margin-left .3s cubic-bezier(.2,.8,.2,1)}
 body:has(#side:hover)[data-route=suche] .sleft,
-body:has(#side:focus-within)[data-route=suche] .sleft{left:calc(var(--sw) + 3rem)}
+body:has(#side:focus-within)[data-route=suche] .sleft{left:calc(var(--sw) + 1rem)}
 /* Fokus im Ergebnisbereich: Tastatur schiebt sich bis auf einen schmalen Rand aus dem Bild */
-body.sk-away[data-route=suche] .sleft{transform:translateX(-32rem);opacity:.5}
+body.sk-away[data-route=suche] .sleft{transform:translateX(-34rem);opacity:.5}
 body.sk-away[data-route=suche] .sres{margin-left:1rem}
 
 /* In-Seiten-Dialoge (ersetzen Browser-Dialoge) */
@@ -1946,7 +1946,7 @@ function focusEl(el) {
   el.focus({ preventScroll:true });
   const kp = el.closest('.sleft');
   if (kp) { /* starres Tastenfeld: nur das Panel selbst scrollt, nie die Seite */
-    const a = el.getBoundingClientRect(), b = kp.getBoundingClientRect(), m = 24;
+    const a = el.getBoundingClientRect(), b = kp.getBoundingClientRect(), m = 60;
     if (a.top < b.top + m) kp.scrollBy({ top:a.top - b.top - m, behavior:'smooth' });
     else if (a.bottom > b.bottom - m) kp.scrollBy({ top:a.bottom - b.bottom + m, behavior:'smooth' });
     return;
