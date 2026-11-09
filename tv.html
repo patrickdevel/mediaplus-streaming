@@ -571,6 +571,9 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
   transition:width .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s;
 }
 #side::-webkit-scrollbar{display:none}
+/* Fix: Einträge dürfen in der Flex-Spalte nicht schrumpfen, sonst werden die oberen (Logo, Suche, Startseite …) auf 0 gequetscht */
+#side>*{flex:none}
+#side{scroll-padding:2rem 0}
 #side:focus-within,#side:hover{
   width:var(--sw);
   box-shadow:4px 0 28px rgba(0,0,0,.25);
