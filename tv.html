@@ -545,6 +545,19 @@ main{padding:calc(var(--hf) + 1.5rem) var(--pad) 5rem}
 
 /* ---------- Hinweis ---------- */
 #toast{bottom:3rem;font-size:1.15rem;padding:.9rem 1.6rem;border-radius:.8rem}
+
+/* PLUS */
+.seenb{position:absolute;right:.5em;top:.5em;z-index:2;background:rgba(0,0,0,.72);color:#fff;font-size:.8em;padding:.15em .6em;border-radius:99px}
+.newb{background:var(--accent);color:#fff;font-size:.8em;padding:.15em .7em;border-radius:99px;font-weight:600}
+html.cw .grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--cw)),1fr))}
+video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(--cb,rgba(0,0,0,.6))}
+.player video{filter:brightness(var(--bright,1))}
+.lvchips{display:flex;flex-wrap:wrap;gap:.6em;padding:1em 0}
+.swatch{width:2.4em;height:2.4em;border-radius:50%;border:2px solid var(--border-2)}
+.swatch.on,.swatch:focus{outline:3px solid var(--fg);outline-offset:2px}
+.pmenu.plus{max-height:78%;overflow:auto}
+.qrbox{background:#fff;color:#000;padding:1em;border-radius:1em;display:block;width:min(20em,100%);margin:1em 0}
+.qrbox svg{width:100%;height:auto;display:block}
 </style>
 </head>
 <body>
@@ -1556,6 +1569,13 @@ function route() {
     case 'show':    Show(arg); break;
     case 'library': Library(arg); break;
     case 'browse':  Browse(arg); break;
+    case 'live':    PLUS.live(arg); break;
+    case 'subs':    PLUS.subsPage(); break;
+    case 'random':  PLUS.random(); break;
+    case 'plus':    PLUS.more(); break;
+    case 'access':  PLUS.access(arg); break;
+    case 'send':    PLUS.sendPage(); break;
+    case 'pair':    PLUS.pairPage(); break;
     default:        Browse('Neu');
   }
   document.body.classList.remove('overlay');
@@ -1795,6 +1815,308 @@ $('#side').addEventListener('click', ev => {
 });
 
 
+/* =========================================================
+   PLUS: Live-TV, Abos, Gesehen, Player-Extras, Kopplung, Daten
+   ========================================================= */
+const IS_TV = typeof TV !== 'undefined';
+const PLUS = (() => {
+  const LIVE = [  /* Streams hier anpassbar */
+    { id:'ard',          name:'Das Erste',    url:'https://mcdn.daserste.de/daserste/de/master.m3u8' },
+    { id:'tagesschau24', name:'tagesschau24', url:'https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8' },
+    { id:'one',          name:'ONE',          url:'https://mcdn.one.ard.de/ardone/hls/master.m3u8' },
+    { id:'ard-alpha',    name:'ARD alpha',    url:'https://mcdn.br.de/br/fs/ard_alpha/hls/de/master.m3u8' },
+    { id:'wdr',          name:'WDR',          url:'https://wdrfs247.akamaized.net/hls/live/681509/wdrfs247/index.m3u8' },
+    { id:'ndr',          name:'NDR',          url:'https://mcdn.ndr.de/ndr/hls/ndr_fs/ndr_hh/master.m3u8' },
+  ];
+  const COLORS = ['#0070f3', '#e5484d', '#30a46c', '#f5a623', '#8e4ec6'];
+  const now = () => Math.floor(Date.now() / 1000);
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const hd = t => h('div', { class:'page-h' }, h('h1', {}, t));
+  let cur = null, sleepT = 0, sleepMin = 0, wl = null, es = null;
+
+  /* ---------- Live-TV ---------- */
+  function live(arg) {
+    document.title = 'Live-TV – Media +';
+    let i = Math.max(0, LIVE.findIndex(c => c.id === arg)), hls = null;
+    const video = h('video', { playsinline:true, autoplay:true });
+    const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieser Livestream lässt sich hier nicht abspielen.'),
+      h('a', { class:'btn primary', href:'https://www.ardmediathek.de/live', target:'_blank', rel:'noopener noreferrer' }, icon('external'), 'Bei der ARD ansehen'));
+    const player = buildPlayer(video, perr), fail = () => perr.classList.add('show');
+    video.addEventListener('error', fail);
+    const btns = LIVE.map((c, k) => h('button', { class:'chip', type:'button', onclick:() => tune(k) }, (k + 1) + ' · ' + c.name));
+    function tune(k) {
+      i = (k + LIVE.length) % LIVE.length; const u = LIVE[i].url;
+      player.setTitle('LIVE · ' + LIVE[i].name); btns.forEach((b, j) => b.classList.toggle('active', j === i));
+      perr.classList.remove('show'); if (hls) { hls.destroy(); hls = null; }
+      if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = u; video.play().catch(() => {}); return; }
+      loadHls().then(() => {
+        if (!window.Hls || !Hls.isSupported()) return fail();
+        hls = new Hls(); hls.loadSource(u); hls.attachMedia(video);
+        hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) fail(); });
+        video.play().catch(() => {});
+      }).catch(fail);
+    }
+    cur = { player, tune, get i() { return i; } };
+    cleanups.push(() => { cur = null; if (hls) hls.destroy(); video.pause(); video.removeAttribute('src'); video.load(); });
+    main.append(h('div', { style:'max-width:1200px;margin:0 auto' }, player, h('div', { class:'lvchips' }, ...btns),
+      h('p', { style:'color:var(--fg-3);font-size:.9em' }, 'Zahlentasten 1–' + LIVE.length + ' oder ↑/↓ und CH+/CH− wechseln den Sender.')));
+    tune(i);
+    if (IS_TV) { TV.pending = false; setTimeout(() => player.focus(), 50); }
+  }
+
+  /* ---------- Abos ---------- */
+  const subs = () => store.get('subs', []), sk = (c, t) => c + '/' + t;
+  const isSub = (c, t) => subs().some(s => s.k === sk(c, t));
+  function toggleSub(c, t) {
+    let l = subs();
+    if (l.some(s => s.k === sk(c, t))) { store.set('subs', l.filter(s => s.k !== sk(c, t))); return false; }
+    l.push({ k:sk(c, t), ch:c, topic:t, seen:now() }); store.set('subs', l); return true;
+  }
+  const latest = async s => (await search({ channel:chanById(s.ch) || null, topic:s.topic, exact:s.topic, size:8 })).items;
+  async function refreshBadge() {
+    const ids = [];
+    for (const s of subs().slice(0, 12)) { try { (await latest(s)).forEach(x => { if (x.timestamp > s.seen) ids.push(x.id); }); } catch {} }
+    store.set('subNew', ids); markNav();
+  }
+  function subsPage() {
+    document.title = 'Abos – Media +'; main.append(hd('Abos'));
+    const l = subs(), tok = routeToken;
+    if (!l.length) return main.append(emptyBox('plus', 'Noch keine Abos. Öffne eine Sendung und tippe auf „Abonnieren“.'));
+    l.forEach(s => {
+      const c = chanById(s.ch) || { id:'', name:'ARD', short:'ARD', color:'#666' };
+      const nb = h('span', { class:'newb', hidden:true }), grid = h('div', { class:'grid' });
+      main.append(h('div', { class:'page-h', style:'padding:18px 0 8px' }, Avatar(c),
+        h('a', { href:'#/show/' + s.ch + '/' + encodeURIComponent(s.topic) }, h('h2', { style:'margin:0;font-size:1.2em' }, s.topic)), nb), grid);
+      latest(s).then(items => {
+        if (tok !== routeToken) return;
+        items.slice(0, 4).forEach(x => grid.append(Card(x)));
+        const n = items.filter(x => x.timestamp > s.seen).length;
+        if (n) { nb.hidden = false; nb.textContent = n + ' neu'; }
+        if (!items.length) grid.append(h('p', {}, 'Keine Folgen gefunden.'));
+      }).catch(() => {});
+    });
+    store.set('subNew', []); markNav();
+    const t = now(), all = subs(); all.forEach(s => { s.seen = t; }); setTimeout(() => store.set('subs', all), 4000);
+  }
+
+  /* ---------- Entdecken ---------- */
+  function access(arg) {
+    const V = { ad:['Audiodeskription', 'Audiodeskription'], dgs:['Gebärdensprache', 'Gebärdensprache'], ut:['Mit Untertitel', '(mit Untertitel'] };
+    const v = V[arg] || V.ad; document.title = v[0] + ' – Media +';
+    main.append(hd(v[0]), h('div', { class:'lvchips', style:'padding-top:0' },
+      ...Object.entries(V).map(([k, x]) => h('a', { class:'chip' + (x === v ? ' active' : ''), href:'#/access/' + k }, x[0]))));
+    const host = h('div'); main.append(host);
+    Feed(host, off => search({ text:v[1], min:300, offset:off }), { emptyText:'Dazu gibt es gerade nichts.' });
+  }
+  async function random() {
+    main.append(h('div', { class:'empty' }, h('div', {}, 'Überraschung wird gesucht …')));
+    const tok = routeToken, T = ['Spielfilm', 'Krimi', 'Komödie', 'Drama', 'Dokumentation', 'Tatort', 'Reportage', 'Kabarett'];
+    try {
+      const t = T[Math.floor(Math.random() * T.length)];
+      let r = await search({ text:t, min:2400, offset:Math.floor(Math.random() * 60), size:24 });
+      if (!r.items.length) r = await search({ text:t, min:2400, size:24 });
+      if (tok !== routeToken) return;
+      const e = r.items[Math.floor(Math.random() * r.items.length)];
+      if (e) { cache.set(e.id, e); location.replace('#/watch/' + encodeURIComponent(e.id)); } else toast('Nichts gefunden');
+    } catch { toast('Das hat nicht geklappt'); }
+  }
+
+  /* ---------- Daten / Optik ---------- */
+  const KEYS = ['hist', 'saved', 'prog', 'subs', 'seen', 'recent'], OBJ = { prog:1, seen:1 };
+  function exportData() {
+    const o = { v:1 }; KEYS.forEach(k => { o[k] = store.get(k, OBJ[k] ? {} : []); });
+    const a = h('a', { href:URL.createObjectURL(new Blob([JSON.stringify(o)], { type:'application/json' })), download:'media-plus-daten.json' });
+    document.body.append(a); a.click(); a.remove(); toast('Exportiert');
+  }
+  function importData(o) {
+    const arr = (k) => Array.isArray(o[k]) ? o[k] : [];
+    ['hist', 'saved'].forEach(k => { const a = store.get(k, []), ids = new Set(a.map(x => x.id)); store.set(k, [...a, ...arr(k).filter(x => x && x.id && !ids.has(x.id))].slice(0, 500)); });
+    const sb = subs(), ks = new Set(sb.map(x => x.k)); store.set('subs', [...sb, ...arr('subs').filter(x => x && x.k && !ks.has(x.k))]);
+    const p = store.get('prog', {}); Object.entries(o.prog || {}).forEach(([id, v]) => { if (!p[id] || p[id].t < v.t) p[id] = v; }); store.set('prog', p);
+    store.set('seen', { ...store.get('seen', {}), ...(o.seen || {}) });
+    store.set('recent', [...new Set([...store.get('recent', []), ...arr('recent')])].slice(0, 8));
+  }
+  function applyLook() {
+    const r = document.documentElement, f = store.get('cw', 1), ac = store.get('accent', '');
+    if (ac) r.style.setProperty('--accent', ac); else r.style.removeProperty('--accent');
+    r.style.setProperty('--cw', IS_TV ? (19 * f) + 'rem' : (280 * f) + 'px'); r.classList.toggle('cw', f !== 1);
+    const c = store.get('cue', {});
+    r.style.setProperty('--cs', c.size || 1); r.style.setProperty('--cb', c.bg || 'rgba(0,0,0,.6)'); r.style.setProperty('--cf', c.fg || '#fff');
+    r.style.setProperty('--bright', store.get('bright', 1));
+  }
+  function more() {
+    document.title = 'Mehr – Media +';
+    const sec = (t, ...k) => [h('div', { class:'side-h', style:'padding:20px 0 8px' }, t), h('div', { class:'lvchips', style:'padding:0' }, ...k)];
+    const lnk = (ic, l, href) => h('a', { class:'btn', href }, icon(ic), l);
+    const act = (l, fn, on) => h('button', { class:'btn' + (on ? ' primary' : ''), type:'button', onclick:fn }, l);
+    const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => {
+      try { importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
+    main.append(hd('Mehr'),
+      ...sec('Entdecken', lnk('tv', 'Live-TV', '#/live'), lnk('refresh', 'Überrasch mich', '#/random'), lnk('captions', 'Audiodeskription', '#/access/ad'),
+        lnk('captions', 'Gebärdensprache', '#/access/dgs'), lnk('captions', 'Mit Untertitel', '#/access/ut')),
+      ...sec('Kopplung Handy ↔ TV', IS_TV ? lnk('share', 'Mit Handy koppeln (QR)', '#/pair') : lnk('share', 'An TV senden', '#/send')),
+      ...sec('Akzentfarbe', act('Standard', () => { store.set('accent', ''); applyLook(); route(); }, !store.get('accent', '')),
+        ...COLORS.map(c => h('button', { class:'swatch' + (store.get('accent', '') === c ? ' on' : ''), type:'button', style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); route(); } }))),
+      ...sec('Kartengröße', ...[['Klein', .8], ['Mittel', 1], ['Groß', 1.3]].map(([l, f]) => act(l, () => { store.set('cw', f); applyLook(); route(); }, store.get('cw', 1) === f))),
+      ...sec('Daten (Merkliste, Verlauf, Abos)', act('Exportieren (JSON)', exportData), act('Importieren …', () => file.click()), file));
+  }
+
+  /* ---------- Kopplung Handy -> TV (über ntfy.sh) ---------- */
+  const sendTv = async d => {
+    const t = store.get('tvTopic'); if (!t) return toast('Erst mit dem TV koppeln');
+    try { await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) }); toast('An TV gesendet'); } catch { toast('Senden fehlgeschlagen'); }
+  };
+  function listen() {
+    const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
+    if (es) es.close(); es = new EventSource('https://ntfy.sh/' + t + '/sse');
+    es.onmessage = ev => { try {
+      const m = JSON.parse(ev.data); if (m.event !== 'message') return;
+      const d = JSON.parse(m.message);
+      if (d.t === 'q') location.hash = '#/search/' + encodeURIComponent(d.v);
+      else if (d.t === 'w') location.hash = '#/watch/' + encodeURIComponent(d.v);
+      toast('Vom Handy: ' + (d.n || d.v));
+    } catch {} };
+  }
+  function pairPage() {
+    document.title = 'Koppeln – Media +';
+    const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
+    const url = base + '?tv=' + store.get('pairTopic') + '#/send';
+    const box = h('div', { class:'qrbox' }, 'QR-Code wird erzeugt …');
+    new Promise((res, rej) => {
+      if (window.qrcode) return res();
+      const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      s.onload = res; s.onerror = rej; document.head.append(s);
+    }).then(() => { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag({ cellSize:6, margin:0 }); })
+      .catch(() => { box.textContent = 'QR-Code nicht verfügbar – Adresse unten am Handy öffnen.'; });
+    const inp = h('input', { class:'pick', type:'url', value:base, 'aria-label':'Adresse der Handy-Seite', style:'width:100%;max-width:40em' });
+    main.append(hd('Mit Handy koppeln'),
+      h('p', {}, 'Scanne den Code mit dem Handy. Dort kannst du Suchbegriffe eintippen oder Videos auf den TV schicken.'), box,
+      h('p', { style:'word-break:break-all;color:var(--fg-3)' }, url),
+      h('div', { class:'side-h', style:'padding:16px 0 6px' }, 'Adresse der Handy-Seite'), inp,
+      h('div', { style:'padding-top:10px' }, h('button', { class:'btn', type:'button', onclick:() => { store.set('mobileUrl', inp.value.trim()); route(); } }, 'Speichern')));
+    listen();
+  }
+  function sendPage() {
+    document.title = 'An TV senden – Media +';
+    const t = store.get('tvTopic'); main.append(hd('An TV senden'));
+    if (!t) return main.append(emptyBox('share', 'Nicht gekoppelt. Scanne am TV unter „Mehr → Mit Handy koppeln“ den QR-Code.'));
+    const inp = h('input', { class:'pick', type:'search', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'send', style:'width:100%;max-width:40em' });
+    const go = () => { const v = inp.value.trim(); if (v) { sendTv({ t:'q', v }); inp.value = ''; } };
+    inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
+    main.append(h('div', { style:'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class:'btn primary', type:'button', onclick:go }, 'Senden')),
+      h('div', { class:'side-h', style:'padding:20px 0 6px' }, 'Zuletzt angesehen'),
+      ...store.get('hist', []).slice(0, 12).map(x => h('div', { style:'display:flex;gap:8px;align-items:center;padding:6px 0' },
+        h('span', { style:'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, x.title),
+        h('button', { class:'btn', type:'button', onclick:() => sendTv({ t:'w', v:x.id, n:x.title }) }, icon('tv'), 'Auf TV'))));
+  }
+
+  /* ---------- Player-Extras ---------- */
+  function enhance(p) {
+    const v = p.querySelector('video'), row = p.querySelector('.prow'); if (!v || !row) return;
+    p.dataset.plus = 1;
+    const menu = h('div', { class:'pmenu plus', hidden:true }); p.append(menu);
+    const st = () => store.get('cue', {}), setSt = o => { store.set('cue', { ...st(), ...o }); applyLook(); };
+    const opt = (l, on, fn) => h('button', { class:'pmenu-btn' + (on ? ' on' : ''), type:'button', onclick:ev => {
+      const i = [...menu.querySelectorAll('.pmenu-btn')].indexOf(ev.currentTarget); fn(); draw(); const b = menu.querySelectorAll('.pmenu-btn')[i]; b && b.focus(); } }, l);
+    const grp = (t, ...o) => [h('div', { class:'pmenu-lbl' }, t), h('div', { class:'pmenu-opts' }, ...o), h('div', { class:'pmenu-div' })];
+    const draw = () => menu.replaceChildren(
+      ...grp('Sleep-Timer', ...[0, 15, 30, 60].map(m => opt(m ? m + ' Min' : 'Aus', sleepMin === m, () => {
+        clearTimeout(sleepT); sleepMin = m;
+        if (m) { sleepT = setTimeout(() => { v.pause(); sleepMin = 0; toast('Sleep-Timer: pausiert'); }, m * 60000); toast('Pausiert in ' + m + ' Min'); } }))),
+      ...grp('Untertitel-Größe', ...[['S', .8], ['M', 1], ['L', 1.4], ['XL', 1.9]].map(([l, x]) => opt(l, (st().size || 1) === x, () => setSt({ size:x })))),
+      ...grp('Untertitel-Hintergrund', ...[['Aus', 'transparent'], ['Halb', 'rgba(0,0,0,.6)'], ['Schwarz', '#000']].map(([l, x]) => opt(l, (st().bg || 'rgba(0,0,0,.6)') === x, () => setSt({ bg:x })))),
+      ...grp('Untertitel-Farbe', ...[['Weiß', '#fff'], ['Gelb', '#ff0'], ['Cyan', '#0ff']].map(([l, x]) => opt(l, (st().fg || '#fff') === x, () => setSt({ fg:x })))),
+      ...grp('Helligkeit', ...[['70 %', .7], ['100 %', 1], ['130 %', 1.3]].map(([l, x]) => opt(l, store.get('bright', 1) === x, () => { store.set('bright', x); applyLook(); }))),
+      ...((v.remote || v.webkitShowPlaybackTargetPicker) ? [h('div', { class:'pmenu-opts' }, opt('Cast / AirPlay …', false, () => { try { v.remote ? v.remote.prompt().catch(() => toast('Kein Gerät gefunden')) : v.webkitShowPlaybackTargetPicker(); } catch {} }))] : []));
+    const btn = h('button', { class:'pb', type:'button', 'aria-label':'Mehr', title:'Sleep-Timer, Untertitel-Stil, Cast' }, h('span', { style:'font-size:1.5em;line-height:1' }, '⋯'));
+    btn.onclick = ev => { ev.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) { draw(); setTimeout(() => { const b = menu.querySelector('.pmenu-btn.on') || menu.querySelector('.pmenu-btn'); b && b.focus(); }, 0); } };
+    document.addEventListener('pointerdown', ev => { if (!menu.hidden && !btn.contains(ev.target) && !menu.contains(ev.target)) menu.hidden = true; });
+    const fsb = row.querySelector('[aria-label^="Vollbild"]'); row.insertBefore(btn, fsb || null);
+    if (!IS_TV) {  /* Wischen im Vollbild: links Helligkeit, rechts Lautstärke */
+      let t0 = null;
+      v.addEventListener('touchstart', ev => { const t = ev.touches[0], r = v.getBoundingClientRect(); t0 = { y:t.clientY, left:t.clientX - r.left < r.width / 2, b:store.get('bright', 1), vol:v.volume }; }, { passive:true });
+      v.addEventListener('touchmove', ev => {
+        if (!t0 || document.fullscreenElement !== p) return;
+        const dy = (t0.y - ev.touches[0].clientY) / v.clientHeight; if (Math.abs(dy) < .03) return; ev.preventDefault();
+        if (t0.left) { store.set('bright', +clamp(t0.b + dy, .4, 1.6).toFixed(2)); applyLook(); } else { v.muted = false; v.volume = clamp(t0.vol + dy, 0, 1); }
+      }, { passive:false });
+    }
+  }
+  const lock = async () => { try { if (navigator.wakeLock && !wl) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } } catch {} };
+
+  /* ---------- Init ---------- */
+  function init() {
+    /* Sidebar */
+    const nav = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href }, icon(ic), label, cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
+    const home = document.querySelector('#side .nav[data-href="#/"]');
+    if (home) home.after(nav('tv', 'Live-TV', '#/live'), nav('plus', 'Abos', '#/subs', 'subNew'), nav('refresh', 'Überrasch mich', '#/random'), nav('settings', 'Mehr', '#/plus'));
+    /* Sprachsuche */
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend', '<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></symbol>');
+      $('#sbtn').before(h('button', { class:'icon-btn', type:'button', 'aria-label':'Sprachsuche', title:'Sprachsuche', onclick:() => {
+        try { const r = new SR(); r.lang = 'de-DE'; r.onresult = ev => { $('#q').value = ev.results[0][0].transcript; $('#sf').requestSubmit(); }; r.onerror = () => toast('Sprachsuche nicht möglich'); r.start(); toast('Sprich jetzt …'); } catch { toast('Sprachsuche nicht möglich'); } } }, icon('mic')));
+    }
+    /* PWA-Manifest (ohne Service Worker, siehe Hinweis) */
+    try {
+      const m = { name:'Media +', short_name:'Media +', start_url:location.href.split('#')[0], display:'standalone', background_color:'#000000', theme_color:'#000000',
+        icons:[{ src:document.querySelector('link[rel=icon]').href, sizes:'any', type:'image/svg+xml' }] };
+      document.head.append(h('link', { rel:'manifest', href:'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(m)) }));
+    } catch {}
+    applyLook();
+    /* Player, Aktionen */
+    new MutationObserver(() => {
+      main.querySelectorAll('.player:not([data-plus])').forEach(enhance);
+      main.querySelectorAll('.acts:not([data-plus])').forEach(a => {
+        a.dataset.plus = 1;
+        if (!IS_TV && store.get('tvTopic')) a.append(h('button', { class:'btn', type:'button', onclick:() => {
+          const id = decodeURIComponent(location.hash.split('/')[2] || ''); sendTv({ t:'w', v:id, n:document.title.replace(/ – Media \+$/, '') }); } }, icon('tv'), 'Auf TV'));
+      });
+    }).observe(main, { childList:true, subtree:true });
+    /* Wake Lock */
+    document.addEventListener('play', lock, true);
+    ['pause', 'ended'].forEach(t => document.addEventListener(t, () => { if (wl) wl.release().catch(() => {}); }, true));
+    document.addEventListener('visibilitychange', () => { const v = document.querySelector('video'); if (!document.hidden && v && !v.paused) lock(); });
+    /* Fernbedienung: Zahlen, ↑/↓, CH+/CH− */
+    document.addEventListener('keydown', ev => {
+      if (/input|textarea|select/i.test(ev.target.tagName) || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+      const k = ev.key, c = ev.keyCode, up = k === 'ChannelUp' || c === 427, dn = k === 'ChannelDown' || c === 428;
+      const eat = fn => { ev.preventDefault(); ev.stopImmediatePropagation(); fn(); };
+      if (cur) {
+        if (up || k === 'PageUp') return eat(() => cur.tune(cur.i + 1));
+        if (dn || k === 'PageDown') return eat(() => cur.tune(cur.i - 1));
+        if (/^[1-9]$/.test(k) && LIVE[k - 1]) return eat(() => cur.tune(k - 1));
+        if ((k === 'ArrowUp' || k === 'ArrowDown') && (ev.target === cur.player || ev.target === document.body)) return eat(() => cur.tune(cur.i + (k === 'ArrowUp' ? 1 : -1)));
+      } else if (up || dn) eat(() => scrollBy({ top:(up ? -1 : 1) * innerHeight * .8, behavior:'smooth' }));
+    }, true);
+    /* Kopplung */
+    if (IS_TV) { if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); }
+    else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); }
+    setTimeout(refreshBadge, 3000); setInterval(refreshBadge, 600000);
+  }
+
+  /* Wrapper um vorhandene Funktionen */
+  const _Card = Card; Card = (e, o) => {
+    const a = _Card(e, o);
+    if (store.get('seen', {})[e.id]) { const t = a.querySelector('.thumb'); if (t) t.append(h('span', { class:'seenb', title:'Gesehen' }, '✓ Gesehen')); }
+    return a;
+  };
+  const _sp = saveProg; saveProg = (e, pos, dur) => {
+    _sp(e, pos, dur); const d = dur || e.duration || 0;
+    if (d && (pos < 1 || pos / d > .92)) { const s = store.get('seen', {}), k = Object.keys(s); if (k.length > 800) delete s[k[0]]; s[e.id] = 1; store.set('seen', s); }
+  };
+  const _Show = Show; Show = arg => {
+    _Show(arg);
+    const i = arg.indexOf('/'), c = i < 0 ? '' : arg.slice(0, i), t = i < 0 ? arg : arg.slice(i + 1), bar = main.querySelector('.page-h'); if (!bar) return;
+    const b = h('button', { class:'btn', type:'button' });
+    const paint = () => { const on = isSub(c, t); b.className = 'btn' + (on ? ' on' : ''); b.replaceChildren(icon('bookmark'), on ? 'Abonniert' : 'Abonnieren'); };
+    b.onclick = () => { toast(toggleSub(c, t) ? 'Sendung abonniert' : 'Abo beendet'); paint(); };
+    paint(); bar.insertBefore(b, bar.querySelector('select'));
+    const l = subs(), s = l.find(x => x.k === sk(c, t)); if (s) { s.seen = now(); store.set('subs', l); setTimeout(refreshBadge, 800); }
+  };
+  return { live, subsPage, access, random, more, pairPage, sendPage, init };
+})();
+
 (function init() {
   $('#menu').append(icon('menu'));
   $('#logoMark').append(icon('plus', 'fill'));
@@ -1828,6 +2150,7 @@ $('#side').addEventListener('click', ev => {
   });
   window.addEventListener('hashchange', route);
   window.addEventListener('resize', applyPin);
+  PLUS.init();
   route();
 })();
 </script>
