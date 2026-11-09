@@ -653,24 +653,25 @@ body[data-route=suche]{--pad:3rem}
 
 /* Suchscreen: Tastatur bleibt starr stehen, nur die Ergebnisse rechts scrollen */
 body[data-route=suche] .sscreen{display:block}
-body[data-route=suche] .skb{
+body[data-route=suche] .sleft{
   position:fixed;top:3rem;left:calc(var(--sw-collapsed) + 3rem);width:31rem;
   max-height:calc(100vh - 6rem);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;z-index:30;
   transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s,left .28s cubic-bezier(.2,.8,.2,1);
 }
-body[data-route=suche] .skb::-webkit-scrollbar{display:none}
-.shist{margin-top:1.8rem}
-.shist h4{margin:0 0 .8rem;padding:0 .4rem;font-size:1.1rem;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-4);font-weight:600}
+body[data-route=suche] .sleft::-webkit-scrollbar{display:none}
+body[data-route=suche] .skb{position:static}
+.shist{margin-top:1.6rem;background:var(--bg-2);border:2px solid var(--border);border-radius:1.6rem;padding:1.6rem}
+.shist h4{margin:0 0 1rem;padding:0 .4rem;font-size:1.1rem;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-4);font-weight:600}
 .hitem{display:flex;align-items:center;gap:.9rem;width:100%;height:4.2rem;margin:0 0 .6rem;padding:0 1.2rem;border:0;border-radius:.9rem;background:var(--bg-3);color:var(--fg);font-size:1.4rem;font-weight:600;text-align:left;transition:transform .12s,background .12s,color .12s,box-shadow .12s}
 .hitem span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hitem .ic{width:1.8rem;height:1.8rem;flex:none}
 .hitem:focus{background:var(--fg);color:var(--bg);transform:scale(1.03);box-shadow:var(--fr);position:relative;z-index:4}
 .hitem.clr{justify-content:center;background:transparent;color:var(--fg-3);font-weight:500}
 body[data-route=suche] .sres{margin-left:34.4rem;transition:margin-left .3s cubic-bezier(.2,.8,.2,1)}
-body:has(#side:hover)[data-route=suche] .skb,
-body:has(#side:focus-within)[data-route=suche] .skb{left:calc(var(--sw) + 3rem)}
+body:has(#side:hover)[data-route=suche] .sleft,
+body:has(#side:focus-within)[data-route=suche] .sleft{left:calc(var(--sw) + 3rem)}
 /* Fokus im Ergebnisbereich: Tastatur schiebt sich bis auf einen schmalen Rand aus dem Bild */
-body.sk-away[data-route=suche] .skb{transform:translateX(-32rem);opacity:.5}
+body.sk-away[data-route=suche] .sleft{transform:translateX(-32rem);opacity:.5}
 body.sk-away[data-route=suche] .sres{margin-left:1rem}
 
 /* In-Seiten-Dialoge (ersetzen Browser-Dialoge) */
@@ -1182,7 +1183,7 @@ function SearchScreen(q0) {
       h('button', { class:'hitem clr', type:'button', onclick:async () => { if (await askConfirm('Suchverlauf wirklich leeren?')) { store.set('recent', []); drawHist(); const f = main.querySelector('.skb .key'); f && focusEl(f); } } }, 'Verlauf leeren'));
   };
   drawHist();
-  main.append(h('div', { class:'sscreen' }, h('div', { class:'skb' }, disp, kb, hist), res));
+  main.append(h('div', { class:'sscreen' }, h('div', { class:'sleft' }, h('div', { class:'skb' }, disp, kb), hist), res));
   draw();
   if (q) go(); else res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
 }
@@ -1943,7 +1944,7 @@ function canFocus(el) {
 function focusEl(el) {
   if (!el) return;
   el.focus({ preventScroll:true });
-  const kp = el.closest('.skb');
+  const kp = el.closest('.sleft');
   if (kp) { /* starres Tastenfeld: nur das Panel selbst scrollt, nie die Seite */
     const a = el.getBoundingClientRect(), b = kp.getBoundingClientRect(), m = 24;
     if (a.top < b.top + m) kp.scrollBy({ top:a.top - b.top - m, behavior:'smooth' });
@@ -1979,7 +1980,7 @@ function move(dir) {
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
     (!dlgEl || dlgEl.contains(el)) &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))) &&
-    !(cur && cur.closest('.skb') && (dir === 'up' || dir === 'down') && !el.closest('.skb')));
+    !(cur && cur.closest('.sleft') && (dir === 'up' || dir === 'down') && !el.closest('.sleft')));
 
   if (!cur) {
     const t = (TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : null) || initialTarget() || all.find(canFocus);
@@ -2081,7 +2082,13 @@ document.addEventListener('keydown', tvKey);
 document.addEventListener('focusin', ev => {
   if (document.body.dataset.route !== 'suche') return;
   const t = ev.target;
-  if (t.closest && t.closest('.skb')) document.body.classList.remove('sk-away');
+  if (t.closest && t.closest('.sleft')) {
+    document.body.classList.remove('sk-away');
+    if (t.classList && t.classList.contains('key')) { /* Buchstabe fokussiert: Ergebnisse rechts wieder ganz nach oben */
+      window.scrollTo({ top:0, behavior:'smooth' });
+      const sl = t.closest('.sleft'); if (sl.scrollTop) sl.scrollTo({ top:0, behavior:'smooth' });
+    }
+  }
   else if (main.contains(t)) document.body.classList.add('sk-away');
 });
 
