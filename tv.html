@@ -733,6 +733,25 @@ body[data-route=watch] .player{overflow:clip}
 .player video{filter:none;transition:none;transform:none}
 html.br .player video{filter:brightness(var(--bright,1))}
 .player.nexting video{filter:blur(18px) brightness(.55);transform:scale(1.08)}
+
+/* Hero-Karussell */
+.hero::after{display:none}
+.hero{touch-action:pan-y}
+.htrack{display:flex;width:100%;height:100%;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.hslide{flex:0 0 100%;min-width:0;position:relative;display:flex;align-items:flex-end}
+.hslide::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(to top,rgba(0,0,0,.92),rgba(0,0,0,.15) 55%,rgba(0,0,0,.05))}
+.hdots{position:absolute;right:16px;bottom:14px;z-index:3;display:flex;gap:6px}
+.hdots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:width .3s,background .3s}
+.hdots i.on{width:20px;border-radius:4px;background:#fff}
+.hdots{right:2.2rem;bottom:1.8rem;gap:.8rem}
+.hdots i{width:.9rem;height:.9rem}
+.hdots i.on{width:2.6rem;border-radius:.5rem}
+/* OSD */
+#osd{position:fixed;top:3.5rem;right:4rem;z-index:150;display:flex;align-items:center;gap:1.4rem;padding:1.4rem 2.4rem;border-radius:1.6rem;background:rgba(0,0,0,.85);color:#fff;font-size:1.9rem;font-weight:700;opacity:0;transform:translateY(-1rem);transition:opacity .2s,transform .2s;pointer-events:none}
+#osd.show{opacity:1;transform:none}
+#osd .ic{width:3rem;height:3rem}
+#osd .ob{width:14rem;height:.8rem;border-radius:.4rem;background:rgba(255,255,255,.25);overflow:hidden}
+#osd .ob i{display:block;height:100%;background:#fff}
 </style>
 </head>
 <body>
@@ -1247,20 +1266,55 @@ function loadHls() {
 function Hero() {
   const tok = routeToken, shell = h('section', { class:'hero' });
   main.prepend(shell);
-  search({ min:1800, size:24 }).then(r => {
+  search({ min:1800, size:30 }).then(r => {
     if (tok !== routeToken) return;
-    const e = r.items.find(x => (x.description || '').length > 80) || r.items[0];
-    if (!e) return shell.remove();
-    const ch = chanOf(e.channel);
-    const bg = h('div', { class:'hbg' });
-    if (store.get('thumbs', true)) { bg._e = e; thumbIO.observe(bg); }
-    shell.append(bg, h('div', { class:'hin' },
-      h('span', { class:'hbadge' }, Avatar(ch), ch.name),
-      h('h2', {}, e.title),
-      h('p', {}, (e.description || '').trim()),
-      h('div', { class:'hact' },
-        h('a', { class:'btn primary big', href:'#/watch/' + encodeURIComponent(e.id) }, icon('play', 'fill'), 'Jetzt ansehen'),
-        h('span', { class:'sub' }, [e.duration ? fmtDur(e.duration) : '', rel(e.timestamp)].filter(Boolean).join(' · ')))));
+    const good = r.items.filter(x => (x.description || '').length > 80);
+    const list = [], tops = new Set();
+    for (const x of [...good, ...r.items]) {
+      if (list.length >= 6) break;
+      const k = x.topic || x.title;
+      if (list.includes(x) || tops.has(k)) continue;
+      tops.add(k); list.push(x);
+    }
+    if (!list.length) return shell.remove();
+    const track = h('div', { class:'htrack' }), dots = h('div', { class:'hdots' });
+    const slides = list.map((e, i) => {
+      const ch = chanOf(e.channel), bg = h('div', { class:'hbg' });
+      if (store.get('thumbs', true)) bg._e = e;
+      const link = h('a', { class:'btn primary big', href:'#/watch/' + encodeURIComponent(e.id), tabindex:i ? '-1' : null }, icon('play', 'fill'), 'Jetzt ansehen');
+      dots.append(h('i', {}));
+      return { bg, link, el:h('div', { class:'hslide' }, bg, h('div', { class:'hin' },
+        h('span', { class:'hbadge' }, Avatar(ch), ch.name),
+        h('h2', {}, e.title),
+        h('p', {}, (e.description || '').trim()),
+        h('div', { class:'hact' }, link,
+          h('span', { class:'sub' }, [e.duration ? fmtDur(e.duration) : '', rel(e.timestamp)].filter(Boolean).join(' · '))))) };
+    });
+    slides.forEach(s => track.append(s.el));
+    shell.append(track, dots);
+    const n = slides.length;
+    if (store.get('thumbs', true)) { slides.slice().reverse().forEach(s => { if (s.bg._e) thumbQueue.push(s.bg); }); pump(); }
+    let idx = 0, timer = 0, x0 = 0, y0 = 0;
+    const go = i => {
+      const prev = slides[idx];
+      idx = ((i % n) + n) % n;
+      track.style.transform = `translateX(-${idx * 100}%)`;
+      Array.from(dots.children).forEach((d, k) => d.classList.toggle('on', k === idx));
+      slides.forEach((s, k) => s.link.setAttribute('tabindex', k === idx ? '0' : '-1'));
+      if (prev !== slides[idx] && prev.el.contains(document.activeElement)) slides[idx].link.focus({ preventScroll:true });
+    };
+    const start = () => {
+      clearInterval(timer);
+      if (n < 2) return;
+      timer = setInterval(() => { if (!shell.isConnected) return clearInterval(timer); if (!document.hidden) go(idx + 1); }, 6000);
+    };
+    shell.addEventListener('touchstart', ev => { x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY; }, { passive:true });
+    shell.addEventListener('touchend', ev => {
+      const dx = ev.changedTouches[0].clientX - x0, dy = ev.changedTouches[0].clientY - y0;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { go(idx + (dx < 0 ? 1 : -1)); start(); }
+    }, { passive:true });
+    cleanups.push(() => clearInterval(timer));
+    go(0); start();
   }).catch(() => shell.remove());
 }
 
@@ -2306,15 +2360,41 @@ const PLUS = (() => {
     const t = store.get('tvTopic'); if (!t) return toast('Erst mit dem TV koppeln');
     try { await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) }); toast('An TV gesendet'); } catch { toast('Senden fehlgeschlagen'); }
   };
+  let osdEl = null, osdT = 0;
+  function osd(ic, text, pct) {
+    if (!osdEl) { osdEl = h('div', { id:'osd', role:'status' }); document.body.append(osdEl); }
+    osdEl.replaceChildren(icon(ic), h('span', {}, text), pct == null ? null : h('span', { class:'ob' }, h('i', { style:'width:' + pct + '%' })));
+    osdEl.classList.add('show'); clearTimeout(osdT); osdT = setTimeout(() => osdEl.classList.remove('show'), 1700);
+  }
   function remoteKey(k) {
-    const M = { up:['ArrowUp',38], down:['ArrowDown',40], left:['ArrowLeft',37], right:['ArrowRight',39], back:['Escape',27],
-      pp:['MediaPlayPause',179], ff:['MediaFastForward',417], rew:['MediaRewind',412], next:['n',78], cc:['c',67], chup:['ChannelUp',427], chdn:['ChannelDown',428] };
+    const P = TV.player || (cur && cur.player), V = P && P.querySelector('video');
     const a = document.activeElement && document.activeElement !== document.body ? document.activeElement : document.body;
-    if (k === 'ok') { if (TV.player && a === TV.player) TV.player.toggle(); else if (a !== document.body && a.click) a.click(); return; }
-    if (k === 'mute') { if (TV.video) TV.video.muted = !TV.video.muted; return; }
-    if (k === 'vup' || k === 'vdn') { if (TV.video) { TV.video.muted = false; TV.video.volume = clamp(TV.video.volume + (k === 'vup' ? .1 : -.1), 0, 1); } return; }
-    const m = M[k]; if (!m) return;
-    a.dispatchEvent(new KeyboardEvent('keydown', { key:m[0], keyCode:m[1], bubbles:true, cancelable:true }));
+    const fire = (key, code) => a.dispatchEvent(new KeyboardEvent('keydown', { key, keyCode:code, bubbles:true, cancelable:true }));
+    const NAV = { up:['ArrowUp',38], down:['ArrowDown',40], left:['ArrowLeft',37], right:['ArrowRight',39], back:['Escape',27] };
+    if (NAV[k]) return fire(...NAV[k]);                         /* Navigation: keine Anzeige */
+    if (k === 'ok') {
+      if (P && a === P && V) { P.toggle(); setTimeout(() => osd(V.paused ? 'pause' : 'play', V.paused ? 'Pause' : 'Wiedergabe'), 80); }
+      else if (a !== document.body && a.click) a.click();
+      return;
+    }
+    if (k === 'pp') { if (P && V) { P.toggle(); setTimeout(() => osd(V.paused ? 'pause' : 'play', V.paused ? 'Pause' : 'Wiedergabe'), 80); } return; }
+    if (k === 'rew' || k === 'ff') { if (P && V) { P.skip(k === 'ff' ? 10 : -10); osd(k === 'ff' ? 'fwd' : 'back', k === 'ff' ? '+10 s' : '−10 s'); } return; }
+    if (k === 'mute') { if (V) { V.muted = !V.muted; osd(V.muted ? 'mute' : 'vol', V.muted ? 'Ton aus' : 'Ton an'); } return; }
+    if (k === 'vup' || k === 'vdn') {
+      if (V) { V.muted = false; V.volume = clamp(V.volume + (k === 'vup' ? .1 : -.1), 0, 1); const p = Math.round(V.volume * 100); osd(p ? 'vol' : 'mute', 'Lautstärke ' + p + ' %', p); }
+      return;
+    }
+    if (k === 'cc') {
+      fire('c', 67);
+      setTimeout(() => { const t = P && P.subTrack; osd('captions', t ? (t.track.mode === 'showing' ? 'Untertitel an' : 'Untertitel aus') : 'Keine Untertitel'); }, 80);
+      return;
+    }
+    if (k === 'chup' || k === 'chdn') {
+      fire(k === 'chup' ? 'ChannelUp' : 'ChannelDown', k === 'chup' ? 427 : 428);
+      if (cur) setTimeout(() => osd('tv', LIVE[cur.i].name), 100);
+      return;
+    }
+    if (k === 'next') fire('n', 78);
   }
   function listen() {
     const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
@@ -2345,6 +2425,8 @@ const PLUS = (() => {
     const inp = h('input', { class:'pick', type:'url', value:base, 'aria-label':'Adresse der Handy-Seite', style:'width:100%;max-width:40em' });
     main.append(hd('Mit Handy koppeln'),
       h('p', {}, 'Scanne den Code mit dem Handy. Dort kannst du Suchbegriffe eintippen oder Videos auf den TV schicken.'), box,
+      h('div', { class:'side-h', style:'padding:16px 0 6px' }, 'Oder Code am Handy eingeben (Mehr → TV koppeln)'),
+      h('div', { style:'font-size:2.6em;font-weight:700;letter-spacing:.14em;font-variant-numeric:tabular-nums;padding:4px 0 10px' }, store.get('pairTopic').slice(2).toUpperCase().replace(/(.{5})(?=.)/g, '$1 ')),
       h('p', { style:'word-break:break-all;color:var(--fg-3)' }, url),
       h('div', { class:'side-h', style:'padding:16px 0 6px' }, 'Adresse der Handy-Seite'), inp,
       h('div', { style:'padding-top:10px' }, h('button', { class:'btn', type:'button', onclick:() => { store.set('mobileUrl', inp.value.trim()); route(); } }, 'Speichern')));
