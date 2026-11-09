@@ -1509,12 +1509,14 @@ async function Watch(id) {
   const onAnyKey = () => { keyT = Date.now(); };
   document.addEventListener('keydown', onAnyKey, true);
   cleanups.push(() => document.removeEventListener('keydown', onAnyKey, true));
+  let resumes = 0, lastResume = 0;
   const autoResume = () => {
-    if (video.ended || !video.paused || keyT > loadT || Date.now() - loadT > 15000) return;
+    const n = Date.now();
+    if (video.ended || !video.paused || keyT > loadT || n - loadT > 8000 || resumes >= 3 || n - lastResume < 1500) return;
+    resumes++; lastResume = n;
     video.play().catch(err => { if (err && err.name === 'NotAllowedError') { video.muted = true; video.play().catch(() => {}); } });
   };
   ['pause', 'canplay', 'loadeddata', 'stalled'].forEach(t => video.addEventListener(t, () => setTimeout(autoResume, 60)));
-  { let n = 0; const wd = setInterval(() => { n++; autoResume(); if (n > 50 || keyT > loadT) clearInterval(wd); }, 300); cleanups.push(() => clearInterval(wd)); }
   const killHls = () => { if (hls) { hls.destroy(); hls = null; } };
   const fail = () => perr.classList.add('show');
   function load(url, t) {
@@ -2371,6 +2373,7 @@ const PLUS = (() => {
     osdEl.classList.add('show'); clearTimeout(osdT); osdT = setTimeout(() => osdEl.classList.remove('show'), 1700);
   }
   function remoteKey(k) {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key:'Shift', bubbles:true }));   /* zählt als Bedienung: kein Auto-Weiterspielen mehr */
     const P = TV.player || (cur && cur.player), V = P && P.querySelector('video');
     const a = document.activeElement && document.activeElement !== document.body ? document.activeElement : document.body;
     const fire = (key, code) => a.dispatchEvent(new KeyboardEvent('keydown', { key, keyCode:code, bubbles:true, cancelable:true }));
