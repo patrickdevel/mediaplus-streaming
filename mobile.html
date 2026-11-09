@@ -1639,16 +1639,46 @@ const PLUS = (() => {
     document.title = 'Fernbedienung – Media +';
     main.append(hd('Fernbedienung'));
     if (!store.get('tvTopic')) return main.append(emptyBox('share', 'Nicht gekoppelt. Scanne am TV unter „Mehr → Mit Handy koppeln“ den QR-Code.'));
-    const send = k => { if (navigator.vibrate) navigator.vibrate(12); fetch('https://ntfy.sh/' + store.get('tvTopic'), { method:'POST', body:JSON.stringify({ t:'k', v:k }) }).catch(() => toast('Senden fehlgeschlagen')); };
-    const b = (label, k) => h('button', { class:'btn' + (k === 'ok' ? ' primary' : ''), type:'button', style:'height:56px;font-size:17px;justify-content:center;touch-action:manipulation', onclick:() => send(k) }, label);
-    const g = (cols, ...c) => h('div', { style:'display:grid;gap:10px;grid-template-columns:repeat(' + cols + ',1fr);max-width:360px;margin:0 auto 14px' }, ...c);
+    if (!document.getElementById('i-arr-up')) document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend',
+      '<symbol id="i-arr-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>' +
+      '<symbol id="i-arr-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>' +
+      '<symbol id="i-arr-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>' +
+      '<symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8zM19 5v14"/></symbol>' +
+      '<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>' +
+      '<symbol id="i-plus2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>');
+    if (!document.getElementById('rcCss')) document.head.append(h('style', { id:'rcCss' },
+      '.rc{max-width:380px;margin:0 auto;display:grid;gap:12px}.rc .row{display:grid;gap:10px}' +
+      '.rb{display:grid;place-items:center;position:relative;height:60px;border-radius:18px;background:var(--bg-3);border:1px solid var(--border);color:var(--fg);font-weight:700;font-size:16px;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:transform .08s,background .08s}' +
+      '.rb:active{transform:scale(.93);background:var(--fg);color:var(--bg)}.rb .ic{width:26px;height:26px;stroke-width:2.2}' +
+      '.rb small{position:absolute;top:50%;left:50%;transform:translate(-50%,-34%);font-size:8px;font-weight:800;pointer-events:none}' +
+      '.rb.ok{background:var(--fg);color:var(--bg);border-radius:50%;height:auto;aspect-ratio:1}.rb.ok:active{opacity:.7;background:var(--fg);color:var(--bg)}' +
+      '.rb.wide{height:52px;font-size:15px;gap:10px;display:flex;justify-content:center;align-items:center}' +
+      '.rs{display:flex;gap:8px}.rs input{flex:1;min-width:0;height:48px;border-radius:14px;border:1px solid var(--border-2);background:var(--bg);padding:0 14px;font-size:16px;outline:0}'));
+    const send = d => { if (navigator.vibrate) navigator.vibrate(10); fetch('https://ntfy.sh/' + store.get('tvTopic'), { method:'POST', body:JSON.stringify(d) }).then(() => d.t === 'q' && toast('Suche am TV gestartet')).catch(() => toast('Senden fehlgeschlagen')); };
+    const key = k => send({ t:'k', v:k });
+    const b = (ic, k, o = {}) => h('button', { class:'rb' + (o.cls ? ' ' + o.cls : ''), type:'button', 'aria-label':o.label || k, onclick:() => key(k) },
+      icon(ic, o.fill ? 'fill' : ''), o.small ? h('small', {}, o.small) : null);
     const sp = () => h('span');
-    main.append(
-      g(3, sp(), b('▲', 'up'), sp(), b('◀', 'left'), b('OK', 'ok'), b('▶', 'right'), sp(), b('▼', 'down'), sp()),
-      g(3, b('Zurück', 'back'), b('⏯', 'pp'), b('Nächstes', 'next')),
-      g(2, b('⏪ 10 s', 'rew'), b('10 s ⏩', 'ff')),
-      g(3, b('Vol −', 'vdn'), b('Ton aus', 'mute'), b('Vol +', 'vup')),
-      g(3, b('CH −', 'chdn'), b('Untertitel', 'cc'), b('CH +', 'chup')));
+    const g = (cols, ...c) => h('div', { class:'row', style:'grid-template-columns:repeat(' + cols + ',1fr)' }, ...c);
+
+    /* Suche */
+    const inp = h('input', { type:'search', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'search', autocomplete:'off' });
+    const go = () => { const v = inp.value.trim(); if (v) { send({ t:'q', v }); inp.value = ''; inp.blur(); } };
+    inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
+    const srow = h('div', { class:'rs', hidden:true }, inp, h('button', { class:'btn primary', type:'button', style:'height:48px;padding:0 16px', onclick:go, 'aria-label':'Senden' }, icon('search')));
+    const sbtn = h('button', { class:'rb wide', type:'button', onclick:() => { srow.hidden = !srow.hidden; if (!srow.hidden) inp.focus(); } }, icon('search'), 'Suchen');
+
+    main.append(h('div', { class:'rc' },
+      sbtn, srow,
+      g(3, sp(), b('arr-up', 'up', { label:'Hoch' }), sp(),
+           b('left', 'left', { label:'Links' }), b('', 'ok', { cls:'ok', label:'OK' }), b('arr-right', 'right', { label:'Rechts' }),
+           sp(), b('arr-down', 'down', { label:'Runter' }), sp()),
+      g(3, b('left', 'back', { label:'Zurück' }), b('play', 'pp', { fill:true, label:'Play/Pause' }), b('skip', 'next', { label:'Nächstes' })),
+      g(2, b('back', 'rew', { small:'10', label:'10 s zurück' }), b('fwd', 'ff', { small:'10', label:'10 s vor' })),
+      g(3, b('minus', 'vdn', { label:'Leiser' }), b('mute', 'mute', { label:'Ton aus' }), b('plus2', 'vup', { label:'Lauter' })),
+      g(3, b('arr-down', 'chdn', { label:'Sender zurück' }), b('captions', 'cc', { label:'Untertitel' }), b('arr-up', 'chup', { label:'Sender vor' }))));
+    /* OK-Button: Text statt Icon */
+    const okb = main.querySelector('.rb.ok'); okb.replaceChildren('OK'); okb.style.fontSize = '20px';
   }
   function sendPage() {
     document.title = 'An TV senden – Media +';
