@@ -555,6 +555,50 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 .pmenu.plus{max-height:78%;overflow:auto}
 .qrbox{background:#fff;color:#000;padding:1em;border-radius:1em;display:block;width:min(20em,100%);margin:1em 0}
 .qrbox svg{width:100%;height:auto;display:block}
+
+/* ===== TV v3: feste Seitenleiste, kein Header, Vollbild-Player, Suchscreen ===== */
+:root{--sw:22rem;--hh:0rem;--hf:0rem}
+#side{top:0;bottom:0;transform:none!important;width:var(--sw);z-index:40;padding:2rem 1.4rem;box-shadow:none}
+#scrim{display:none!important}
+main{margin-left:var(--sw);padding:3rem var(--pad) 6rem}
+.chips{top:0}
+.side-logo{padding:0 1.2rem 1.6rem;margin:0;font-size:2.4rem}
+.side-logo .mark{width:4.4rem;height:4.4rem}
+.switch{font-size:1.15rem}
+.chgrid .nav{font-size:1.05rem;padding:0 .7rem;gap:.6rem;overflow:hidden;white-space:nowrap}
+.chgrid .nav .dot{width:2.4rem;height:2.4rem}
+.side-h{cursor:default}
+body[data-route=suche]{--pad:3rem}
+.sscreen{display:grid;grid-template-columns:27rem minmax(0,1fr);gap:3rem;align-items:start}
+.skb{position:sticky;top:3rem}
+.sdisp{height:5.6rem;border:2px solid var(--border-2);border-radius:1.2rem;background:var(--bg-3);display:flex;align-items:center;padding:0 1.6rem;font-size:2rem;font-weight:600;margin-bottom:1.4rem;overflow:hidden;white-space:nowrap}
+.sdisp.ph span{color:var(--fg-4);font-weight:500}
+.caret{width:.2rem;height:2.4rem;background:var(--fg);margin-left:.3rem;animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.keys{display:grid;grid-template-columns:repeat(7,1fr);gap:.6rem}
+.key{height:4.2rem;border-radius:.9rem;background:var(--bg-3);border:2px solid var(--border-2);font-size:1.5rem;font-weight:700;color:var(--fg);transition:transform .12s,background .12s,color .12s,box-shadow .12s}
+.key:focus{background:var(--fg);color:var(--bg);transform:scale(1.12);box-shadow:var(--fr);position:relative;z-index:4}
+.key.w2{grid-column:span 2}.key.w3{grid-column:span 3}.key.w7{grid-column:span 7}
+.key.go{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sres .grid{grid-template-columns:repeat(auto-fill,minmax(11rem,1fr));gap:2.6rem 1.6rem}
+.sres .txt h3{font-size:1.2rem}
+/* Player */
+body[data-route=watch]{overflow:hidden}
+body[data-route=watch] #side{display:none}
+body[data-route=watch] main{margin:0;padding:0;min-height:0}
+body[data-route=watch] .winfo,body[data-route=watch] .related{display:none}
+body[data-route=watch] .player{position:fixed;inset:0;width:100vw;height:100vh;aspect-ratio:auto;max-height:none;margin:0;border:0;border-radius:0;z-index:70}
+.pb[aria-label^="Vollbild"]{display:none!important}
+.ipanel,.mpanel{position:absolute;z-index:9;color:#fff}
+.ipanel[hidden],.mpanel[hidden]{display:none}
+.ipanel{left:6rem;right:6rem;bottom:15rem;max-height:60%;overflow:hidden;background:rgba(0,0,0,.88);border-radius:1.4rem;padding:2.6rem 3rem}
+.ipanel h2{margin:0 0 .6rem;font-size:2.6rem}
+.ipanel .im{color:#bbb;font-size:1.3rem;margin-bottom:1.2rem}
+.ipanel .it{font-size:1.5rem;line-height:1.6;white-space:pre-line}
+.mpanel{left:0;right:0;bottom:11rem;padding:4rem 4rem 1rem;background:linear-gradient(transparent,rgba(0,0,0,.93) 25%)}
+.mpanel .rowh{margin:0 0 .6rem;color:#fff}
+.mpanel .txt h3{color:#fff}.mpanel .txt p{color:#bbb}
+.player.panel .pc{opacity:1!important;transform:none!important;pointer-events:auto!important}
 </style>
 </head>
 <body>
@@ -589,18 +633,15 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
   <symbol id="i-fwd" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></symbol>
   <symbol id="i-full" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
   <symbol id="i-pip" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="15" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
   <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
 </svg>
 
-<header class="top">
-  <button class="icon-btn" id="menu" aria-label="Menü"></button>
-  <a class="logo" href="#/" aria-label="Startseite"><span class="mark" id="logoMark"></span><span class="t">Media<small>+</small></span></a>
-  <form class="search" id="sf" role="search">
-    <input id="q" type="search" placeholder="ARD-Mediathek durchsuchen…" autocomplete="off" enterkeyhint="search" aria-label="Suche">
-    <button type="submit" aria-label="Suchen" id="sbtn"></button>
-  </form>
-  <button class="icon-btn" id="theme" aria-label="Design wechseln"></button>
-</header>
+<div id="legacy" hidden>
+  <button id="menu"></button><span id="logoMark"></span><button id="theme"></button>
+  <form id="sf"><input id="q" type="search"><button type="submit" id="sbtn"></button></form>
+</div>
 
 <aside id="side" aria-label="Navigation"></aside>
 <div id="scrim"></div>
@@ -963,6 +1004,40 @@ function Search(q) {
   }, qc);
 }
 
+function SearchScreen(q0) {
+  document.title = 'Suche – Media +';
+  let q = q0 || '', t = 0;
+  const disp = h('div', { class:'sdisp' }), res = h('div', { class:'sres' });
+  const draw = () => { disp.replaceChildren(h('span', {}, q || 'Suchbegriff eingeben …'), h('i', { class:'caret' })); disp.classList.toggle('ph', !q); };
+  async function go(ff) {
+    clearTimeout(t);
+    const tok = routeToken, term = q.trim();
+    res.replaceChildren();
+    if (term.length < 2) { res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
+    remember(term);
+    const grid = h('div', { class:'grid' }, skeletons(6)); res.append(grid);
+    try {
+      const r = await search({ text:term, size:24 });
+      if (tok !== routeToken || term !== q.trim()) return;
+      if (!r.items.length) { res.replaceChildren(emptyBox('search', `Nichts gefunden für „${term}“.`)); return; }
+      grid.replaceChildren(); r.items.forEach(e => grid.append(Card(e)));
+      if (ff === true) focusEl(grid.querySelector('a'));
+    } catch (err) { if (tok === routeToken) res.replaceChildren(errorBox(err, go)); }
+  }
+  const edit = fn => { fn(); draw(); clearTimeout(t); t = setTimeout(go, 700); };
+  const key = (label, fn, cls = '') => h('button', { class:'key ' + cls, type:'button', onclick:fn }, label);
+  const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'Ä', 'Ö', 'Ü', 'ß', ...'0123456789'];
+  const kb = h('div', { class:'keys' },
+    letters.map(c => key(c, () => edit(() => { q += c.toLowerCase(); }))),
+    key('Leerzeichen', () => edit(() => { if (q && !q.endsWith(' ')) q += ' '; }), 'w3'),
+    key('⌫ Löschen', () => edit(() => { q = q.slice(0, -1); }), 'w2'),
+    key('Leeren', () => edit(() => { q = ''; }), 'w2'),
+    key('Suchen', () => go(true), 'w7 go'));
+  main.append(h('div', { class:'sscreen' }, h('div', { class:'skb' }, disp, kb), res));
+  draw();
+  if (q) go(); else res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
+}
+
 function Channel(id) {
   const ch = chanById(id);
   if (!ch) return main.append(emptyBox('tv', 'Sender nicht gefunden.'));
@@ -1060,7 +1135,7 @@ function buildPlayer(video, perr) {
 
   /* Seek */
   const buf = h('i', { class:'buf' }), fill = h('i', { class:'fill' }), knob = h('i', { class:'knob' }), tip = h('span', { class:'tip' }, '0:00');
-  const seek = h('div', { class:'seek', role:'slider', tabindex:'0', 'aria-label':'Position' }, h('div', { class:'trk' }, buf, fill), knob, tip);
+  const seek = h('div', { class:'seek', role:'slider', tabindex:'-1', 'aria-label':'Position' }, h('div', { class:'trk' }, buf, fill), knob, tip);
   const time = h('span', { class:'pt' }, '0:00 / 0:00');
   const paint = () => {
     const d = dur(), p = d ? video.currentTime / d * 100 : 0, b = video.buffered;
@@ -1202,6 +1277,18 @@ async function Watch(id) {
   const player = buildPlayer(video, perr);
   player.setTitle(e.title);
   TV.video = video; TV.player = player;
+  const infoBtn = h('button', { class:'pb', type:'button', 'aria-label':'Info', title:'Info' }, icon('info'));
+  const moreBtn = h('button', { class:'pb', type:'button', 'aria-label':'Weitere Inhalte', title:'Weitere Inhalte' }, icon('grid'));
+  const infoP = h('div', { class:'ipanel', hidden:true }, h('h2', {}, e.title),
+    h('div', { class:'im' }, [ch.name, e.topic, fullDate(e.timestamp), e.duration ? fmtDur(e.duration) : ''].filter(Boolean).join(' · ')),
+    h('div', { class:'it' }, (e.description || '').trim() || 'Keine Beschreibung vorhanden.'));
+  const moreRow = h('div', { class:'hrow' });
+  const moreP = h('div', { class:'mpanel', hidden:true }, h('h2', { class:'rowh' }, 'Weitere Inhalte'), moreRow);
+  player.closePanels = () => { infoP.hidden = moreP.hidden = true; player.classList.remove('panel'); };
+  const tp = p => { const open = p.hidden; player.closePanels(); if (open) { p.hidden = false; player.classList.add('panel'); if (p === moreP) setTimeout(() => focusEl(moreRow.querySelector('a') || moreBtn), 0); } };
+  infoBtn.onclick = () => tp(infoP); moreBtn.onclick = () => tp(moreP);
+  player.querySelector('[aria-label="Einstellungen"]').before(infoBtn, moreBtn);
+  player.append(infoP, moreP);
 
   /* Quellen */
   const srcs = [['HD', e.url_video_hd], ['SD', e.url_video], ['LQ', e.url_video_low]].filter(s => s[1]);
@@ -1450,9 +1537,9 @@ async function Watch(id) {
       if (e.topic) add((await search({ topic:e.topic, size:30, min:120 })).items);
       if (out.length < 8 && ch.id) add((await search({ channel:ch, size:20, min:600 })).items);
       if (tok !== routeToken) return;
-      out.slice(0, 30).forEach(x => relList.append(Card(x, { compact:true })));
+      out.slice(0, 30).forEach(x => moreRow.append(Card(x, { compact:true })));
       nextE = out[0] || null;
-      if (!out.length) relList.append(h('p', { style:'color:var(--fg-3);font-size:13px' }, 'Keine ähnlichen Videos gefunden.'));
+      if (!out.length) moreRow.append(h('p', { style:'color:var(--fg-3);font-size:13px' }, 'Keine ähnlichen Videos gefunden.'));
     } catch { if (tok === routeToken) relList.append(h('p', { style:'color:var(--fg-3);font-size:13px' }, 'Vorschläge konnten nicht geladen werden.')); }
   })();
 }
@@ -1561,7 +1648,8 @@ function route() {
   if (a !== 'search') $('#q').value = '';
   switch (a) {
     case 'watch':   Watch(arg); break;
-    case 'search':  Search(arg); break;
+    case 'search':
+    case 'suche':   document.body.dataset.route = 'suche'; SearchScreen(arg); break;
     case 'channel': Channel(arg); break;
     case 'show':    Show(arg); break;
     case 'library': Library(arg); break;
@@ -1595,11 +1683,12 @@ function buildSide() {
   const link = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href }, icon(ic), label, cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
   const sw = (label, key, def, fn) => h('label', { class:'switch' }, label, h('input', { type:'checkbox', checked:store.get(key, def), onchange:ev => { store.set(key, ev.target.checked); fn && fn(ev.target.checked); } }));
   const th = h('label', { class:'switch' }, 'Dunkles Design', h('input', { id:'thSw', type:'checkbox', checked:document.documentElement.dataset.theme === 'dark', onchange:ev => { const t = ev.target.checked ? 'dark' : 'light'; store.set('theme', t); setTheme(t); } }));
-  const open = store.get('chOpen', false);
+  const open = true;
   const grid = h('div', { class:'chgrid', hidden:!open }, CHANNELS.map(c => h('a', { class:'nav', href:'#/channel/' + c.id, 'data-href':'#/channel/' + c.id }, h('span', { class:'dot', style:`--c:${c.color}` }, c.short.length > 3 ? c.short.slice(0, 3) : c.short), c.name)));
-  const tog = h('button', { class:'side-h tg', 'aria-expanded':String(open), onclick:() => { const o = grid.hidden; grid.hidden = !o; tog.setAttribute('aria-expanded', String(o)); store.set('chOpen', o); } },
-    'Sender', h('span', { class:'n' }, CHANNELS.length), icon('chev'));
+  const tog = h('div', { class:'side-h' }, 'Sender', h('span', { class:'n' }, ' ' + CHANNELS.length));
   side.append(
+    h('div', { class:'logo side-logo' }, h('span', { class:'mark' }, icon('plus', 'fill')), h('span', { class:'t' }, 'Media', h('small', {}, '+'))),
+    link('search', 'Suche', '#/suche'),
     link('home', 'Startseite', '#/'),
     link('history', 'Verlauf', '#/library/history', 'hist'),
     link('bookmark', 'Gemerkt', '#/library/saved', 'saved'),
@@ -1640,8 +1729,13 @@ function showSugg() {
    TV: Fernbedienung – Pfeiltasten, OK, Zurück, Medien- und Farbtasten
    ========================================================= */
 const TV = { video:null, player:null, pending:true, last:null };
+const navSnd = new Audio('navigate.mp3'); navSnd.preload = 'auto';
+function navTick() {
+  if ([...document.querySelectorAll('video')].some(v => !v.paused && !v.ended)) return;
+  try { navSnd.currentTime = 0; navSnd.play().catch(() => {}); } catch {}
+}
 const FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex="0"]';
-const sideOpen = () => document.body.classList.contains('overlay');
+const sideOpen = () => false;
 
 function canFocus(el) {
   if (el.disabled || el.hidden || el.tabIndex < 0) return false;
@@ -1658,15 +1752,14 @@ function focusEl(el) {
   el.scrollIntoView({ block:fixedBar ? 'nearest' : 'center', inline:el.closest('.chips,.hrow') ? 'center' : 'nearest', behavior:'smooth' });
 }
 function initialTarget() {
+  if (document.body.dataset.route === 'suche') return $('main .key');
   if (document.body.dataset.route === 'watch') return $('.watch .player[tabindex]') || $('main .btn.primary');
   return $('main .chip.active, main .btn.primary, main .stile, main .card');
 }
 function openSide() {
-  document.body.classList.add('overlay');
-  setTimeout(() => focusEl($('#side .nav.active') || $('#side .nav')), 60);
+  focusEl($('#side .nav.active') || $('#side .nav'));
 }
 function closeSide() {
-  document.body.classList.remove('overlay');
   const t = TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : initialTarget();
   focusEl(t || $('#menu'));
 }
@@ -1676,10 +1769,9 @@ function move(dir) {
   const side = sideOpen();
   let cur = document.activeElement;
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
-  if (cur && (side ? !cur.closest('#side') : cur.closest('#side'))) cur = null;
   const scope = side ? $('#side') : document;
   const all = [...scope.querySelectorAll(FOCUSABLE)].filter(el =>
-    (side || !el.closest('#side')) && !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
+    !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))));
 
   if (!cur) {
@@ -1717,12 +1809,13 @@ function move(dir) {
   if (hit) { TV.colFor = hit[1]; return focusEl(hit[1]); }
 
   /* Rand erreicht */
-  if (side && dir === 'right') return closeSide();
-  if (!side && dir === 'left' && !cur.closest('.top,.pmenu,.player,.sticky-player,.sugg')) openSide();
+  if (cur.closest('#side') && dir === 'right') return closeSide();
+  if (dir === 'left' && !cur.closest('#side,.pmenu,.player,.sticky-player,.sugg')) openSide();
 }
 
 /* Zurück-Taste: erst Menüs schließen, dann eine Seite zurück */
 function goBack() {
+  if (TV.player && TV.player.classList.contains('panel')) { TV.player.closePanels(); focusEl(TV.player); return true; }
   const pm = document.querySelector('.pmenu:not([hidden])');
   if (pm) { pm.hidden = true; focusEl(TV.player && TV.player.querySelector('[aria-label="Einstellungen"]')); return true; }
   if (!sugg.hidden) { sugg.hidden = true; return true; }
@@ -1762,12 +1855,11 @@ function tvKey(ev) {
       if (dir === 'right' && t.selectionEnd < t.value.length) return;
     }
     ev.preventDefault();
-    if (p && (t === p || t.classList.contains('seek'))) {
-      const step = ev.repeat ? 30 : 10;
-      if (dir === 'left' || dir === 'right') return p.skip(dir === 'left' ? -step : step);
-      if (t === p && dir === 'up') return focusEl(p.querySelector('.prow .pb'));
-      if (t !== p && dir === 'down') return focusEl(p.querySelector('.prow .pb'));
+    if (p && t === p) {   /* links/rechts spult nicht mehr */
+      if (dir === 'up' || dir === 'down') { navTick(); return focusEl(p.querySelector('.prow .pb')); }
+      return;
     }
+    navTick();
     return move(dir);
   }
 
