@@ -556,32 +556,97 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 .qrbox{background:#fff;color:#000;padding:1em;border-radius:1em;display:block;width:min(20em,100%);margin:1em 0}
 .qrbox svg{width:100%;height:auto;display:block}
 
-/* ===== TV v3: feste Seitenleiste, kein Header, Vollbild-Player, Suchscreen ===== */
-:root{--sw:22rem;--hh:0rem;--hf:0rem}
-#side{top:0;bottom:0;transform:none!important;width:var(--sw);z-index:40;padding:2rem 1.4rem;box-shadow:none}
+/* ===== TV v3: feste, einklappbare Seitenleiste, kein Header, Vollbild-Player, Suchscreen ===== */
+:root{--sw:22rem;--hh:0rem;--hf:0rem;--sw-collapsed:6.5rem}
 #scrim{display:none!important}
-main{margin-left:var(--sw);padding:3rem var(--pad) 6rem}
 .chips{top:0}
+
+/* Sidebar: standardmäßig nur Icons, expandiert bei Fokus/Hover */
+#side{
+  top:0;bottom:0;transform:none!important;
+  width:var(--sw-collapsed);z-index:40;
+  padding:2rem 0;box-shadow:none;
+  overflow-x:hidden;overflow-y:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
+  transition:width .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s;
+}
+#side::-webkit-scrollbar{display:none}
+#side:focus-within,#side:hover{
+  width:var(--sw);
+  box-shadow:4px 0 28px rgba(0,0,0,.25);
+}
+
+/* Innenabstände (Sidebar hat horizontal 0 Padding) */
+#side>.side-logo{padding:0 1.6rem 1.6rem;margin:0;overflow:hidden;white-space:nowrap}
+#side>.nav{padding:0 1.4rem;gap:1.4rem;white-space:nowrap;overflow:hidden}
+#side>.nav .cnt{margin-left:auto;flex:none}
+#side>.side-h{padding:1.6rem 1.4rem .6rem;white-space:nowrap;overflow:hidden}
+#side>.chgrid{padding:.6rem 1.4rem 1rem}
+#side>.chgrid .nav{padding:0 1rem;gap:.8rem}
+#side>.chgrid .nav .lbl{overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+#side>.chgrid .nav .dot{flex:none}
+#side>.switch{padding:.6rem 1.4rem;gap:1rem;white-space:nowrap;overflow:hidden;justify-content:space-between}
+#side>.switch .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#side>.switch input{flex:none}
+#side>.side-foot{padding:1.8rem 1.4rem .6rem}
+#side>hr.sep{margin:.8rem 1.4rem}
+
+/* Kollabiert: Text weg, Icons zentriert */
+#side:not(:focus-within):not(:hover)>.side-logo{padding:0 0 1.6rem;gap:0;justify-content:center}
+#side:not(:focus-within):not(:hover)>.nav{padding:0;gap:0;justify-content:center}
+#side:not(:focus-within):not(:hover)>.side-logo .t,
+#side:not(:focus-within):not(:hover)>.nav .lbl,
+#side:not(:focus-within):not(:hover)>.nav .cnt,
+#side:not(:focus-within):not(:hover)>.side-h,
+#side:not(:focus-within):not(:hover)>.chgrid,
+#side:not(:focus-within):not(:hover)>.side-foot,
+#side:not(:focus-within):not(:hover)>.switch,
+#side:not(:focus-within):not(:hover)>hr.sep{
+  display:none;
+}
+
+/* Kanal-Liste einspaltig, damit Namen nicht abgeschnitten/gequetscht werden */
+.chgrid{grid-template-columns:1fr;gap:.6rem;padding:.6rem 0 1rem}
+
+/* Main schiebt sich mit, wenn die Sidebar aufklappt */
+main{
+  margin-left:var(--sw-collapsed);
+  padding:3rem var(--pad) 6rem;
+  min-height:100vh;
+  transition:margin-left .28s cubic-bezier(.2,.8,.2,1);
+}
+body:has(#side:hover) main,
+body:has(#side:focus-within) main{
+  margin-left:var(--sw);
+}
+
 .side-logo{padding:0 1.2rem 1.6rem;margin:0;font-size:2.4rem}
 .side-logo .mark{width:4.4rem;height:4.4rem}
 .switch{font-size:1.15rem}
 .chgrid .nav{font-size:1.05rem;padding:0 .7rem;gap:.6rem;overflow:hidden;white-space:nowrap}
 .chgrid .nav .dot{width:2.4rem;height:2.4rem}
 .side-h{cursor:default}
+
+/* Suchscreen */
 body[data-route=suche]{--pad:3rem}
-.sscreen{display:grid;grid-template-columns:27rem minmax(0,1fr);gap:3rem;align-items:start}
-.skb{position:sticky;top:3rem}
-.sdisp{height:5.6rem;border:2px solid var(--border-2);border-radius:1.2rem;background:var(--bg-3);display:flex;align-items:center;padding:0 1.6rem;font-size:2rem;font-weight:600;margin-bottom:1.4rem;overflow:hidden;white-space:nowrap}
+.sscreen{display:grid;grid-template-columns:31rem minmax(0,1fr);gap:3.4rem;align-items:start}
+.skb{position:sticky;top:3rem;background:var(--bg-2);border:2px solid var(--border);border-radius:1.6rem;padding:1.6rem}
+.sdisp{height:5.6rem;border:2px solid var(--border-2);border-radius:1.2rem;background:var(--bg);display:flex;align-items:center;padding:0 1.6rem;font-size:2rem;font-weight:600;margin-bottom:1.2rem;overflow:hidden;white-space:nowrap}
 .sdisp.ph span{color:var(--fg-4);font-weight:500}
 .caret{width:.2rem;height:2.4rem;background:var(--fg);margin-left:.3rem;animation:bl 1s steps(1) infinite}
 @keyframes bl{50%{opacity:0}}
 .keys{display:grid;grid-template-columns:repeat(7,1fr);gap:.6rem}
-.key{height:4.2rem;border-radius:.9rem;background:var(--bg-3);border:2px solid var(--border-2);font-size:1.5rem;font-weight:700;color:var(--fg);transition:transform .12s,background .12s,color .12s,box-shadow .12s}
+.key{height:4.2rem;border-radius:.9rem;background:var(--bg-3);border:0;font-size:1.5rem;font-weight:600;color:var(--fg);transition:transform .12s,background .12s,color .12s,box-shadow .12s}
 .key:focus{background:var(--fg);color:var(--bg);transform:scale(1.12);box-shadow:var(--fr);position:relative;z-index:4}
 .key.w2{grid-column:span 2}.key.w3{grid-column:span 3}.key.w7{grid-column:span 7}
 .key.go{background:var(--accent);color:#fff;border-color:var(--accent)}
-.sres .grid{grid-template-columns:repeat(auto-fill,minmax(11rem,1fr));gap:2.6rem 1.6rem}
-.sres .txt h3{font-size:1.2rem}
+.sres .grid{grid-template-columns:1fr;gap:1.6rem}
+.sres .rowh:first-child,.sres>.rowh{margin-top:0}
+.sres .card.compact,.sres .card.sk{display:grid;grid-template-columns:20rem minmax(0,1fr);gap:1.6rem;align-items:center}
+.sres .card.compact .meta,.sres .card.sk .meta{padding-top:0}
+.sres .txt h3{font-size:1.5rem}
+.sres .txt p{font-size:1.15rem}
+
 /* Player */
 body[data-route=watch]{overflow:hidden}
 body[data-route=watch] #side{display:none}
@@ -604,18 +669,6 @@ body[data-route=watch] .player{position:fixed;inset:0;width:100vw;height:100vh;a
 .player video{filter:none;transition:none;transform:none}
 html.br .player video{filter:brightness(var(--bright,1))}
 .player.nexting video{filter:blur(18px) brightness(.55);transform:scale(1.08)}
-/* Suche: ruhigeres Design */
-.sscreen{grid-template-columns:31rem minmax(0,1fr);gap:3.4rem}
-.skb{background:var(--bg-2);border:2px solid var(--border);border-radius:1.6rem;padding:1.6rem}
-.sdisp{background:var(--bg);margin-bottom:1.2rem}
-.key{background:var(--bg-3);border:0;font-weight:600}
-.key.go{margin-top:.6rem;height:4.8rem}
-.sres .rowh:first-child,.sres>.rowh{margin-top:0}
-.sres .grid{grid-template-columns:1fr;gap:1.6rem}
-.sres .card.compact,.sres .card.sk{display:grid;grid-template-columns:20rem minmax(0,1fr);gap:1.6rem;align-items:center}
-.sres .card.compact .meta,.sres .card.sk .meta{padding-top:0}
-.sres .txt h3{font-size:1.5rem}
-.sres .txt p{font-size:1.15rem}
 </style>
 </head>
 <body>
@@ -1050,12 +1103,12 @@ function SearchScreen(q0) {
   const edit = fn => { fn(); draw(); clearTimeout(t); t = setTimeout(go, 700); };
   const key = (label, fn, cls = '') => h('button', { class:'key ' + cls, type:'button', onclick:fn }, label);
   const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'Ä', 'Ö', 'Ü', 'ß', ...'0123456789'];
+  /* "Suchen"-Button entfernt – Suche startet automatisch nach 700 ms */
   const kb = h('div', { class:'keys' },
     letters.map(c => key(c, () => edit(() => { q += c.toLowerCase(); }))),
     key('Leerzeichen', () => edit(() => { if (q && !q.endsWith(' ')) q += ' '; }), 'w3'),
     key('⌫ Löschen', () => edit(() => { q = q.slice(0, -1); }), 'w2'),
-    key('Leeren', () => edit(() => { q = ''; }), 'w2'),
-    key('Suchen', () => go(true), 'w7 go'));
+    key('Leeren', () => edit(() => { q = ''; }), 'w2'));
   main.append(h('div', { class:'sscreen' }, h('div', { class:'skb' }, disp, kb), res));
   draw();
   if (q) go(); else res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
@@ -1464,10 +1517,10 @@ async function Watch(id) {
       acts),
     descBox);
 
-  /* Sticky Player */
+  /* Sticky Player (TV: inaktiv) */
   const sticky = h('div', { class:'sticky-player' },
     h('div', { class:'sticky-inner' },
-      h('div', { class:'sticky-video' }), // Container für das Video
+      h('div', { class:'sticky-video' }),
       h('div', { class:'sticky-info' },
         h('div', { class:'sticky-title' }, e.title),
         h('div', { class:'sticky-sub' }, ch.name + (e.topic ? ' · ' + e.topic : ''))
@@ -1481,7 +1534,6 @@ async function Watch(id) {
       h('div', { class:'sticky-progress-fill' })
     )
   );
-  /* TV: keine Mini-Leiste oben */
 
   const stickyVideoContainer = sticky.querySelector('.sticky-video');
   const stickySaveBtn = sticky.querySelector('.btn');
@@ -1515,8 +1567,6 @@ async function Watch(id) {
   const observer = new IntersectionObserver(([entry]) => {
     const show = !entry.isIntersecting;
     sticky.classList.toggle('show', show);
-    /* TV: keine kompakte Kopfleiste */
-    
     if (show) {
       if (video.parentElement !== stickyVideoContainer) {
         stickyVideoContainer.appendChild(video);
@@ -1529,8 +1579,6 @@ async function Watch(id) {
       }
     }
   }, { rootMargin: '-120px 0px 0px 0px', threshold: 0 });
-  
-  /* TV: Video bleibt immer im Player */
 
   cleanups.push(() => {
     observer.disconnect();
@@ -1690,7 +1738,7 @@ function route() {
   applyPin(); markNav(); sugg.hidden = true;
 }
 
-const wide = () => false; /* TV: Menü immer als Overlay */
+const wide = () => false; /* TV: Menü immer sichtbar */
 function applyPin() {
   const pin = wide() && document.body.dataset.route !== 'watch' && store.get('pin', true);
   document.body.classList.toggle('pinned', !!pin);
@@ -1703,11 +1751,18 @@ function markNav() {
 
 function buildSide() {
   const side = $('#side');
-  const link = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href }, icon(ic), label, cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
-  const sw = (label, key, def, fn) => h('label', { class:'switch' }, label, h('input', { type:'checkbox', checked:store.get(key, def), onchange:ev => { store.set(key, ev.target.checked); fn && fn(ev.target.checked); } }));
-  const th = h('label', { class:'switch' }, 'Dunkles Design', h('input', { id:'thSw', type:'checkbox', checked:document.documentElement.dataset.theme === 'dark', onchange:ev => { const t = ev.target.checked ? 'dark' : 'light'; store.set('theme', t); setTheme(t); } }));
+  const link = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href },
+    icon(ic), h('span', { class:'lbl' }, label), cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
+  const sw = (label, key, def, fn) => h('label', { class:'switch' },
+    h('span', { class:'lbl' }, label),
+    h('input', { type:'checkbox', checked:store.get(key, def), onchange:ev => { store.set(key, ev.target.checked); fn && fn(ev.target.checked); } }));
+  const th = h('label', { class:'switch' },
+    h('span', { class:'lbl' }, 'Dunkles Design'),
+    h('input', { id:'thSw', type:'checkbox', checked:document.documentElement.dataset.theme === 'dark', onchange:ev => { const t = ev.target.checked ? 'dark' : 'light'; store.set('theme', t); setTheme(t); } }));
   const open = true;
-  const grid = h('div', { class:'chgrid', hidden:!open }, CHANNELS.map(c => h('a', { class:'nav', href:'#/channel/' + c.id, 'data-href':'#/channel/' + c.id }, h('span', { class:'dot', style:`--c:${c.color}` }, c.short.length > 3 ? c.short.slice(0, 3) : c.short), c.name)));
+  const grid = h('div', { class:'chgrid', hidden:!open }, CHANNELS.map(c => h('a', { class:'nav', href:'#/channel/' + c.id, 'data-href':'#/channel/' + c.id },
+    h('span', { class:'dot', style:`--c:${c.color}` }, c.short.length > 3 ? c.short.slice(0, 3) : c.short),
+    h('span', { class:'lbl' }, c.name))));
   const tog = h('div', { class:'side-h' }, 'Sender', h('span', { class:'n' }, ' ' + CHANNELS.length));
   side.append(
     h('div', { class:'logo side-logo' }, h('span', { class:'mark' }, icon('plus', 'fill')), h('span', { class:'t' }, 'Media', h('small', {}, '+'))),
@@ -1719,7 +1774,7 @@ function buildSide() {
     h('hr', { class:'sep' }),
     h('div', { class:'side-h' }, 'Einstellungen'),
     th,
-    sw('Vorschaubilder', 'thumbs', true, () => { const o = sideOpen(); route(); if (o) document.body.classList.add('overlay'); }),
+    sw('Vorschaubilder', 'thumbs', true, () => { route(); }),
     sw('Nächstes Video automatisch', 'autonext', true),
     h('div', { class:'side-foot' }, 'Fernbedienung: Pfeile bewegen · OK wählt · Zurück geht zurück · Play/Pause · Rot Untertitel · Gelb Merken · Blau Nächstes', h('br'), 'Inoffizielles Projekt. Nicht mit der ARD verbunden. Inhalte stammen aus den ARD-Mediatheken, die Daten liefert MediathekViewWeb.'));
 }
@@ -1789,22 +1844,19 @@ function closeSide() {
 
 /* Nächstes fokussierbares Element in Pfeilrichtung finden */
 function move(dir) {
-  const side = sideOpen();
   let cur = document.activeElement;
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
-  const scope = side ? $('#side') : document;
-  const all = [...scope.querySelectorAll(FOCUSABLE)].filter(el =>
+  const all = [...document.querySelectorAll(FOCUSABLE)].filter(el =>
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))));
 
   if (!cur) {
-    const t = side ? all.find(canFocus)
-      : (TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : null) || initialTarget() || all.find(canFocus);
+    const t = (TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : null) || initialTarget() || all.find(canFocus);
     return focusEl(t);
   }
 
   const c = cur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, horiz = dir === 'left' || dir === 'right';
-  if (horiz || TV.colFor !== cur) TV.col = null;           /* beim Hoch/Runter die Spalte beibehalten */
+  if (horiz || TV.colFor !== cur) TV.col = null;
   if (!horiz && TV.col == null) TV.col = cx;
   const colX = TV.col == null ? cx : TV.col;
   const scored = [];
@@ -1817,7 +1869,7 @@ function move(dir) {
       if (dir === 'right' ? ex <= cx + 1 : ex >= cx - 1) continue;
       prim = dir === 'right' ? r.left - c.right : c.left - r.right;
       gap = Math.max(0, r.top - c.bottom, c.top - r.bottom);
-      if (gap > 8) continue;                       /* seitwärts nur in derselben Zeile */
+      if (gap > 8) continue;
       off = Math.abs(ey - cy);
     } else {
       if (dir === 'down' ? ey <= cy + 1 : ey >= cy - 1) continue;
@@ -1842,13 +1894,12 @@ function goBack() {
   const pm = document.querySelector('.pmenu:not([hidden])');
   if (pm) { pm.hidden = true; focusEl(TV.player && TV.player.querySelector('[aria-label="Einstellungen"]')); return true; }
   if (!sugg.hidden) { sugg.hidden = true; return true; }
-  if (sideOpen()) { closeSide(); return true; }
   const a = document.activeElement;
   if (TV.player && a && a !== TV.player && a.closest('.pc,.ptop')) { focusEl(TV.player); return true; }
   if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return true; }
   const hash = location.hash;
   if (hash && hash !== '#/' && hash !== '#') { if (history.length > 1) history.back(); else location.hash = '#/'; return true; }
-  return false;                                    /* Startseite: TV-Browser darf die App beenden */
+  return false;
 }
 
 function tvKey(ev) {
@@ -1873,12 +1924,12 @@ function tvKey(ev) {
 
   const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
   if (dir) {
-    if (t.tagName === 'INPUT' && !/^(checkbox|range|button)$/.test(t.type)) {   /* Cursor im Suchfeld nicht klauen */
+    if (t.tagName === 'INPUT' && !/^(checkbox|range|button)$/.test(t.type)) {
       if (dir === 'left' && t.selectionStart > 0) return;
       if (dir === 'right' && t.selectionEnd < t.value.length) return;
     }
     ev.preventDefault();
-    if (p && t === p) {   /* links/rechts spult nicht mehr */
+    if (p && t === p) {
       if (dir === 'up' || dir === 'down') { navTick(); return focusEl(p.querySelector('.prow .pb')); }
       return;
     }
@@ -1894,24 +1945,24 @@ function tvKey(ev) {
 }
 document.addEventListener('keydown', tvKey);
 
-/* TV: Touch-Gesten und Zoom komplett deaktivieren (nur Fernbedienung, Maus bleibt für Magic Remote) */
+/* TV: Touch-Gesten und Zoom komplett deaktivieren */
 const killEv = ev => { if (ev.cancelable) ev.preventDefault(); ev.stopImmediatePropagation(); };
 ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, killEv, { capture:true, passive:false }));
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, ev => { if (ev.pointerType === 'touch' || ev.pointerType === 'pen') killEv(ev); }, true));
 ['contextmenu', 'dragstart'].forEach(t => document.addEventListener(t, ev => ev.preventDefault()));
 document.documentElement.dataset.input = 'remote';
 
-/* Zuletzt fokussiertes Element im Inhalt merken (Rückkehr aus dem Menü) */
+/* Zuletzt fokussiertes Element im Inhalt merken */
 document.addEventListener('focusin', ev => { if (main.contains(ev.target)) TV.last = ev.target; });
 
-/* Nach jedem Seitenwechsel automatisch etwas fokussieren, sobald es da ist */
+/* Nach jedem Seitenwechsel automatisch etwas fokussieren */
 new MutationObserver(() => {
-  if (!TV.pending || sideOpen()) return;
+  if (!TV.pending) return;
   const t = initialTarget();
   if (t) { TV.pending = false; focusEl(t); }
 }).observe(main, { childList:true, subtree:true });
 
-/* Player-Einstellungsmenü: Fokus hineinsetzen und nach Auswahl behalten */
+/* Player-Einstellungsmenü: Fokus hineinsetzen */
 document.addEventListener('click', ev => {
   if (!TV.player || !ev.target.closest) return;
   const el = ev.target.closest('[aria-label="Einstellungen"],.pmenu-btn');
@@ -1925,12 +1976,10 @@ document.addEventListener('click', ev => {
   }, 0);
 }, true);
 
-/* Menü-Knopf und Menü-Links */
-$('#menu').addEventListener('click', () => setTimeout(() => { if (sideOpen()) focusEl($('#side .nav.active') || $('#side .nav')); }, 60));
+/* Menü-Links: nach Klick Fokus zurück in den Inhalt */
 $('#side').addEventListener('click', ev => {
   if (!ev.target.closest('a')) return;
   setTimeout(() => {
-    if (sideOpen()) return;
     const a = document.activeElement;
     if (!a || a === document.body || a.closest('#side')) focusEl(initialTarget());
   }, 150);
@@ -1942,7 +1991,7 @@ $('#side').addEventListener('click', ev => {
    ========================================================= */
 const IS_TV = typeof TV !== 'undefined';
 const PLUS = (() => {
-  const LIVE = [  /* Streams hier anpassbar */
+  const LIVE = [
     { id:'ard',          name:'Das Erste',    url:'https://mcdn.daserste.de/daserste/de/master.m3u8' },
     { id:'tagesschau24', name:'tagesschau24', url:'https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8' },
     { id:'one',          name:'ONE',          url:'https://mcdn.one.ard.de/ardone/hls/master.m3u8' },
@@ -2148,13 +2197,13 @@ const PLUS = (() => {
       ...grp('Untertitel-Größe', ...[['S', .8], ['M', 1], ['L', 1.4], ['XL', 1.9]].map(([l, x]) => opt(l, (st().size || 1) === x, () => setSt({ size:x })))),
       ...grp('Untertitel-Hintergrund', ...[['Aus', 'transparent'], ['Halb', 'rgba(0,0,0,.6)'], ['Schwarz', '#000']].map(([l, x]) => opt(l, (st().bg || 'rgba(0,0,0,.6)') === x, () => setSt({ bg:x })))),
       ...grp('Untertitel-Farbe', ...[['Weiß', '#fff'], ['Gelb', '#ff0'], ['Cyan', '#0ff']].map(([l, x]) => opt(l, (st().fg || '#fff') === x, () => setSt({ fg:x })))),
-      ...grp('Helligkeit', ...[['70 %', .7], ['100 %', 1], ['130 %', 1.3]].map(([l, x]) => opt(l, store.get('bright', 1) === x, () => { store.set('bright', x); applyLook(); }))),
+      ...grp('Helligkeit', ...[['70 %', .7], ['100 %', 1], ['130 %', 1.3]].map(([l, x]) => opt(l, store.get('bright', 1) === x, () => { store.set('bright', x); applyLook(); })))),
       ...((v.remote || v.webkitShowPlaybackTargetPicker) ? [h('div', { class:'pmenu-opts' }, opt('Cast / AirPlay …', false, () => { try { v.remote ? v.remote.prompt().catch(() => toast('Kein Gerät gefunden')) : v.webkitShowPlaybackTargetPicker(); } catch {} }))] : []));
     const btn = h('button', { class:'pb', type:'button', 'aria-label':'Mehr', title:'Sleep-Timer, Untertitel-Stil, Cast' }, h('span', { style:'font-size:1.5em;line-height:1' }, '⋯'));
     btn.onclick = ev => { ev.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) { draw(); setTimeout(() => { const b = menu.querySelector('.pmenu-btn.on') || menu.querySelector('.pmenu-btn'); b && b.focus(); }, 0); } };
     document.addEventListener('pointerdown', ev => { if (!menu.hidden && !btn.contains(ev.target) && !menu.contains(ev.target)) menu.hidden = true; });
     const fsb = row.querySelector('[aria-label^="Vollbild"]'); row.insertBefore(btn, fsb || null);
-    if (!IS_TV) {  /* Wischen im Vollbild: links Helligkeit, rechts Lautstärke */
+    if (!IS_TV) {
       let t0 = null;
       v.addEventListener('touchstart', ev => { const t = ev.touches[0], r = v.getBoundingClientRect(); t0 = { y:t.clientY, left:t.clientX - r.left < r.width / 2, b:store.get('bright', 1), vol:v.volume }; }, { passive:true });
       v.addEventListener('touchmove', ev => {
@@ -2169,17 +2218,19 @@ const PLUS = (() => {
   /* ---------- Init ---------- */
   function init() {
     /* Sidebar */
-    const nav = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href }, icon(ic), label, cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
+    const nav = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href },
+      icon(ic), h('span', { class:'lbl' }, label), cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
     const home = document.querySelector('#side .nav[data-href="#/"]');
     if (home) home.after(nav('tv', 'Live-TV', '#/live'), nav('plus', 'Abos', '#/subs', 'subNew'), nav('refresh', 'Überrasch mich', '#/random'), nav('settings', 'Mehr', '#/plus'));
     /* Sprachsuche */
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
       document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend', '<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></symbol>');
-      $('#sbtn').before(h('button', { class:'icon-btn', type:'button', 'aria-label':'Sprachsuche', title:'Sprachsuche', onclick:() => {
+      const btn = $('#sbtn');
+      if (btn) btn.before(h('button', { class:'icon-btn', type:'button', 'aria-label':'Sprachsuche', title:'Sprachsuche', onclick:() => {
         try { const r = new SR(); r.lang = 'de-DE'; r.onresult = ev => { $('#q').value = ev.results[0][0].transcript; $('#sf').requestSubmit(); }; r.onerror = () => toast('Sprachsuche nicht möglich'); r.start(); toast('Sprich jetzt …'); } catch { toast('Sprachsuche nicht möglich'); } } }, icon('mic')));
     }
-    /* PWA-Manifest (ohne Service Worker, siehe Hinweis) */
+    /* PWA-Manifest */
     try {
       const m = { name:'Media +', short_name:'Media +', start_url:location.href.split('#')[0], display:'standalone', background_color:'#000000', theme_color:'#000000',
         icons:[{ src:document.querySelector('link[rel=icon]').href, sizes:'any', type:'image/svg+xml' }] };
@@ -2247,10 +2298,7 @@ const PLUS = (() => {
   buildSide();
 
   $('#theme').onclick = () => { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; store.set('theme', t); setTheme(t); };
-  $('#menu').onclick = () => {
-    if (wide() && document.body.dataset.route !== 'watch') { store.set('pin', !store.get('pin', true)); applyPin(); }
-    else document.body.classList.toggle('overlay');
-  };
+  $('#menu').onclick = () => { document.body.classList.toggle('overlay'); };
   $('#scrim').onclick = () => document.body.classList.remove('overlay');
   $('#sbtn').addEventListener('click', ev => {
     const b = document.body.classList;
@@ -2260,7 +2308,7 @@ const PLUS = (() => {
   $('#q').addEventListener('input', showSugg);
   $('#q').addEventListener('blur', () => { setTimeout(() => { if (sugg.contains(document.activeElement)) return; sugg.hidden = true; document.body.classList.remove('sopen'); }, 200); });
   sugg.addEventListener('focusout', ev => { if (!sugg.contains(ev.relatedTarget) && ev.relatedTarget !== $('#q')) sugg.hidden = true; });
-  $('#side').addEventListener('click', ev => { if (ev.target.closest('a') && !wide()) document.body.classList.remove('overlay'); });
+  $('#side').addEventListener('click', ev => { if (ev.target.closest('a')) document.body.classList.remove('overlay'); });
   $('#sf').onsubmit = ev => {
     ev.preventDefault();
     const q = $('#q').value.trim();
