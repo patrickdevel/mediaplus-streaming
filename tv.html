@@ -706,7 +706,9 @@ body[data-route=watch] .player{position:fixed;inset:0;width:100vw;height:100vh;a
 .ipanel[hidden]{transform:translateY(2.5rem)}
 .mpanel[hidden]{transform:translateY(100%)}
 /* Weitere Inhalte: von unten, ohne schwarzen Balken */
-.mpanel{bottom:0;background:none;padding:4rem 4rem 3rem;text-shadow:0 .1rem .6rem rgba(0,0,0,.9)}
+.mpanel{top:0;bottom:0;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:rgba(0,0,0,.45);padding:4rem 4rem 3rem;text-shadow:0 .1rem .6rem rgba(0,0,0,.9)}
+.mpanel[hidden]{display:flex!important}
+body[data-route=watch] .player{overflow:clip}
 .mpanel .rowh{display:flex;align-items:center;gap:1.4rem;color:#fff}
 .pclose{width:4.4rem;height:4.4rem;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;flex:none;transition:transform .14s,background .14s,color .14s}
 .pclose .ic{width:2.2rem;height:2.2rem}
@@ -1922,6 +1924,11 @@ function focusEl(el) {
   if (!el) return;
   el.focus({ preventScroll:true });
   if (el.closest('.skb')) return; /* starres Tastenfeld: Seite nie mitscrollen */
+  if (el.closest('.player')) { /* Player ist fix: nur Reihen seitlich nachziehen, nie vertikal scrollen */
+    const row = el.closest('.hrow');
+    if (row) { const a = el.getBoundingClientRect(), b = row.getBoundingClientRect(); row.scrollBy({ left:(a.left + a.width / 2) - (b.left + b.width / 2), behavior:'smooth' }); }
+    return;
+  }
   const fixedBar = el.closest('.chips,.top,#side,.sticky-player,.pmenu,.sugg');
   el.scrollIntoView({ block:fixedBar ? 'nearest' : 'center', inline:el.closest('.chips,.hrow') ? 'center' : 'nearest', behavior:'smooth' });
 }
