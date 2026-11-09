@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#000000">
 <title>Media + TV – ARD-Videos</title>
@@ -363,188 +363,186 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* =========================================================
-   TV-MODUS – 10-Fuß-Oberfläche für Fernseher
-   Alle Größen in rem: 1rem = 20 px bei 1920 px Breite.
-   Die Oberfläche skaliert mit der Bildschirmbreite (1280 px, 1920 px, 4K).
+   TV-MODUS v2 – 10-Fuß-Oberfläche
+   1rem = ca. 22 px bei 1920 px Breite, skaliert mit dem Bildschirm.
+   Kein Cursor, keine Touch-Gesten, Bedienung nur per Fernbedienung.
    ========================================================= */
-html{font-size:clamp(10px,1.0417vw,44px);scrollbar-width:none}
+html{font-size:clamp(10px,1.15vw,48px);scrollbar-width:none;cursor:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
-:root{--hh:5rem;--hf:5rem;--sw:22rem;--pad:3.5rem;--r:.8rem;--r-sm:.6rem;--r-lg:1.2rem;--fg-3:#555;--fg-4:#777}
-:root[data-theme="dark"]{--fg-2:#e2e2e2;--fg-3:#b4b4b4;--fg-4:#939393;--border:#262626;--border-2:#434343}
-body{font-size:1rem;line-height:1.5}
-/* Leichtgewichtig für schwache TV-Chips: kein Blur */
+html,html *{cursor:none!important;-webkit-tap-highlight-color:transparent}
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none}
+body{-webkit-user-select:none;user-select:none;font-size:1rem;line-height:1.5;font-weight:500}
+input{-webkit-user-select:text;user-select:text;caret-color:var(--fg)}
+:root{--hh:6.5rem;--hf:6.5rem;--sw:30rem;--pad:4.5rem;--r:1rem;--r-sm:.8rem;--r-lg:1.6rem;--fg-3:#555;--fg-4:#777;
+  --glow:rgba(50,145,255,.55);--ring:var(--fg);--ringbg:var(--bg);
+  --fr:0 0 0 .22rem var(--ringbg),0 0 0 .5rem var(--ring),0 0 2.8rem .8rem var(--glow)}
+:root[data-theme="dark"]{--fg-2:#e6e6e6;--fg-3:#b8b8b8;--fg-4:#959595;--border:#2a2a2a;--border-2:#454545;--bg-3:#1a1a1a}
+.player,.pmenu,.nextup{--ring:#fff;--ringbg:#000}
 *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-/* Auf dem TV unnötig: Lautstärke (macht die Fernbedienung), Bild-in-Bild, Teilen, Download */
-.tv-hide,.vwrap,.pb.pipb{display:none!important}
+.tv-hide,.vwrap,.pb.pipb,.sticky-player,#mtab,.mini{display:none!important}
 
-/* ---------- Fokus: sehr deutlich ---------- */
-:focus{outline:none}
-a:focus,button:focus,select:focus,[tabindex]:focus{outline:.22rem solid var(--fg);outline-offset:.25rem}
-.player :focus{outline-color:#fff}
-.player:focus,.nav:focus,.search input:focus,.seek:focus{outline:none}
-.btn,.chip,.icon-btn,.pb{transition:transform .12s,background .12s,color .12s,border-color .12s}
-.btn:focus,.chip:focus,.icon-btn:focus{transform:scale(1.06);background:var(--fg);color:var(--bg)}
-.nav:focus{background:var(--fg);color:var(--bg)}
-.nav:focus .dot{box-shadow:0 0 0 .15rem var(--bg)}
-.pick:focus{border-color:var(--fg)}
-.side-h.tg:focus{background:var(--bg-3);color:var(--fg)}
-.switch:focus-within{outline:.2rem solid var(--fg);outline-offset:-.2rem;background:var(--bg-3)}
-.search:focus-within{border-color:var(--fg);box-shadow:0 0 0 .25rem var(--fg)}
+/* ---------- Fokus: Ring + leichtes Vergrößern ---------- */
+:focus{outline:none!important}
+.btn,.chip,.icon-btn,.pb,.nav,.pick,.stile,.card,.pmenu-btn,.desc button{transition:transform .14s,background .14s,color .14s,box-shadow .14s}
+.btn:focus,.chip:focus,.icon-btn:focus,.pick:focus,.desc button:focus{transform:scale(1.07);background:var(--fg);color:var(--bg);box-shadow:var(--fr);position:relative;z-index:4}
+.nav:focus{background:var(--fg);color:var(--bg);transform:translateX(.5rem);box-shadow:0 0 2rem .2rem var(--glow)}
+.nav:focus .dot{box-shadow:0 0 0 .2rem var(--bg)}
+.card:focus{transform:scale(1.05);position:relative;z-index:4}
+.card:focus .thumb{box-shadow:var(--fr);border-color:transparent}
+.card:focus .thumb .play{opacity:1}
+.card:focus h3{color:var(--fg)}
+.stile:focus{transform:scale(1.06);background:var(--bg-3);box-shadow:var(--fr);border-color:transparent;position:relative;z-index:4}
+.pb:focus{background:#fff;color:#000;transform:scale(1.14);box-shadow:0 0 2.4rem .4rem var(--glow)}
+.pmenu-btn:focus{background:#fff;color:#000;box-shadow:0 0 0 .3rem var(--glow)}
+.switch:focus-within{background:var(--bg-3);box-shadow:var(--fr)}
+.search:focus-within{border-color:var(--fg);box-shadow:var(--fr)}
+.side-h.tg:focus{background:var(--bg-3);color:var(--fg);box-shadow:var(--fr)}
+.seek:focus .trk{height:1rem;box-shadow:0 0 0 .3rem rgba(255,255,255,.6)}
+.seek:focus .knob{transform:scale(1.5)}
+.player:focus{box-shadow:none}
 
 /* ---------- Grundgrößen ---------- */
-.ic{width:1.5rem;height:1.5rem;stroke-width:2}
-.icon-btn{width:3.4rem;height:3.4rem;border-radius:.9rem}
-.btn{height:3.2rem;padding:0 1.5rem;font-size:1.05rem;gap:.7rem;border:2px solid var(--border-2);border-radius:.8rem;background:var(--bg-3);color:var(--fg)}
+.ic{width:2rem;height:2rem;stroke-width:2.1}
+.icon-btn{width:4.6rem;height:4.6rem;border-radius:1.2rem;background:var(--bg-3);color:var(--fg)}
+.btn{height:4.4rem;padding:0 2.1rem;font-size:1.4rem;gap:.9rem;border:2px solid var(--border-2);border-radius:1.1rem;background:var(--bg-3);color:var(--fg);font-weight:600}
 .btn.primary,.btn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .btn.primary:hover{opacity:1}
-.btn.big{height:4rem;padding:0 2.2rem;font-size:1.2rem;border-radius:1rem}
-.avatar{width:2.8rem;height:2.8rem;font-size:.8rem;border-radius:.6rem}
-.avatar.lg{width:5rem;height:5rem;font-size:1.2rem;border-radius:.9rem}
-.pick{height:3.2rem;padding:0 1.1rem;font-size:1.05rem;border:2px solid var(--border-2);border-radius:.8rem}
+.btn.big{height:5.4rem;padding:0 2.8rem;font-size:1.6rem;border-radius:1.4rem}
+.avatar{width:3.6rem;height:3.6rem;font-size:1rem;border-radius:.8rem}
+.avatar.lg{width:6.4rem;height:6.4rem;font-size:1.5rem;border-radius:1.2rem}
+.pick{height:4.4rem;padding:0 1.4rem;font-size:1.4rem;border:2px solid var(--border-2);border-radius:1.1rem;background:var(--bg-3);color:var(--fg)}
 
 /* ---------- Kopfleiste ---------- */
-.top{padding:0 var(--pad);gap:1rem}
-.logo{font-size:1.4rem;gap:.9rem;margin-right:.8rem}
-.logo .mark{width:2.8rem;height:2.8rem;border-radius:.7rem}
-.logo small{font-size:1.4rem}
-.logo span.t{max-width:12rem}
-.search{max-width:40rem;height:3.4rem;border:2px solid var(--border-2);border-radius:.9rem}
-.search input{font-size:1.1rem;padding:0 1.2rem}
-.search button{width:4rem;border-left:2px solid var(--border-2)}
+.top{padding:0 var(--pad);gap:1.4rem;border-bottom:2px solid var(--border)}
+.logo{font-size:1.9rem;gap:1.1rem;margin-right:1rem}
+.logo .mark{width:3.8rem;height:3.8rem;border-radius:.9rem}
+.logo small{font-size:1.9rem}
+.logo span.t{max-width:16rem}
+.search{max-width:52rem;height:4.6rem;border:2px solid var(--border-2);border-radius:1.2rem;background:var(--bg-3)}
+.search input{font-size:1.4rem;padding:0 1.5rem}
+.search button{width:5.2rem;border-left:2px solid var(--border-2)}
 
-/* ---------- Seitenmenü (immer als Overlay) ---------- */
-#side{width:var(--sw);padding:1.2rem}
-.nav{height:3.4rem;padding:0 1.1rem;font-size:1.1rem;gap:1.1rem;border-radius:.8rem;margin:.1rem 0}
-.nav .dot{width:2.2rem;height:2.2rem;font-size:.7rem;border-radius:.5rem}
-.nav .cnt{font-size:.95rem}
-.side-h{font-size:.85rem;padding:1.4rem 1.1rem .5rem}
-.side-h.tg .ic{width:1.1rem;height:1.1rem}
-.side-foot{font-size:.9rem;padding:1.4rem 1.1rem .4rem;line-height:1.6}
-.switch{min-height:3.4rem;padding:.5rem 1.1rem;font-size:1.05rem;border-radius:.8rem}
-.switch input{width:3.6rem;height:2rem}
-.switch input::after{top:.25rem;left:.25rem;width:1.5rem;height:1.5rem}
-.switch input:checked::after{left:1.85rem}
-.chgrid{gap:.6rem;padding:.4rem 0 .8rem}
-.chgrid .nav{height:3.2rem;font-size:1rem;padding:0 .8rem;gap:.7rem}
-.sugg{padding:.6rem;border-radius:1rem}
+/* ---------- Menü (immer Overlay) ---------- */
+#side{width:var(--sw);padding:1.6rem;border-right:2px solid var(--border-2)}
+#scrim{background:rgba(0,0,0,.75)}
+.nav{height:4.6rem;padding:0 1.4rem;font-size:1.4rem;gap:1.4rem;border-radius:1.1rem;margin:.2rem 0;font-weight:600}
+.nav .dot{width:2.8rem;height:2.8rem;font-size:.85rem;border-radius:.6rem}
+.nav .cnt{font-size:1.2rem}
+.side-h{font-size:1.05rem;padding:1.8rem 1.4rem .6rem}
+.side-h.tg .ic{width:1.4rem;height:1.4rem}
+.side-foot{font-size:1.05rem;padding:1.8rem 1.4rem .6rem;line-height:1.6}
+.switch{min-height:4.6rem;padding:.6rem 1.4rem;font-size:1.3rem;border-radius:1.1rem}
+.switch input{width:4.6rem;height:2.6rem}
+.switch input::after{top:.3rem;left:.3rem;width:2rem;height:2rem}
+.switch input:checked::after{left:2.3rem}
+.chgrid{gap:.8rem;padding:.6rem 0 1rem}
+.chgrid .nav{height:4.2rem;font-size:1.15rem;padding:0 1rem;gap:.8rem}
+.sugg{padding:.8rem;border-radius:1.2rem}
 
 /* ---------- Inhalt ---------- */
-main{padding:calc(var(--hf) + 1.5rem) var(--pad) 5rem}
-.chips{gap:.8rem;padding-block:1rem;padding-inline:var(--pad);margin:0 calc(-1*var(--pad))}
-.chip{padding:.6rem 1.5rem;font-size:1.05rem;border:2px solid var(--border-2)}
-.page-h{padding:1.6rem 0 1rem;gap:1.2rem}
-.page-h h1{font-size:2.2rem}
-.page-h .sub{font-size:1rem}
-.rowh{font-size:1.5rem;margin:2.2rem 0 1rem}
-.empty{padding:6rem 2rem;gap:1.2rem;font-size:1.2rem}
-.empty .ic{width:3.5rem;height:3.5rem}
+main{padding:calc(var(--hf) + 2rem) var(--pad) 6rem}
+.chips{gap:1rem;padding-block:1.4rem;padding-inline:var(--pad);margin:0 calc(-1*var(--pad))}
+.chip{padding:.9rem 2.1rem;font-size:1.35rem;border:2px solid var(--border-2);font-weight:600;background:var(--bg-3)}
+.chip.active{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.page-h{padding:2rem 0 1.4rem;gap:1.6rem}
+.page-h h1{font-size:3rem;line-height:1.15}
+.page-h .sub{font-size:1.3rem}
+.rowh{font-size:2rem;margin:3rem 0 1.2rem}
+.empty{padding:7rem 2rem;gap:1.6rem;font-size:1.6rem}
+.empty .ic{width:4.8rem;height:4.8rem}
+.empty div[style*="font-size"]{font-size:1.2rem!important}
+.related p[style]{font-size:1.4rem!important}
+main>div[style*="max-width:1200px"]{max-width:none!important}
+.lvchips{gap:1rem;padding:1.6rem 0}
+main p{font-size:1.3rem}
 
 /* Karten */
-.grid{grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:2.6rem 1.6rem;padding-top:.4rem}
-.card{transition:transform .15s}
-.card:focus{transform:scale(1.04);position:relative;z-index:3}
-.card:focus .thumb{outline:.28rem solid var(--fg);outline-offset:.2rem;border-color:transparent}
-.card:focus .thumb .play{opacity:1}
-.thumb{border-radius:.9rem;border-width:2px}
-.thumb .tmark{font-size:2.2rem;left:.8rem;bottom:.6rem}
-.thumb .play .ic{width:4rem;height:4rem;padding:1rem .8rem 1rem 1.2rem}
-.dur{right:.6rem;bottom:.6rem;font-size:.85rem;padding:.15rem .5rem;border-radius:.4rem}
-.bar{height:.35rem}
-.meta{gap:.9rem;padding-top:.9rem}
-.txt h3{font-size:1.2rem;line-height:1.35;margin:0 0 .3rem}
-.txt p{font-size:.95rem}
+.grid{grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:3.4rem 2rem;padding-top:1rem}
+.thumb{border-radius:1.2rem;border-width:2px}
+.thumb .tmark{font-size:2.8rem;left:1rem;bottom:.8rem}
+.thumb .play .ic{width:5.4rem;height:5.4rem;padding:1.3rem 1.1rem 1.3rem 1.5rem}
+.dur{right:.8rem;bottom:.8rem;font-size:1.1rem;padding:.2rem .7rem;border-radius:.5rem}
+.bar{height:.5rem}
+.meta{gap:1.1rem;padding-top:1.1rem}
+.txt h3{font-size:1.45rem;line-height:1.3;margin:0 0 .4rem}
+.txt p{font-size:1.15rem}
 .card.compact{display:block}
-.card.compact .meta{padding-top:.9rem}
-.card.compact .txt h3{font-size:1.2rem}
-.card.compact .thumb{border-radius:.9rem}
-.card.compact .thumb .tmark{font-size:2.2rem;left:.8rem;bottom:.6rem}
-.card.compact .thumb .play .ic{width:4rem;height:4rem;padding:1rem .8rem 1rem 1.2rem}
+.card.compact .meta{padding-top:1.1rem}
+.card.compact .txt h3{font-size:1.45rem}
+.card.compact .thumb{border-radius:1.2rem}
+.card.compact .thumb .tmark{font-size:2.8rem;left:1rem;bottom:.8rem}
+.card.compact .thumb .play .ic{width:5.4rem;height:5.4rem;padding:1.3rem 1.1rem 1.3rem 1.5rem}
+.seenb{font-size:1.05rem}
 
-/* Horizontale Reihen (Platz für Fokus-Rahmen und Vergrößerung) */
-.hrow{gap:1.6rem;padding:1.3rem 1.2rem 1.6rem;margin:-1.3rem -1.2rem -.4rem}
-.hrow .card{flex:0 0 22rem}
-.stile{flex:0 0 18rem;padding:1.3rem;gap:.4rem;border:2px solid var(--border);border-radius:1rem;transition:transform .15s}
-.stile:focus{transform:scale(1.05);background:var(--bg-3);border-color:var(--fg)}
-.stile b{font-size:1.15rem}
-.stile .sub{font-size:.95rem}
+/* Reihen (Platz für Fokus-Ring) */
+.hrow{gap:2.2rem;padding:2rem 2rem 2.4rem;margin:-2rem -2rem -.8rem}
+.hrow .card{flex:0 0 27rem}
+.stile{flex:0 0 23rem;padding:1.8rem;gap:.5rem;border:2px solid var(--border);border-radius:1.2rem}
+.stile b{font-size:1.5rem}
+.stile .sub{font-size:1.15rem}
 
 /* Hero */
-.hero{margin:0 0 2.2rem;max-height:27rem;border-radius:var(--r-lg)}
-.hin{padding:2.6rem 3rem;max-width:52rem}
-.hin h2{font-size:2.8rem;margin:1rem 0 .8rem}
-.hin p{font-size:1.15rem;margin:0 0 1.4rem;max-width:60ch}
-.hbadge{font-size:1rem;gap:.7rem;padding:.25rem 1rem .25rem .25rem}
-.hact{gap:1.2rem}
-.hact .sub{font-size:1rem}
+.hero{margin:0 0 3rem;max-height:36rem;border-radius:var(--r-lg)}
+.hin{padding:3.4rem 4rem;max-width:64rem}
+.hin h2{font-size:3.8rem;margin:1.2rem 0 1rem}
+.hin p{font-size:1.4rem;margin:0 0 1.8rem;max-width:56ch}
+.hbadge{font-size:1.25rem;gap:.8rem;padding:.3rem 1.2rem .3rem .3rem}
+.hact{gap:1.6rem}
+.hact .sub{font-size:1.25rem}
 
-/* ---------- Wiedergabeseite: Player füllt den Bildschirm ---------- */
-.watch{--pw:min(100%,calc((100vh - var(--hf) - 3rem)*16/9));grid-template-columns:minmax(0,1fr);gap:2rem;max-width:none;padding-top:0}
-.player{width:var(--pw);margin:0 auto;max-height:none;border-radius:var(--r-lg)}
+/* ---------- Wiedergabe ---------- */
+.watch{--pw:min(100%,calc((100vh - var(--hf) - 3rem)*16/9));grid-template-columns:minmax(0,1fr);gap:2.4rem;max-width:none;padding-top:0}
+.player{width:var(--pw,min(100%,calc((100vh - var(--hf) - 9rem)*16/9)));margin:0 auto;max-height:none;border-radius:var(--r-lg)}
 .player:fullscreen{border-radius:0;border:0}
 .winfo{width:var(--pw);margin:0 auto}
-.winfo h1{font-size:1.9rem;line-height:1.25;margin:1.2rem 0 1rem}
-.wrow{gap:1.2rem}
-.wrow .who{gap:1.1rem}
-.wrow .who b{font-size:1.2rem}
-.wrow .who span,.who .topic-link{font-size:1rem}
-.acts{gap:.9rem}
-.desc{margin-top:1.2rem;padding:1.1rem 1.5rem;border-radius:1rem}
-.desc .m{font-size:1rem}
-.desc .t{font-size:1.1rem;line-height:1.6}
-.desc button{font-size:1.05rem;margin-top:.8rem;padding:.55rem 1.1rem;border:2px solid var(--border-2);border-radius:.7rem}
-.related h2{font-size:1.4rem;margin:0 0 1rem}
-.related .list{grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:2.2rem 1.6rem}
+.winfo h1{font-size:2.6rem;line-height:1.25;margin:1.6rem 0 1.2rem}
+.wrow{gap:1.6rem}
+.wrow .who{gap:1.3rem}
+.wrow .who b{font-size:1.5rem}
+.wrow .who span,.who .topic-link{font-size:1.25rem}
+.acts{gap:1.1rem}
+.desc{margin-top:1.6rem;padding:1.5rem 2rem;border-radius:1.2rem}
+.desc .m{font-size:1.2rem}
+.desc .t{font-size:1.35rem;line-height:1.6}
+.desc button{font-size:1.3rem;margin-top:1rem;padding:.7rem 1.4rem;border:2px solid var(--border-2);border-radius:.9rem}
+.related h2{font-size:2rem;margin:0 0 1.2rem}
+.related .list{grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:3rem 2rem}
 
-/* ---------- Player-Steuerung ---------- */
-.perr{padding:2rem;gap:1.2rem}
-.perr .ic{width:3.5rem;height:3.5rem}
-.perr p{font-size:1.15rem;max-width:36rem}
-.pc{padding:5rem 2rem 1.2rem;gap:.4rem}
-.seek{height:2.2rem}
-.trk{height:.5rem;border-radius:.25rem}
-.seek:hover .trk,.seek.drag .trk{height:.6rem}
-.seek:focus .trk{height:.8rem;box-shadow:0 0 0 .2rem rgba(255,255,255,.55)}
-.knob{width:1.4rem;height:1.4rem;margin:-.7rem 0 0 -.7rem;transform:scale(1)}
-.seek:focus .knob{transform:scale(1.4)}
-.tip{bottom:2.6rem;font-size:.95rem;padding:.2rem .6rem}
-.prow{gap:.4rem}
-.pb{width:3.6rem;height:3.6rem}
-.pb:focus{background:#fff;color:#000;transform:scale(1.12)}
-.pb small{font-size:.75rem}
-.pt{padding:0 1rem;font-size:1.1rem}
-.big-play{width:7rem;height:7rem;margin:-3.5rem}
-.big-play .ic{width:2.8rem;height:2.8rem;margin-left:.3rem}
-.spin{width:4.5rem;height:4.5rem;margin:-2.25rem;border-width:.3rem}
-.ripple{font-size:1.5rem}
-.ptop{padding:1rem 1.5rem 3.5rem;gap:1rem}
-.ptop span{font-size:1.2rem}
-.pmenu{right:1.5rem;bottom:7.5rem;min-width:22rem;padding:.6rem;border-radius:1rem}
-.pmenu-lbl{font-size:.8rem;padding:.8rem 1rem .4rem}
-.pmenu-opts{gap:.4rem;padding:0 .4rem .6rem}
-.pmenu-btn{padding:.6rem 1.1rem;font-size:1.05rem;border-radius:.5rem}
-.pmenu-btn:focus{background:#fff;color:#000}
-.pmenu-div{margin:.4rem .6rem}
-.nextup{right:1.5rem;bottom:8rem;width:min(24rem,calc(100% - 3rem));padding:1.2rem;gap:.8rem;border-radius:1rem}
-.nextup small{font-size:.8rem}
-.nextup b{font-size:1.1rem}
-.nextup .r{gap:.8rem}
-.nextup .btn{height:3rem;font-size:1rem}
-.player.nexting .nextup{width:min(34rem,calc(100% - 3rem))}
-.player.nexting .nextup b{font-size:1.6rem}
+/* Player-Steuerung */
+.perr{padding:3rem;gap:1.6rem}
+.perr .ic{width:4.8rem;height:4.8rem}
+.perr p{font-size:1.5rem;max-width:44rem}
+.pc{padding:6rem 3rem 1.8rem;gap:.6rem}
+.seek{height:3rem}
+.trk{height:.7rem;border-radius:.35rem}
+.knob{width:1.9rem;height:1.9rem;margin:-.95rem 0 0 -.95rem;transform:scale(1)}
+.tip{bottom:3.4rem;font-size:1.25rem;padding:.3rem .9rem}
+.prow{gap:.6rem}
+.pb{width:5rem;height:5rem}
+.pb .ic{width:2.4rem;height:2.4rem}
+.pb small{font-size:1rem}
+.pt{padding:0 1.4rem;font-size:1.5rem}
+.big-play{width:9rem;height:9rem;margin:-4.5rem}
+.big-play .ic{width:3.6rem;height:3.6rem;margin-left:.4rem}
+.spin{width:6rem;height:6rem;margin:-3rem;border-width:.4rem}
+.ripple{font-size:2rem}
+.ptop{padding:1.4rem 2rem 4.5rem;gap:1.4rem}
+.ptop span{font-size:1.7rem}
+.pmenu{right:2rem;bottom:10rem;min-width:30rem;padding:.8rem;border-radius:1.4rem}
+.pmenu-lbl{font-size:1.05rem;padding:1rem 1.2rem .5rem}
+.pmenu-opts{gap:.5rem;padding:0 .6rem .8rem}
+.pmenu-btn{padding:.8rem 1.5rem;font-size:1.4rem;border-radius:.8rem}
+.pmenu-div{margin:.5rem .8rem}
+.nextup{right:2rem;bottom:10.5rem;width:min(32rem,calc(100% - 4rem));padding:1.6rem;gap:1rem;border-radius:1.4rem}
+.nextup small{font-size:1.05rem}
+.nextup b{font-size:1.45rem}
+.nextup .r{gap:1rem}
+.nextup .btn{height:4rem;font-size:1.25rem}
+.nextup .btn:focus{background:#fff;color:#000}
+.player.nexting .nextup{width:min(46rem,calc(100% - 4rem))}
+.player.nexting .nextup b{font-size:2.1rem}
 
-/* ---------- Mini-Leiste oben (Video läuft beim Stöbern weiter) ---------- */
-.sticky-player{display:none!important}
-.sticky-inner{height:6.5rem;padding:.6rem var(--pad);gap:1.5rem}
-.sticky-video{width:10.4rem;height:5.85rem;border-radius:.6rem}
-.sticky-title{font-size:1.2rem}
-.sticky-sub{font-size:.95rem}
-.sticky-actions{gap:.8rem}
-.sticky-actions .btn{height:3.4rem;font-size:1rem;padding:0 1.2rem}
-.sticky-actions .icon-btn{width:3.4rem;height:3.4rem;border:2px solid var(--border-2)}
-.sticky-progress{height:.3rem}
-
-/* ---------- Hinweis ---------- */
-#toast{bottom:3rem;font-size:1.15rem;padding:.9rem 1.6rem;border-radius:.8rem}
+#toast{bottom:4rem;font-size:1.6rem;padding:1.2rem 2.4rem;border-radius:1.1rem}
 
 /* PLUS */
 .seenb{position:absolute;right:.5em;top:.5em;z-index:2;background:rgba(0,0,0,.72);color:#fff;font-size:.8em;padding:.15em .6em;border-radius:99px}
@@ -552,9 +550,8 @@ main{padding:calc(var(--hf) + 1.5rem) var(--pad) 5rem}
 html.cw .grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--cw)),1fr))}
 video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(--cb,rgba(0,0,0,.6))}
 .player video{filter:brightness(var(--bright,1))}
-.lvchips{display:flex;flex-wrap:wrap;gap:.6em;padding:1em 0}
-.swatch{width:2.4em;height:2.4em;border-radius:50%;border:2px solid var(--border-2)}
-.swatch.on,.swatch:focus{outline:3px solid var(--fg);outline-offset:2px}
+.swatch{width:3.2rem;height:3.2rem;border-radius:50%;border:2px solid var(--border-2)}
+.swatch.on,.swatch:focus{outline:3px solid var(--fg)!important;outline-offset:3px}
 .pmenu.plus{max-height:78%;overflow:auto}
 .qrbox{background:#fff;color:#000;padding:1em;border-radius:1em;display:block;width:min(20em,100%);margin:1em 0}
 .qrbox svg{width:100%;height:auto;display:block}
@@ -1692,6 +1689,9 @@ function move(dir) {
   }
 
   const c = cur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, horiz = dir === 'left' || dir === 'right';
+  if (horiz || TV.colFor !== cur) TV.col = null;           /* beim Hoch/Runter die Spalte beibehalten */
+  if (!horiz && TV.col == null) TV.col = cx;
+  const colX = TV.col == null ? cx : TV.col;
   const scored = [];
   for (const el of all) {
     const r = el.getBoundingClientRect();
@@ -1708,13 +1708,13 @@ function move(dir) {
       if (dir === 'down' ? ey <= cy + 1 : ey >= cy - 1) continue;
       prim = dir === 'down' ? r.top - c.bottom : c.top - r.bottom;
       gap = Math.max(0, r.left - c.right, c.left - r.right);
-      off = Math.abs(ex - cx);
+      off = Math.abs(ex - colX);
     }
     scored.push([Math.max(0, prim) + gap * 3 + off * .5 + (gap === 0 ? 0 : 1000), el]);
   }
   scored.sort((a, b) => a[0] - b[0]);
   const hit = scored.find(s => canFocus(s[1]));
-  if (hit) return focusEl(hit[1]);
+  if (hit) { TV.colFor = hit[1]; return focusEl(hit[1]); }
 
   /* Rand erreicht */
   if (side && dir === 'right') return closeSide();
@@ -1778,6 +1778,13 @@ function tvKey(ev) {
   }
 }
 document.addEventListener('keydown', tvKey);
+
+/* TV: Touch-Gesten und Zoom komplett deaktivieren (nur Fernbedienung, Maus bleibt für Magic Remote) */
+const killEv = ev => { if (ev.cancelable) ev.preventDefault(); ev.stopImmediatePropagation(); };
+['touchstart', 'touchmove', 'touchend', 'touchcancel', 'gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, killEv, { capture:true, passive:false }));
+['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, ev => { if (ev.pointerType === 'touch' || ev.pointerType === 'pen') killEv(ev); }, true));
+['contextmenu', 'dragstart'].forEach(t => document.addEventListener(t, ev => ev.preventDefault()));
+document.documentElement.dataset.input = 'remote';
 
 /* Zuletzt fokussiertes Element im Inhalt merken (Rückkehr aus dem Menü) */
 document.addEventListener('focusin', ev => { if (main.contains(ev.target)) TV.last = ev.target; });
