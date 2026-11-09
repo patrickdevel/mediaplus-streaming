@@ -741,7 +741,7 @@ const CHANNELS = [
   { id:'swr',          name:'SWR',          short:'SWR', color:'#1b66b3', q:['SWR'],              re:/^swr$/i },
   { id:'wdr',          name:'WDR',          short:'WDR', color:'#1a5fa8', q:['WDR'],              re:/^wdr$/i },
 ];
-const ALL_Q = [...new Set(CHANNELS.flatMap(c => c.q))];
+const ALL_Q = Array.from(new Set(CHANNELS.flatMap(c => c.q)));
 const isArd = ch => CHANNELS.some(c => c.re.test((ch || '').trim()));
 const chanOf = name => CHANNELS.find(c => c.re.test((name || '').trim())) || { id:'', name:name || 'ARD', short:(name || 'ARD').slice(0,3), color:'#666', q:[], re:/./ };
 const chanById = id => CHANNELS.find(c => c.id === id);
@@ -999,7 +999,7 @@ function groupShows(items, q) {
     const k = (e.channel || '') + '|' + e.topic, x = m.get(k) || { topic:e.topic, ch:chanOf(e.channel), n:0, nt:norm(e.topic) };
     x.n++; m.set(k, x);
   }
-  let l = [...m.values()];
+  let l = Array.from(m.values());
   if (words.length) l = l.filter(x => words.every(w => x.nt.includes(w)));
   const rank = x => x.nt === nq ? 0 : x.nt.startsWith(nq) ? 1 : 2;
   return l.sort((a, b) => rank(a) - rank(b) || b.n - a.n).slice(0, 14);
@@ -1102,7 +1102,7 @@ function SearchScreen(q0) {
   }
   const edit = fn => { fn(); draw(); clearTimeout(t); t = setTimeout(go, 700); };
   const key = (label, fn, cls = '') => h('button', { class:'key ' + cls, type:'button', onclick:fn }, label);
-  const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'Ä', 'Ö', 'Ü', 'ß', ...'0123456789'];
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß0123456789'.split('');
   /* "Suchen"-Button entfernt – Suche startet automatisch nach 700 ms */
   const kb = h('div', { class:'keys' },
     letters.map(c => key(c, () => edit(() => { q += c.toLowerCase(); }))),
@@ -1141,7 +1141,7 @@ function Library(tab) {
 function ttml2vtt(x) {
   const d = new DOMParser().parseFromString(x, 'application/xml');
   if (d.querySelector('parsererror')) return null;
-  const ps = [...d.getElementsByTagNameNS('*', 'p')];
+  const ps = Array.from(d.getElementsByTagNameNS('*', 'p'));
   const tt = s => {
     if (!s) return NaN;
     if (/ms$/.test(s)) return parseFloat(s) / 1000;
@@ -1738,7 +1738,7 @@ function route() {
   applyPin(); markNav(); sugg.hidden = true;
 }
 
-const wide = () => false; /* TV: Menü immer sichtbar */
+const wide = () => false;
 function applyPin() {
   const pin = wide() && document.body.dataset.route !== 'watch' && store.get('pin', true);
   document.body.classList.toggle('pinned', !!pin);
@@ -1846,7 +1846,7 @@ function closeSide() {
 function move(dir) {
   let cur = document.activeElement;
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
-  const all = [...document.querySelectorAll(FOCUSABLE)].filter(el =>
+  const all = Array.from(document.querySelectorAll(FOCUSABLE)).filter(el =>
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))));
 
@@ -1967,7 +1967,7 @@ document.addEventListener('click', ev => {
   if (!TV.player || !ev.target.closest) return;
   const el = ev.target.closest('[aria-label="Einstellungen"],.pmenu-btn');
   if (!el) return;
-  const idx = el.classList.contains('pmenu-btn') ? [...TV.player.querySelectorAll('.pmenu-btn')].indexOf(el) : -1;
+  const idx = el.classList.contains('pmenu-btn') ? Array.from(TV.player.querySelectorAll('.pmenu-btn')).indexOf(el) : -1;
   setTimeout(() => {
     const pm = TV.player && TV.player.querySelector('.pmenu');
     if (!pm || pm.hidden) return;
@@ -2074,8 +2074,8 @@ const PLUS = (() => {
   function access(arg) {
     const V = { ad:['Audiodeskription', 'Audiodeskription'], dgs:['Gebärdensprache', 'Gebärdensprache'], ut:['Mit Untertitel', '(mit Untertitel'] };
     const v = V[arg] || V.ad; document.title = v[0] + ' – Media +';
-    main.append(hd(v[0]), h('div', { class:'lvchips', style:'padding-top:0' },
-      ...Object.entries(V).map(([k, x]) => h('a', { class:'chip' + (x === v ? ' active' : ''), href:'#/access/' + k }, x[0]))));
+    const chips = Object.entries(V).map(([k, x]) => h('a', { class:'chip' + (x === v ? ' active' : ''), href:'#/access/' + k }, x[0]));
+    main.append(hd(v[0]), h('div', { class:'lvchips', style:'padding-top:0' }, ...chips));
     const host = h('div'); main.append(host);
     Feed(host, off => search({ text:v[1], min:300, offset:off }), { emptyText:'Dazu gibt es gerade nichts.' });
   }
@@ -2117,19 +2117,31 @@ const PLUS = (() => {
   }
   function more() {
     document.title = 'Mehr – Media +';
-    const sec = (t, ...k) => [h('div', { class:'side-h', style:'padding:20px 0 8px' }, t), h('div', { class:'lvchips', style:'padding:0' }, ...k)];
+    const sec = (t, k) => [h('div', { class:'side-h', style:'padding:20px 0 8px' }, t), h('div', { class:'lvchips', style:'padding:0' }, ...k)];
     const lnk = (ic, l, href) => h('a', { class:'btn', href }, icon(ic), l);
     const act = (l, fn, on) => h('button', { class:'btn' + (on ? ' primary' : ''), type:'button', onclick:fn }, l);
     const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => {
       try { importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
-    main.append(hd('Mehr'),
-      ...sec('Entdecken', lnk('tv', 'Live-TV', '#/live'), lnk('refresh', 'Überrasch mich', '#/random'), lnk('captions', 'Audiodeskription', '#/access/ad'),
-        lnk('captions', 'Gebärdensprache', '#/access/dgs'), lnk('captions', 'Mit Untertitel', '#/access/ut')),
-      ...sec('Kopplung Handy ↔ TV', IS_TV ? lnk('share', 'Mit Handy koppeln (QR)', '#/pair') : lnk('share', 'An TV senden', '#/send')),
-      ...sec('Akzentfarbe', act('Standard', () => { store.set('accent', ''); applyLook(); route(); }, !store.get('accent', '')),
-        ...COLORS.map(c => h('button', { class:'swatch' + (store.get('accent', '') === c ? ' on' : ''), type:'button', style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); route(); } }))),
-      ...sec('Kartengröße', ...[['Klein', .8], ['Mittel', 1], ['Groß', 1.3]].map(([l, f]) => act(l, () => { store.set('cw', f); applyLook(); route(); }, store.get('cw', 1) === f))),
-      ...sec('Daten (Merkliste, Verlauf, Abos)', act('Exportieren (JSON)', exportData), act('Importieren …', () => file.click()), file));
+
+    const entdecken = sec('Entdecken', [
+      lnk('tv', 'Live-TV', '#/live'), lnk('refresh', 'Überrasch mich', '#/random'), lnk('captions', 'Audiodeskription', '#/access/ad'),
+      lnk('captions', 'Gebärdensprache', '#/access/dgs'), lnk('captions', 'Mit Untertitel', '#/access/ut')
+    ]);
+    const kopplung = sec('Kopplung Handy ↔ TV', [
+      IS_TV ? lnk('share', 'Mit Handy koppeln (QR)', '#/pair') : lnk('share', 'An TV senden', '#/send')
+    ]);
+    const akzent = sec('Akzentfarbe', [
+      act('Standard', () => { store.set('accent', ''); applyLook(); route(); }, !store.get('accent', '')),
+      COLORS.map(c => h('button', { class:'swatch' + (store.get('accent', '') === c ? ' on' : ''), type:'button', style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); route(); } }))
+    ]);
+    const karten = sec('Kartengröße', [
+      ['Klein', .8], ['Mittel', 1], ['Groß', 1.3]
+    ].map(([l, f]) => act(l, () => { store.set('cw', f); applyLook(); route(); }, store.get('cw', 1) === f)));
+    const daten = sec('Daten (Merkliste, Verlauf, Abos)', [
+      act('Exportieren (JSON)', exportData), act('Importieren …', () => file.click()), file
+    ]);
+
+    main.append(hd('Mehr'), ...entdecken, ...kopplung, ...akzent, ...karten, ...daten);
   }
 
   /* ---------- Kopplung Handy -> TV (über ntfy.sh) ---------- */
@@ -2175,10 +2187,13 @@ const PLUS = (() => {
     const go = () => { const v = inp.value.trim(); if (v) { sendTv({ t:'q', v }); inp.value = ''; } };
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
     main.append(h('div', { style:'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class:'btn primary', type:'button', onclick:go }, 'Senden')),
-      h('div', { class:'side-h', style:'padding:20px 0 6px' }, 'Zuletzt angesehen'),
-      ...store.get('hist', []).slice(0, 12).map(x => h('div', { style:'display:flex;gap:8px;align-items:center;padding:6px 0' },
+      h('div', { class:'side-h', style:'padding:20px 0 6px' }, 'Zuletzt angesehen'));
+      
+    store.get('hist', []).slice(0, 12).forEach(x => {
+      main.append(h('div', { style:'display:flex;gap:8px;align-items:center;padding:6px 0' },
         h('span', { style:'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, x.title),
-        h('button', { class:'btn', type:'button', onclick:() => sendTv({ t:'w', v:x.id, n:x.title }) }, icon('tv'), 'Auf TV'))));
+        h('button', { class:'btn', type:'button', onclick:() => sendTv({ t:'w', v:x.id, n:x.title }) }, icon('tv'), 'Auf TV')));
+    });
   }
 
   /* ---------- Player-Extras ---------- */
@@ -2188,7 +2203,7 @@ const PLUS = (() => {
     const menu = h('div', { class:'pmenu plus', hidden:true }); p.append(menu);
     const st = () => store.get('cue', {}), setSt = o => { store.set('cue', { ...st(), ...o }); applyLook(); };
     const opt = (l, on, fn) => h('button', { class:'pmenu-btn' + (on ? ' on' : ''), type:'button', onclick:ev => {
-      const i = [...menu.querySelectorAll('.pmenu-btn')].indexOf(ev.currentTarget); fn(); draw(); const b = menu.querySelectorAll('.pmenu-btn')[i]; b && b.focus(); } }, l);
+      const i = Array.from(menu.querySelectorAll('.pmenu-btn')).indexOf(ev.currentTarget); fn(); draw(); const b = menu.querySelectorAll('.pmenu-btn')[i]; b && b.focus(); } }, l);
     const grp = (t, ...o) => [h('div', { class:'pmenu-lbl' }, t), h('div', { class:'pmenu-opts' }, ...o), h('div', { class:'pmenu-div' })];
     const draw = () => menu.replaceChildren(
       ...grp('Sleep-Timer', ...[0, 15, 30, 60].map(m => opt(m ? m + ' Min' : 'Aus', sleepMin === m, () => {
