@@ -573,6 +573,7 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 #side::-webkit-scrollbar{display:none}
 /* Fix: Einträge dürfen in der Flex-Spalte nicht schrumpfen, sonst werden die oberen (Logo, Suche, Startseite …) auf 0 gequetscht */
 #side>*{flex:none}
+#side{border-right:1px solid var(--border)}
 #side{scroll-padding:2rem 0}
 #side:focus-within,#side:hover{
   width:var(--sw);
@@ -664,6 +665,24 @@ body:has(#side:focus-within)[data-route=suche] .skb{left:calc(var(--sw) + 3rem)}
 body.sk-away[data-route=suche] .skb{transform:translateX(-32rem);opacity:.5}
 body.sk-away[data-route=suche] .sres{margin-left:1rem}
 
+/* In-Seiten-Dialoge (ersetzen Browser-Dialoge) */
+.dlg-back{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:2em;opacity:0;transition:opacity .2s;font-size:16px}
+html[data-input=remote] .dlg-back{font-size:1.8rem}
+.dlg-back.show{opacity:1}
+.dlg{width:min(26em,100%);max-height:80vh;overflow:auto;scrollbar-width:none;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:1em;padding:1.2em;box-shadow:0 1.5em 4em rgba(0,0,0,.5);transform:translateY(1.5em) scale(.97);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.dlg::-webkit-scrollbar{display:none}
+.dlg-back.show .dlg{transform:none}
+.dlg h3{margin:0 0 .7em;font-size:1.1em}
+.dlg p{margin:0 0 1em;color:var(--fg-3);line-height:1.5}
+.dopt{display:flex;align-items:center;gap:.6em;width:100%;min-height:2.6em;padding:0 .9em;margin:.15em 0;border:0;border-radius:.6em;background:transparent;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.dopt:hover{background:var(--bg-3)}
+.dopt.on{font-weight:700}
+.dopt.on::after{content:'✓';margin-left:auto}
+.dopt:focus{outline:none;background:var(--fg);color:var(--bg)}
+.dacts{display:flex;gap:.6em;justify-content:flex-end}
+.dacts .dopt{width:auto;justify-content:center;padding:0 1.2em;background:var(--bg-3)}
+.dacts .dopt:focus{background:var(--fg)}
+
 /* Player */
 body[data-route=watch]{overflow:hidden}
 body[data-route=watch] #side{display:none}
@@ -681,6 +700,21 @@ body[data-route=watch] .player{position:fixed;inset:0;width:100vw;height:100vh;a
 .mpanel .rowh{margin:0 0 .6rem;color:#fff}
 .mpanel .txt h3{color:#fff}.mpanel .txt p{color:#bbb}
 .player.panel .pc{opacity:1!important;transform:none!important;pointer-events:auto!important}
+/* Panels: Ein-/Ausblend-Animation statt display:none */
+.ipanel,.mpanel{transition:opacity .25s,transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.ipanel[hidden],.mpanel[hidden]{display:block!important;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .22s,transform .28s cubic-bezier(.4,0,1,1),visibility 0s .28s}
+.ipanel[hidden]{transform:translateY(2.5rem)}
+.mpanel[hidden]{transform:translateY(100%)}
+/* Weitere Inhalte: von unten, ohne schwarzen Balken */
+.mpanel{bottom:0;background:none;padding:4rem 4rem 3rem;text-shadow:0 .1rem .6rem rgba(0,0,0,.9)}
+.mpanel .rowh{display:flex;align-items:center;gap:1.4rem;color:#fff}
+.pclose{width:4.4rem;height:4.4rem;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;flex:none;transition:transform .14s,background .14s,color .14s}
+.pclose .ic{width:2.2rem;height:2.2rem}
+.pclose:focus{background:#fff;color:#000;transform:scale(1.12)}
+.mpanel .pclose{margin-left:auto}
+.ipanel .pclose{position:absolute;top:1.6rem;right:1.8rem}
+/* Steuerelemente ausblenden, solange Weitere Inhalte offen ist */
+.player.morep .pc,.player.morep .ptop{opacity:0!important;visibility:hidden;pointer-events:none!important;transform:translateY(1.2rem)!important;transition:opacity .25s,transform .25s,visibility 0s .25s}
 
 /* Fix schwarzes Bild: kein Filter/Transition auf dem Video im Normalfall */
 .player video{filter:none;transition:none;transform:none}
@@ -1150,7 +1184,7 @@ function Library(tab) {
   main.append(h('div', { class:'page-h' },
     h('h1', {}, hist ? 'Verlauf' : 'Gemerkt'),
     h('span', { class:'grow' }),
-    list.length ? h('button', { class:'btn', onclick:() => { if (confirm((hist ? 'Verlauf' : 'Merkliste') + ' wirklich leeren?')) { store.set(hist ? 'hist' : 'saved', []); route(); } } }, icon('trash'), 'Leeren') : null), host);
+    list.length ? h('button', { class:'btn', onclick:async () => { if (await askConfirm((hist ? 'Verlauf' : 'Merkliste') + ' wirklich leeren?')) { store.set(hist ? 'hist' : 'saved', []); route(); } } }, icon('trash'), 'Leeren') : null), host);
   StaticList(host, list, hist ? 'Noch nichts angesehen.' : 'Noch nichts gemerkt. Tippe beim Video auf „Merken“.');
 }
 
@@ -1372,16 +1406,18 @@ async function Watch(id) {
   TV.video = video; TV.player = player;
   const infoBtn = h('button', { class:'pb', type:'button', 'aria-label':'Info', title:'Info' }, icon('info'));
   const moreBtn = h('button', { class:'pb', type:'button', 'aria-label':'Weitere Inhalte', title:'Weitere Inhalte' }, icon('grid'));
-  const infoP = h('div', { class:'ipanel', hidden:true }, h('h2', {}, e.title),
+  const xb = () => h('button', { class:'pclose', type:'button', 'aria-label':'Schließen', onclick:() => { player.closePanels(); player.focus(); } }, icon('x'));
+  const infoP = h('div', { class:'ipanel', hidden:true }, xb(), h('h2', {}, e.title),
     h('div', { class:'im' }, [ch.name, e.topic, fullDate(e.timestamp), e.duration ? fmtDur(e.duration) : ''].filter(Boolean).join(' · ')),
     h('div', { class:'it' }, (e.description || '').trim() || 'Keine Beschreibung vorhanden.'));
   const moreRow = h('div', { class:'hrow' });
-  const moreP = h('div', { class:'mpanel', hidden:true }, h('h2', { class:'rowh' }, 'Weitere Inhalte'), moreRow);
-  player.closePanels = () => { infoP.hidden = moreP.hidden = true; player.classList.remove('panel'); };
-  const tp = p => { const open = p.hidden; player.closePanels(); if (open) { p.hidden = false; player.classList.add('panel'); if (p === moreP) setTimeout(() => focusEl(moreRow.querySelector('a') || moreBtn), 0); } };
+  const moreP = h('div', { class:'mpanel', hidden:true }, h('h2', { class:'rowh' }, 'Weitere Inhalte', xb()), moreRow);
+  player.closePanels = () => { infoP.hidden = moreP.hidden = true; player.classList.remove('panel', 'morep'); };
+  const tp = p => { const open = p.hidden; player.closePanels(); if (open) { p.hidden = false; player.classList.add('panel'); player.classList.toggle('morep', p === moreP); if (p === moreP) setTimeout(() => focusEl(moreRow.querySelector('a') || moreBtn), 0); } };
   infoBtn.onclick = () => tp(infoP); moreBtn.onclick = () => tp(moreP);
   player.querySelector('[aria-label="Einstellungen"]').before(infoBtn, moreBtn);
   player.append(infoP, moreP);
+  moreP.addEventListener('click', ev => { const a = ev.target.closest('a.card'); if (a) { ev.preventDefault(); location.replace(a.getAttribute('href')); } });
 
   /* Quellen */
   const srcs = [['HD', e.url_video_hd], ['SD', e.url_video], ['LQ', e.url_video_low]].filter(s => s[1]);
@@ -1448,7 +1484,7 @@ async function Watch(id) {
   const nextBox = h('div', { class:'nextup' });
   player.append(nextBox);
   const stopNext = () => { clearInterval(nt); nextBox.classList.remove('show'); player.classList.remove('nexting'); };
-  const goNext = () => { if (nextE) location.hash = '#/watch/' + encodeURIComponent(nextE.id); else toast('Kein weiteres Video'); };
+  const goNext = () => { if (nextE) location.replace('#/watch/' + encodeURIComponent(nextE.id)); else toast('Kein weiteres Video'); };
   video.addEventListener('play', stopNext);
   video.addEventListener('ended', () => {
     if (!nextE || !store.get('autonext', true)) return;
@@ -1830,6 +1866,48 @@ function navTick() {
   try { navSnd.currentTime = 0; navSnd.play().catch(() => {}); } catch {}
 }
 const FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex="0"]';
+
+/* ---------- In-Seiten-Dialoge statt Browser-Dialoge ---------- */
+let dlgEl = null;
+function closeDlg(ret) {
+  if (!dlgEl) return false;
+  const d = dlgEl; dlgEl = null; d.classList.remove('show');
+  setTimeout(() => d.remove(), 220);
+  if (d._back && d._back.isConnected) d._back.focus({ preventScroll:true });
+  return true;
+}
+function openDlg(title, content, opener) {
+  closeDlg();
+  const back = h('div', { class:'dlg-back', role:'dialog', 'aria-modal':'true', 'aria-label':title },
+    h('div', { class:'dlg' }, h('h3', {}, title), ...content));
+  back._back = opener;
+  back.addEventListener('mousedown', ev => { if (ev.target === back) closeDlg(); });
+  document.body.append(back); dlgEl = back;
+  requestAnimationFrame(() => { back.classList.add('show'); const f = back.querySelector('.dopt.on') || back.querySelector('.dopt'); f && f.focus({ preventScroll:true }); });
+}
+function openChoice(sel) {
+  const opts = Array.from(sel.options);
+  openDlg(sel.getAttribute('aria-label') || 'Auswahl', opts.map(o => h('button', { class:'dopt' + (o.value === sel.value ? ' on' : ''), type:'button', onclick:() => {
+    const ch = sel.value !== o.value; sel.value = o.value; closeDlg();
+    if (ch) sel.dispatchEvent(new Event('change', { bubbles:true }));
+  } }, o.textContent)), sel);
+}
+function askConfirm(text, okLabel = 'Leeren') {
+  return new Promise(res => {
+    let done = false; const fin = v => { if (!done) { done = true; res(v); } closeDlg(); };
+    openDlg('Bestätigen', [h('p', {}, text), h('div', { class:'dacts' },
+      h('button', { class:'dopt', type:'button', onclick:() => fin(false) }, 'Abbrechen'),
+      h('button', { class:'dopt', type:'button', onclick:() => fin(true) }, okLabel))], document.activeElement);
+    dlgEl._cancel = () => fin(false);
+  });
+}
+/* Native <select>-Popups abfangen */
+document.addEventListener('mousedown', ev => { const s = ev.target.closest && ev.target.closest('select'); if (s) { ev.preventDefault(); openChoice(s); } }, true);
+document.addEventListener('keydown', ev => {
+  if (dlgEl && (ev.key === 'Escape')) { ev.preventDefault(); ev.stopPropagation(); (dlgEl._cancel || closeDlg)(); closeDlg(); return; }
+  const s = ev.target.tagName === 'SELECT' ? ev.target : null;
+  if (s && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); ev.stopPropagation(); openChoice(s); }
+}, true);
 const sideOpen = () => false;
 
 function canFocus(el) {
@@ -1866,6 +1944,7 @@ function move(dir) {
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
   const all = Array.from(document.querySelectorAll(FOCUSABLE)).filter(el =>
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
+    (!dlgEl || dlgEl.contains(el)) &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))) &&
     !(cur && cur.closest('.skb') && (dir === 'up' || dir === 'down') && !el.closest('.skb')));
 
@@ -1909,6 +1988,7 @@ function move(dir) {
 
 /* Zurück-Taste: erst Menüs schließen, dann eine Seite zurück */
 function goBack() {
+  if (dlgEl) { (dlgEl._cancel || closeDlg)(); closeDlg(); return true; }
   if (TV.player && TV.player.classList.contains('panel')) { TV.player.closePanels(); focusEl(TV.player); return true; }
   const pm = document.querySelector('.pmenu:not([hidden])');
   if (pm) { pm.hidden = true; focusEl(TV.player && TV.player.querySelector('[aria-label="Einstellungen"]')); return true; }
@@ -1959,7 +2039,7 @@ function tvKey(ev) {
   if (k === 'Enter' || c === 13) {
     if (p && (t === p || t.classList.contains('seek'))) { ev.preventDefault(); p.toggle(); }
     else if (t.tagName === 'INPUT' && t.type === 'checkbox') { ev.preventDefault(); t.click(); }
-    else if (t.tagName === 'SELECT') { ev.preventDefault(); try { t.showPicker(); } catch {} }
+    else if (t.tagName === 'SELECT') { ev.preventDefault(); openChoice(t); }
   }
 }
 document.addEventListener('keydown', tvKey);
