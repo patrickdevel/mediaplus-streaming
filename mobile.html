@@ -1665,11 +1665,10 @@ const PLUS = (() => {
     const inp = h('input', { type:'search', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'search', autocomplete:'off' });
     const go = () => { const v = inp.value.trim(); if (v) { send({ t:'q', v }); inp.value = ''; inp.blur(); } };
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
-    const srow = h('div', { class:'rs', hidden:true }, inp, h('button', { class:'btn primary', type:'button', style:'height:48px;padding:0 16px', onclick:go, 'aria-label':'Senden' }, icon('search')));
-    const sbtn = h('button', { class:'rb wide', type:'button', onclick:() => { srow.hidden = !srow.hidden; if (!srow.hidden) inp.focus(); } }, icon('search'), 'Suchen');
+    const srow = h('div', { class:'rs' }, inp, h('button', { class:'btn primary', type:'button', style:'height:48px;padding:0 16px', onclick:go, 'aria-label':'Senden' }, icon('search')));
 
     main.append(h('div', { class:'rc' },
-      sbtn, srow,
+      srow,
       g(3, sp(), b('arr-up', 'up', { label:'Hoch' }), sp(),
            b('left', 'left', { label:'Links' }), b('', 'ok', { cls:'ok', label:'OK' }), b('arr-right', 'right', { label:'Rechts' }),
            sp(), b('arr-down', 'down', { label:'Runter' }), sp()),
