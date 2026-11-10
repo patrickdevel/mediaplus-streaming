@@ -447,6 +447,10 @@ body[data-route="shorts"] .mini,body[data-route="shorts"] .sticky-player{display
  .sh:not(.tv) .sh-feed{max-width:min(480px,100%);margin:0 auto;border-inline:1px solid #222}
  body[data-route="shorts"] #toast{bottom:24px}
 }
+
+.sh-heart{position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;z-index:5;pointer-events:none;color:#ff2d55;filter:drop-shadow(0 4px 18px rgba(255,45,85,.55));animation:shHeart .8s cubic-bezier(.2,.8,.2,1) forwards}
+.sh-heart .ic{width:100%;height:100%}
+@keyframes shHeart{0%{transform:scale(.2) rotate(-12deg);opacity:0}25%{transform:scale(1.25) rotate(4deg);opacity:1}45%{transform:scale(.95)}70%{transform:scale(1.05);opacity:1}100%{transform:scale(1.4) translateY(-30px);opacity:0}}
 </style>
 </head>
 <body>
@@ -2012,18 +2016,30 @@ const PLUS = (() => {
   /* ---------- Shorts ---------- */
   const SH_Q = ['Comedy', 'Kabarett', 'Dokumentation', 'Wissen', 'Tatort', 'Krimi', 'Reportage', 'Sport', 'Musik', 'Natur', 'Reise', 'Satire', 'Serie', 'Spielfilm', 'Kinder', 'Tagesschau'];
   const shSeen = new Set();
+  function shBump(t, d) { if (!t || !d) return; const w = store.get('shW', {}); w[t] = Math.max(-5, Math.min(12, (w[t] || 0) + d)); const k = Object.keys(w); if (k.length > 150) delete w[k[0]]; store.set('shW', w); }
+  function shProfile() {
+    const m = new Map(), add = (t, w) => { if (t) m.set(t, (m.get(t) || 0) + w); }, arr = k => { const v = store.get(k, []); return Array.isArray(v) ? v : []; };
+    arr('subs').forEach(x => add(x.topic, 3)); arr('saved').forEach(x => add(x.topic, 3)); arr('hist').slice(0, 40).forEach(x => add(x.topic, 1));
+    const w = store.get('shW', {}); for (const t in w) add(t, w[t]);
+    return [...m].filter(([, v]) => v > 0);
+  }
+  function shPick(p) { let r = Math.random() * p.reduce((a, [, v]) => a + v, 0); for (const [t, v] of p) { r -= v; if (r <= 0) return t; } return p[0][0]; }
   async function shFetch(n) {
     const out = []; let err;
-    for (let i = 0; i < 4 && out.length < n; i++) {
-      const t = SH_Q[Math.floor(Math.random() * SH_Q.length)];
+    const old = store.get('shSeenIds', []), seen = new Set([...(Array.isArray(old) ? old : []), ...Object.keys(store.get('seen', {}))]);
+    const prof = shProfile();
+    for (let i = 0; i < 5 && out.length < n; i++) {
+      const pers = prof.length && Math.random() < .67, t = pers ? shPick(prof) : SH_Q[Math.floor(Math.random() * SH_Q.length)];
       try {
-        let r; try { r = await search({ text:t, min:300, offset:Math.floor(Math.random() * 60), size:30 }); if (!r.items.length) r = await search({ text:t, size:30 }); } catch (x) { r = await search({ text:t, size:30 }); }
-        const ok = r.items.filter(e => { const u = e.url_video || e.url_video_low || e.url_video_hd; return u && !/\.m3u8/i.test(u) && !shSeen.has(e.id); }).sort(() => Math.random() - .5);
-        for (const e of ok.slice(0, n - out.length)) { shSeen.add(e.id); out.push(e); }
+        let r;
+        if (pers) r = await search({ topic:t, min:120, offset:Math.floor(Math.random() * 8), size:30 });
+        else { try { r = await search({ text:t, min:300, offset:Math.floor(Math.random() * 60), size:30 }); if (!r.items.length) r = await search({ text:t, size:30 }); } catch (x) { r = await search({ text:t, size:30 }); } }
+        const ok = r.items.filter(e => { const u = e.url_video || e.url_video_low || e.url_video_hd; return u && !/\.m3u8/i.test(u) && !shSeen.has(e.id) && !seen.has(e.id); }).sort(() => Math.random() - .5);
+        for (const e of ok.slice(0, pers ? 3 : n - out.length)) { shSeen.add(e.id); out.push(e); }
       } catch (x) { err = x; }
     }
     if (!out.length && err) throw err;
-    return out;
+    return out.sort(() => Math.random() - .5).slice(0, n);
   }
   function shorts() {
     document.title = 'Shorts – Media +';
@@ -2043,13 +2059,26 @@ const PLUS = (() => {
         h('div', { class:'sh-info' }, h('div', { class:'sh-ch' }, Avatar(ch), h('span', {}, ch.name)), h('div', { class:'sh-t' }, e.title || topic),
           topic && topic !== e.title ? h('div', { class:'sh-s' }, topic) : null), h('div', { class:'sh-prog' }, bar));
       s.toggle = () => v.paused ? play(s) : v.pause();
-      s.stage.onclick = s.toggle;
+      if (tv) s.stage.onclick = s.toggle;
+      else {
+        let lastTap = 0, tapT = 0;
+        s.stage.onclick = ev => {
+          const now = Date.now();
+          if (now - lastTap < 300) {
+            clearTimeout(tapT); lastTap = 0;
+            const r = s.stage.getBoundingClientRect(), hh = h('span', { class:'sh-heart' }, icon('heart', 'fill'));
+            s.stage.append(hh); hh.addEventListener('animationend', () => hh.remove());
+            if (!isSaved(e.id)) { toggleSaved(e); shBump(e.topic, 3); paintLike(); }
+            if (navigator.vibrate) try { navigator.vibrate(12); } catch {}
+          } else { lastTap = now; tapT = setTimeout(s.toggle, 280); }
+        };
+      }
       const like = h('button', { class:'sh-b', type:'button', 'aria-label':'Gefällt mir' });
       const paintLike = () => { const on = isSaved(e.id); like.classList.toggle('on', on); like.replaceChildren(icon('heart', on ? 'fill' : ''), h('span', {}, on ? lab('Gemerkt', 'Gemerkt') : 'Like')); };
-      like.onclick = ev => { ev.stopPropagation(); toast(toggleSaved(e) ? 'Gemerkt – dein Like ist gespeichert' : 'Like entfernt'); paintLike(); };
+      like.onclick = ev => { ev.stopPropagation(); const on = toggleSaved(e); shBump(e.topic, on ? 3 : -3); toast(on ? 'Gemerkt – dein Like ist gespeichert' : 'Like entfernt'); paintLike(); };
       const sub = h('button', { class:'sh-b', type:'button', 'aria-label':'Sendung abonnieren' });
       const paintSub = () => { const on = isSub(cid, topic); sub.classList.toggle('on', on); sub.replaceChildren(icon('plus'), h('span', {}, on ? 'Abonniert' : lab('Abo', 'Abonnieren'))); };
-      sub.onclick = ev => { ev.stopPropagation(); toast(toggleSub(cid, topic) ? 'Sendung abonniert' : 'Abo beendet'); paintSub(); };
+      sub.onclick = ev => { ev.stopPropagation(); const on = toggleSub(cid, topic); shBump(topic, on ? 3 : -2); toast(on ? 'Sendung abonniert' : 'Abo beendet'); paintSub(); };
       const snd = h('button', { class:'sh-b', type:'button', 'aria-label':'Ton' });
       s.paintSound = () => snd.replaceChildren(icon(v.muted ? 'mute' : 'vol'), h('span', {}, v.muted ? 'Ton aus' : 'Ton an'));
       snd.onclick = ev => { ev.stopPropagation(); store.set('shSound', !sound()); els.forEach(x => { x.v.muted = !sound(); x.paintSound(); }); };
@@ -2088,6 +2117,8 @@ const PLUS = (() => {
     function release(s) { clearTimeout(s.t); s.v.pause(); s.v.removeAttribute('src'); s.v.load(); s.loaded = false; s.ready = false; }
     function activate(i) {
       if (i === ci || !els[i]) return;
+      const pv = els[ci]; if (pv && pv.t0) { const d = Date.now() - pv.t0; shBump(pv.e.topic, d < 2500 ? -1 : d > 8000 ? 1 : 0); }
+      els[i].t0 = Date.now(); { const l = store.get('shSeenIds', []); l.push(els[i].e.id); store.set('shSeenIds', (Array.isArray(l) ? l : []).slice(-300)); }
       ci = i;
       els.forEach((x, j) => { if (j !== i) { x.v.pause(); focusable(x, false); if (Math.abs(j - i) > 2 && x.loaded) release(x); } });
       const s = els[i]; focusable(s, true); load(s, true);
