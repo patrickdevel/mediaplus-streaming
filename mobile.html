@@ -438,6 +438,15 @@ body[data-route="shorts"]{overflow:hidden}
 .sh.tv .sh-pp{width:10rem;height:10rem}.sh.tv .sh-pp .ic{width:4rem;height:4rem}
 .sh.tv .sh-prog{height:.5rem}
 .sh.tv .sh-msg{font-size:2rem}.sh.tv .sh-msg .sh-b{width:auto;font-size:1.6rem}
+
+body[data-route="shorts"] .mini,body[data-route="shorts"] .sticky-player{display:none!important}
+@media(min-width:1000px){
+ :root{--bn:0px}
+ .sh:not(.tv){top:var(--hh);bottom:0;z-index:30}
+ body.pinned .sh:not(.tv){left:var(--sw)}
+ .sh:not(.tv) .sh-feed{max-width:min(480px,100%);margin:0 auto;border-inline:1px solid #222}
+ body[data-route="shorts"] #toast{bottom:24px}
+}
 </style>
 </head>
 <body>
@@ -2008,8 +2017,8 @@ const PLUS = (() => {
     for (let i = 0; i < 4 && out.length < n; i++) {
       const t = SH_Q[Math.floor(Math.random() * SH_Q.length)];
       try {
-        const r = await search({ text:t, min:300, offset:Math.floor(Math.random() * 120), size:30 });
-        const ok = r.items.filter(e => { const u = e.url_video || e.url_video_low; return u && !/\.m3u8/i.test(u) && !shSeen.has(e.id); }).sort(() => Math.random() - .5);
+        let r; try { r = await search({ text:t, min:300, offset:Math.floor(Math.random() * 60), size:30 }); if (!r.items.length) r = await search({ text:t, size:30 }); } catch (x) { r = await search({ text:t, size:30 }); }
+        const ok = r.items.filter(e => { const u = e.url_video || e.url_video_low || e.url_video_hd; return u && !/\.m3u8/i.test(u) && !shSeen.has(e.id); }).sort(() => Math.random() - .5);
         for (const e of ok.slice(0, n - out.length)) { shSeen.add(e.id); out.push(e); }
       } catch (x) { err = x; }
     }
@@ -2019,7 +2028,7 @@ const PLUS = (() => {
   function shorts() {
     document.title = 'Shorts – Media +';
     const tok = routeToken, tv = IS_TV, sound = () => store.get('shSound', true);
-    let els = [], ci = -1, loading = false, wantNext = false;
+    let lastErr, els = [], ci = -1, loading = false, wantNext = false;
     const root = h('div', { class:'sh' + (tv ? ' tv' : '') }), feed = h('div', { class:'sh-feed' });
     const msg = h('div', { class:'sh-msg' }, 'Shorts werden geladen …');
     root.append(feed, msg); main.append(root);
@@ -2054,7 +2063,7 @@ const PLUS = (() => {
       v.addEventListener('volumechange', s.paintSound);
       v.addEventListener('timeupdate', () => { if (v.duration) bar.style.width = (v.currentTime / v.duration * 100) + '%'; });
       v.addEventListener('ended', () => go(els.indexOf(s) + 1));
-      v.addEventListener('error', () => { if (v.getAttribute('src') && els[ci] === s) { toast('Nicht abspielbar – weiter'); go(ci + 1); } });
+      v.addEventListener('error', () => { if (v.getAttribute('src') && els[ci] === s && v.error) { toast('Nicht abspielbar – weiter'); go(ci + 1); } });
       return s;
     }
     function focusable(s, on) { [s.stage, ...s.acts.querySelectorAll('.sh-b')].forEach(el => { el.tabIndex = on ? 0 : -1; }); }
@@ -2073,7 +2082,7 @@ const PLUS = (() => {
           if (isFinite(d) && d > 30) { v.addEventListener('seeked', fin, { once:true }); try { v.currentTime = d * (.08 + Math.random() * .7); } catch { fin(); } } else fin();
         }, { once:true });
         s.t = setTimeout(fin, 5000);
-        v.preload = act ? 'auto' : 'metadata'; v.src = secure(s.e.url_video || s.e.url_video_low);
+        v.preload = act ? 'auto' : 'metadata'; v.src = secure(s.e.url_video || s.e.url_video_low || s.e.url_video_hd);
       } else if (act) v.preload = 'auto';
     }
     function release(s) { clearTimeout(s.t); s.v.pause(); s.v.removeAttribute('src'); s.v.load(); s.loaded = false; s.ready = false; }
@@ -2100,12 +2109,13 @@ const PLUS = (() => {
         const arr = await shFetch(els.length ? 8 : 6);
         if (tok !== routeToken) return;
         if (!arr.length && !els.length) throw new Error('Keine Videos gefunden');
-        arr.forEach(e => { const s = build(e); s.art._i = els.length; els.push(s); feed.append(s.art); io.observe(s.art); });
+        arr.forEach(e => { try { const s = build(e); s.art._i = els.length; els.push(s); feed.append(s.art); io.observe(s.art); } catch (x) { console.error('Shorts build', x); lastErr = x; } });
+        if (!els.length) throw lastErr || new Error('Keine Videos gefunden');
         msg.remove();
         if (wantNext && arr.length) { wantNext = false; go(ci + 1); }
       } catch (err) {
         if (tok !== routeToken || els.length) return;
-        msg.replaceChildren('Shorts konnten nicht geladen werden.', h('button', { class:'sh-b', type:'button', onclick:() => { msg.replaceChildren('Shorts werden geladen …'); loading = false; more(); } }, 'Erneut versuchen'));
+        console.error('Shorts', err); msg.replaceChildren('Shorts konnten nicht geladen werden.', h('small', { style:'opacity:.6;max-width:320px' }, String((err && err.message) || err)), h('button', { class:'sh-b', type:'button', onclick:() => { msg.replaceChildren('Shorts werden geladen …'); loading = false; more(); } }, 'Erneut versuchen'));
         root.append(msg);
         if (tv) msg.querySelector('button').focus();
       } finally { loading = false; }
