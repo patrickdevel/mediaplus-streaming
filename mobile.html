@@ -451,6 +451,15 @@ body[data-route="shorts"] .mini,body[data-route="shorts"] .sticky-player{display
 .sh-heart{position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;z-index:5;pointer-events:none;color:#ff2d55;filter:drop-shadow(0 4px 18px rgba(255,45,85,.55));animation:shHeart .8s cubic-bezier(.2,.8,.2,1) forwards}
 .sh-heart .ic{width:100%;height:100%}
 @keyframes shHeart{0%{transform:scale(.2) rotate(-12deg);opacity:0}25%{transform:scale(1.25) rotate(4deg);opacity:1}45%{transform:scale(.95)}70%{transform:scale(1.05);opacity:1}100%{transform:scale(1.4) translateY(-30px);opacity:0}}
+
+.sh-end{position:absolute;inset:0;z-index:6;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:default}
+.sh-it.ended .sh-end{display:flex}
+.sh-it.ended .sh-info,.sh-it.ended .sh-grad,.sh-it.ended .sh-pp,.sh-it.ended .sh-prog{display:none}
+.sh-end-t{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:6px}
+.sh-end .sh-b{width:min(260px,100%);flex-direction:row;justify-content:center;gap:8px;padding:13px 16px;font-size:14px}
+.sh-end .sh-b.pri{background:#fff;color:#000;border-color:#fff}
+.sh.tv .sh-end-t{font-size:1.8rem}.sh.tv .sh-end .sh-b{width:34rem;font-size:1.8rem;justify-content:center}
+.sh.tv .sh-end .sh-b.pri{background:#fff;color:#000}
 </style>
 </head>
 <body>
@@ -2058,7 +2067,7 @@ const PLUS = (() => {
       s.stage = h('div', { class:'sh-stage', tabindex:'0' }, v, h('span', { class:'sh-pp' }, icon('play', 'fill')), h('div', { class:'sh-grad' }),
         h('div', { class:'sh-info' }, h('div', { class:'sh-ch' }, Avatar(ch), h('span', {}, ch.name)), h('div', { class:'sh-t' }, e.title || topic),
           topic && topic !== e.title ? h('div', { class:'sh-s' }, topic) : null), h('div', { class:'sh-prog' }, bar));
-      s.toggle = () => v.paused ? play(s) : v.pause();
+      s.toggle = () => s.done ? 0 : v.paused ? play(s) : v.pause();
       if (tv) s.stage.onclick = s.toggle;
       else {
         let lastTap = 0, tapT = 0;
@@ -2086,17 +2095,32 @@ const PLUS = (() => {
       const full = h('a', { class:'sh-b', href:'#/watch/' + encodeURIComponent(e.id), 'aria-label':'Ganzes Video ansehen' }, icon('play', 'fill'), h('span', {}, lab('Ganz', 'Ganzes Video')));
       paintLike(); paintSub(); s.paintSound();
       s.acts = h('div', { class:'sh-acts' }, show, topic ? sub : null, like, full, snd);
+      const cont = h('button', { class:'sh-b pri', type:'button', 'aria-label':'Weiterschauen' }, icon('play', 'fill'), h('span', {}, 'Weiterschauen'));
+      cont.onclick = ev => { ev.stopPropagation(); try { saveProg(e, v.currentTime, e.duration); } catch {} location.hash = '#/watch/' + encodeURIComponent(e.id); };
+      const show2 = h('a', { class:'sh-b', href:show.getAttribute('href') }, icon('film'), h('span', {}, 'Zur Sendung'));
+      s.end = h('div', { class:'sh-end', onclick:ev => ev.stopPropagation() }, h('div', { class:'sh-end-t' }, 'Ausschnitt beendet – Wisch weiter oder schau das ganze Video'), cont, show2);
+      s.cont = cont; s.stage.append(s.end);
+      full.addEventListener('click', () => { try { saveProg(e, v.currentTime, e.duration); } catch {} });
       art.append(s.stage, s.acts); focusable(s, false);
       v.addEventListener('play', () => { art.classList.remove('paused'); s.paintSound(); });
       v.addEventListener('pause', () => { if (!v.ended) art.classList.add('paused'); });
       v.addEventListener('volumechange', s.paintSound);
-      v.addEventListener('timeupdate', () => { if (v.duration) bar.style.width = (v.currentTime / v.duration * 100) + '%'; });
-      v.addEventListener('ended', () => go(els.indexOf(s) + 1));
+      v.addEventListener('timeupdate', () => {
+        const st = s.start || 0, len = Math.min(60, (v.duration || 60) - st);
+        if (len > 0) bar.style.width = Math.min(100, (v.currentTime - st) / len * 100) + '%';
+        if (!s.done && v.currentTime - st >= 60) finish(s);
+      });
+      v.addEventListener('ended', () => finish(s));
       v.addEventListener('error', () => { if (v.getAttribute('src') && els[ci] === s && v.error) { toast('Nicht abspielbar – weiter'); go(ci + 1); } });
       return s;
     }
-    function focusable(s, on) { [s.stage, ...s.acts.querySelectorAll('.sh-b')].forEach(el => { el.tabIndex = on ? 0 : -1; }); }
+    function focusable(s, on) { [s.stage, ...s.acts.querySelectorAll('.sh-b'), ...s.end.querySelectorAll('.sh-b')].forEach(el => { el.tabIndex = on ? 0 : -1; }); }
+    function finish(s) {
+      if (s.done) return; s.done = true; s.v.pause(); s.art.classList.add('ended');
+      if (IS_TV && els[ci] === s) s.cont.focus();
+    }
     function play(s) {
+      if (s.done) return;
       const v = s.v; v.muted = !sound();
       const p = v.play();
       if (p) p.catch(() => { v.muted = true; return v.play(); }).catch(() => {}).then(s.paintSound);
@@ -2105,7 +2129,7 @@ const PLUS = (() => {
       const v = s.v;
       if (!s.loaded) {
         s.loaded = true; s.ready = false;
-        const fin = () => { if (s.ready) return; s.ready = true; clearTimeout(s.t); if (els[ci] === s) play(s); };
+        const fin = () => { if (s.ready) return; s.ready = true; s.start = v.currentTime || 0; clearTimeout(s.t); if (els[ci] === s) play(s); };
         v.addEventListener('loadedmetadata', () => {
           const d = v.duration;
           if (isFinite(d) && d > 30) { v.addEventListener('seeked', fin, { once:true }); try { v.currentTime = d * (.08 + Math.random() * .7); } catch { fin(); } } else fin();
