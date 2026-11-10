@@ -1253,8 +1253,8 @@ async function Watch(id) {
       const track = h('track', { kind:'subtitles', label:'Deutsch', srclang:'de', src:URL.createObjectURL(new Blob([vtt], { type:'text/vtt' })) });
       video.append(track);
       const apply = on => { track.track.mode = on ? 'showing' : 'disabled'; player.ccBtn.classList.toggle('on', on); };
-      apply(store.get('subs', false));
-      player.setSubs(track, () => { const on = track.track.mode !== 'showing'; apply(on); store.set('subs', on); });
+      apply(store.get('subsOn', false));
+      player.setSubs(track, () => { const on = track.track.mode !== 'showing'; apply(on); store.set('subsOn', on); });
     } catch {}
   })();
 
@@ -1611,7 +1611,7 @@ const PLUS = (() => {
   }
 
   /* ---------- Abos ---------- */
-  const subs = () => store.get('subs', []), sk = (c, t) => c + '/' + t;
+  const subs = () => { const v = store.get('subs', []); return Array.isArray(v) ? v : []; }, sk = (c, t) => c + '/' + t;
   const isSub = (c, t) => subs().some(s => s.k === sk(c, t));
   function toggleSub(c, t) {
     let l = subs();
