@@ -2106,6 +2106,7 @@ const PLUS = (() => {
       v.addEventListener('pause', () => { if (!v.ended) art.classList.add('paused'); });
       v.addEventListener('volumechange', s.paintSound);
       v.addEventListener('timeupdate', () => {
+        if (!s.ready) return;
         const st = s.start || 0, len = Math.min(60, (v.duration || 60) - st);
         if (len > 0) bar.style.width = Math.min(100, (v.currentTime - st) / len * 100) + '%';
         if (!s.done && v.currentTime - st >= 60) finish(s);
@@ -2129,10 +2130,10 @@ const PLUS = (() => {
       const v = s.v;
       if (!s.loaded) {
         s.loaded = true; s.ready = false;
-        const fin = () => { if (s.ready) return; s.ready = true; s.start = v.currentTime || 0; clearTimeout(s.t); if (els[ci] === s) play(s); };
+        const fin = () => { if (s.ready) return; s.ready = true; clearTimeout(s.t); if (els[ci] === s) play(s); };
         v.addEventListener('loadedmetadata', () => {
           const d = v.duration;
-          if (isFinite(d) && d > 30) { v.addEventListener('seeked', fin, { once:true }); try { v.currentTime = d * (.08 + Math.random() * .7); } catch { fin(); } } else fin();
+          if (isFinite(d) && d > 30) { v.addEventListener('seeked', fin, { once:true }); try { s.start = d * (.08 + Math.random() * .7); v.currentTime = s.start; } catch { fin(); } } else fin();
         }, { once:true });
         s.t = setTimeout(fin, 5000);
         v.preload = act ? 'auto' : 'metadata'; v.src = secure(s.e.url_video || s.e.url_video_low || s.e.url_video_hd);
