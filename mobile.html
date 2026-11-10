@@ -388,6 +388,56 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 .hdots{position:absolute;right:16px;bottom:14px;z-index:3;display:flex;gap:6px}
 .hdots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:width .3s,background .3s}
 .hdots i.on{width:20px;border-radius:4px;background:#fff}
+
+/* ===== Shorts ===== */
+:root{--bn:calc(56px + env(safe-area-inset-bottom,0px))}
+#bnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;height:var(--bn);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);border-top:1px solid var(--border);grid-template-columns:1fr 1fr}
+body[data-route="home"] #bnav,body[data-route="shorts"] #bnav{display:grid}
+#bnav a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:500;letter-spacing:.01em;color:var(--fg-3);border-radius:0;transition:color .12s,background .12s}
+#bnav a+a{border-left:1px solid var(--border)}
+#bnav a.on{color:var(--fg);background:var(--bg-2);font-weight:600}
+#bnav a.on::before{content:"";position:absolute;left:0;right:0;top:-1px;height:2px;background:var(--fg)}
+@media(min-width:1000px){#bnav{display:none!important}}
+body[data-route="home"] main{padding-bottom:calc(var(--bn) + 24px)}
+body[data-route="home"] #toast,body[data-route="shorts"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
+body[data-route="shorts"]{overflow:hidden}
+.sh{position:fixed;left:0;right:0;top:0;bottom:var(--bn);z-index:60;background:#000;color:#fff}
+.sh-feed{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
+.sh-feed::-webkit-scrollbar{display:none}
+.sh-it{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:#000}
+.sh-stage{position:absolute;inset:0;outline:0;cursor:pointer}
+.sh-v{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+.sh-grad{position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(transparent,rgba(0,0,0,.85));pointer-events:none}
+.sh-pp{position:absolute;inset:0;margin:auto;width:64px;height:64px;display:grid;place-items:center;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);opacity:0;pointer-events:none;transition:opacity .15s}
+.sh-pp .ic{width:26px;height:26px}
+.sh-it.paused .sh-pp{opacity:1}
+.sh-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.25)}
+.sh-prog i{display:block;height:100%;width:0;background:#fff}
+.sh-info{position:absolute;left:14px;right:84px;bottom:16px;display:flex;flex-direction:column;gap:6px;pointer-events:none;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.sh-ch{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.sh-t{font-size:15px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sh-s{font-size:12.5px;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-acts{position:absolute;right:10px;bottom:16px;z-index:3;display:flex;flex-direction:column;gap:8px}
+.sh-b{width:56px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 7px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.22);border-radius:0;color:#fff;font-size:10.5px;font-weight:600;line-height:1.2;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .12s,color .12s}
+.sh-b .ic{width:22px;height:22px}
+.sh-b.on{background:#fff;color:#000;border-color:#fff}
+.sh-msg{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:14px;color:rgba(255,255,255,.8)}
+.sh-msg .sh-b{width:auto;padding:10px 18px;flex-direction:row}
+/* TV */
+.sh.tv{position:relative;inset:auto;z-index:auto;height:calc(100vh - var(--hf) - 8rem);border:1px solid var(--border)}
+.sh.tv .sh-feed{overflow-y:hidden}
+.sh.tv .sh-it{display:flex}
+.sh.tv .sh-stage{position:relative;inset:auto;flex:1;min-width:0}
+.sh.tv .sh-acts{position:static;justify-content:center;gap:1rem;width:20rem;padding:0 1.6rem;background:#000;border-left:1px solid #222}
+.sh.tv .sh-b{width:100%;flex-direction:row;justify-content:flex-start;gap:1.2rem;padding:1.1rem 1.4rem;font-size:1.5rem}
+.sh.tv .sh-b .ic{width:2.4rem;height:2.4rem}
+.sh.tv .sh-b:focus{background:#fff;color:#000;transform:scale(1.05);box-shadow:0 0 2rem .3rem var(--glow,rgba(255,255,255,.3))}
+.sh.tv .sh-stage:focus{outline:.35rem solid #fff!important;outline-offset:-.35rem}
+.sh.tv .sh-info{left:2.4rem;right:2.4rem;bottom:2.2rem;gap:.8rem}
+.sh.tv .sh-ch{font-size:1.6rem}.sh.tv .sh-t{font-size:2.2rem}.sh.tv .sh-s{font-size:1.6rem}
+.sh.tv .sh-pp{width:10rem;height:10rem}.sh.tv .sh-pp .ic{width:4rem;height:4rem}
+.sh.tv .sh-prog{height:.5rem}
+.sh.tv .sh-msg{font-size:2rem}.sh.tv .sh-msg .sh-b{width:auto;font-size:1.6rem}
 </style>
 </head>
 <body>
@@ -1432,6 +1482,7 @@ function route() {
     case 'live':    PLUS.live(arg); break;
     case 'subs':    PLUS.subsPage(); break;
     case 'random':  PLUS.random(); break;
+    case 'shorts':  PLUS.shorts(); break;
     case 'plus':    PLUS.more(); break;
     case 'access':  PLUS.access(arg); break;
     case 'send':    PLUS.sendPage(); break;
@@ -1872,10 +1923,18 @@ const PLUS = (() => {
 
   /* ---------- Init ---------- */
   function init() {
+
+    document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend', '<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></symbol><symbol id="i-shorts" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></symbol>');
+    if (!IS_TV) {
+      const bn = h('nav', { id:'bnav', 'aria-label':'Hauptnavigation' }, h('a', { href:'#/', 'data-r':'home' }, icon('home'), 'Start'), h('a', { href:'#/shorts', 'data-r':'shorts' }, icon('shorts'), 'Shorts'));
+      document.body.append(bn);
+      const paintB = () => bn.querySelectorAll('a').forEach(a => a.classList.toggle('on', a.dataset.r === document.body.dataset.route));
+      window.addEventListener('hashchange', paintB); paintB();
+    }
     /* Sidebar */
     const nav = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href }, icon(ic), label, cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
     const home = document.querySelector('#side .nav[data-href="#/"]');
-    if (home) home.after(nav('tv', 'Live-TV', '#/live'), nav('plus', 'Abos', '#/subs', 'subNew'), nav('refresh', 'Überrasch mich', '#/random'), nav('settings', 'Mehr', '#/plus'));
+    if (home) home.after(nav('shorts', 'Shorts', '#/shorts'), nav('tv', 'Live-TV', '#/live'), nav('plus', 'Abos', '#/subs', 'subNew'), nav('refresh', 'Überrasch mich', '#/random'), nav('settings', 'Mehr', '#/plus'));
     /* Sprachsuche */
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
@@ -1940,7 +1999,134 @@ const PLUS = (() => {
     paint(); bar.insertBefore(b, bar.querySelector('select'));
     const l = subs(), s = l.find(x => x.k === sk(c, t)); if (s) { s.seen = now(); store.set('subs', l); setTimeout(refreshBadge, 800); }
   };
-  return { live, subsPage, access, random, more, pairPage, sendPage, remotePage, connectPage, sendTv, init };
+
+  /* ---------- Shorts ---------- */
+  const SH_Q = ['Comedy', 'Kabarett', 'Dokumentation', 'Wissen', 'Tatort', 'Krimi', 'Reportage', 'Sport', 'Musik', 'Natur', 'Reise', 'Satire', 'Serie', 'Spielfilm', 'Kinder', 'Tagesschau'];
+  const shSeen = new Set();
+  async function shFetch(n) {
+    const out = []; let err;
+    for (let i = 0; i < 4 && out.length < n; i++) {
+      const t = SH_Q[Math.floor(Math.random() * SH_Q.length)];
+      try {
+        const r = await search({ text:t, min:300, offset:Math.floor(Math.random() * 120), size:30 });
+        const ok = r.items.filter(e => { const u = e.url_video || e.url_video_low; return u && !/\.m3u8/i.test(u) && !shSeen.has(e.id); }).sort(() => Math.random() - .5);
+        for (const e of ok.slice(0, n - out.length)) { shSeen.add(e.id); out.push(e); }
+      } catch (x) { err = x; }
+    }
+    if (!out.length && err) throw err;
+    return out;
+  }
+  function shorts() {
+    document.title = 'Shorts – Media +';
+    const tok = routeToken, tv = IS_TV, sound = () => store.get('shSound', true);
+    let els = [], ci = -1, loading = false, wantNext = false;
+    const root = h('div', { class:'sh' + (tv ? ' tv' : '') }), feed = h('div', { class:'sh-feed' });
+    const msg = h('div', { class:'sh-msg' }, 'Shorts werden geladen …');
+    root.append(feed, msg); main.append(root);
+    const lab = (a, b) => tv ? b : a;
+
+    function build(e) {
+      const ch = chanOf(e.channel), topic = e.topic || '', cid = ch.id || '_', v = h('video', { class:'sh-v', playsinline:true, preload:'none' });
+      v.muted = true; v.setAttribute('webkit-playsinline', '');
+      const bar = h('i'), art = h('article', { class:'sh-it paused' });
+      const s = { art, v, e, loaded:false, ready:false, t:0 };
+      s.stage = h('div', { class:'sh-stage', tabindex:'0' }, v, h('span', { class:'sh-pp' }, icon('play', 'fill')), h('div', { class:'sh-grad' }),
+        h('div', { class:'sh-info' }, h('div', { class:'sh-ch' }, Avatar(ch), h('span', {}, ch.name)), h('div', { class:'sh-t' }, e.title || topic),
+          topic && topic !== e.title ? h('div', { class:'sh-s' }, topic) : null), h('div', { class:'sh-prog' }, bar));
+      s.toggle = () => v.paused ? play(s) : v.pause();
+      s.stage.onclick = s.toggle;
+      const like = h('button', { class:'sh-b', type:'button', 'aria-label':'Gefällt mir' });
+      const paintLike = () => { const on = isSaved(e.id); like.classList.toggle('on', on); like.replaceChildren(icon('heart', on ? 'fill' : ''), h('span', {}, on ? lab('Gemerkt', 'Gemerkt') : 'Like')); };
+      like.onclick = ev => { ev.stopPropagation(); toast(toggleSaved(e) ? 'Gemerkt – dein Like ist gespeichert' : 'Like entfernt'); paintLike(); };
+      const sub = h('button', { class:'sh-b', type:'button', 'aria-label':'Sendung abonnieren' });
+      const paintSub = () => { const on = isSub(cid, topic); sub.classList.toggle('on', on); sub.replaceChildren(icon('plus'), h('span', {}, on ? 'Abonniert' : lab('Abo', 'Abonnieren'))); };
+      sub.onclick = ev => { ev.stopPropagation(); toast(toggleSub(cid, topic) ? 'Sendung abonniert' : 'Abo beendet'); paintSub(); };
+      const snd = h('button', { class:'sh-b', type:'button', 'aria-label':'Ton' });
+      s.paintSound = () => snd.replaceChildren(icon(v.muted ? 'mute' : 'vol'), h('span', {}, v.muted ? 'Ton aus' : 'Ton an'));
+      snd.onclick = ev => { ev.stopPropagation(); store.set('shSound', !sound()); els.forEach(x => { x.v.muted = !sound(); x.paintSound(); }); };
+      const show = h('a', { class:'sh-b', href:'#/show/' + cid + '/' + encodeURIComponent(topic || e.title || ''), 'aria-label':'Zur Sendung' }, icon('film'), h('span', {}, 'Sendung'));
+      const full = h('a', { class:'sh-b', href:'#/watch/' + encodeURIComponent(e.id), 'aria-label':'Ganzes Video ansehen' }, icon('play', 'fill'), h('span', {}, lab('Ganz', 'Ganzes Video')));
+      paintLike(); paintSub(); s.paintSound();
+      s.acts = h('div', { class:'sh-acts' }, show, topic ? sub : null, like, full, snd);
+      art.append(s.stage, s.acts); focusable(s, false);
+      v.addEventListener('play', () => { art.classList.remove('paused'); s.paintSound(); });
+      v.addEventListener('pause', () => { if (!v.ended) art.classList.add('paused'); });
+      v.addEventListener('volumechange', s.paintSound);
+      v.addEventListener('timeupdate', () => { if (v.duration) bar.style.width = (v.currentTime / v.duration * 100) + '%'; });
+      v.addEventListener('ended', () => go(els.indexOf(s) + 1));
+      v.addEventListener('error', () => { if (v.getAttribute('src') && els[ci] === s) { toast('Nicht abspielbar – weiter'); go(ci + 1); } });
+      return s;
+    }
+    function focusable(s, on) { [s.stage, ...s.acts.querySelectorAll('.sh-b')].forEach(el => { el.tabIndex = on ? 0 : -1; }); }
+    function play(s) {
+      const v = s.v; v.muted = !sound();
+      const p = v.play();
+      if (p) p.catch(() => { v.muted = true; return v.play(); }).catch(() => {}).then(s.paintSound);
+    }
+    function load(s, act) {
+      const v = s.v;
+      if (!s.loaded) {
+        s.loaded = true; s.ready = false;
+        const fin = () => { if (s.ready) return; s.ready = true; clearTimeout(s.t); if (els[ci] === s) play(s); };
+        v.addEventListener('loadedmetadata', () => {
+          const d = v.duration;
+          if (isFinite(d) && d > 30) { v.addEventListener('seeked', fin, { once:true }); try { v.currentTime = d * (.08 + Math.random() * .7); } catch { fin(); } } else fin();
+        }, { once:true });
+        s.t = setTimeout(fin, 5000);
+        v.preload = act ? 'auto' : 'metadata'; v.src = secure(s.e.url_video || s.e.url_video_low);
+      } else if (act) v.preload = 'auto';
+    }
+    function release(s) { clearTimeout(s.t); s.v.pause(); s.v.removeAttribute('src'); s.v.load(); s.loaded = false; s.ready = false; }
+    function activate(i) {
+      if (i === ci || !els[i]) return;
+      ci = i;
+      els.forEach((x, j) => { if (j !== i) { x.v.pause(); focusable(x, false); if (Math.abs(j - i) > 2 && x.loaded) release(x); } });
+      const s = els[i]; focusable(s, true); load(s, true);
+      if (s.ready) play(s);
+      if (els[i + 1]) load(els[i + 1], false);
+      if (i >= els.length - 3) more();
+      const a = document.activeElement;
+      if (tv && (!a || a === document.body || a.classList.contains('sh-stage'))) s.stage.focus({ preventScroll:true });
+    }
+    function go(i) {
+      if (i < 0) return;
+      if (i >= els.length) { wantNext = true; return more(); }
+      feed.scrollTo({ top:i * feed.clientHeight, behavior:'smooth' });
+    }
+    const io = new IntersectionObserver(en => { for (const x of en) if (x.isIntersecting) activate(x.target._i); }, { root:feed, threshold:.6 });
+    async function more() {
+      if (loading) return; loading = true;
+      try {
+        const arr = await shFetch(els.length ? 8 : 6);
+        if (tok !== routeToken) return;
+        if (!arr.length && !els.length) throw new Error('Keine Videos gefunden');
+        arr.forEach(e => { const s = build(e); s.art._i = els.length; els.push(s); feed.append(s.art); io.observe(s.art); });
+        msg.remove();
+        if (wantNext && arr.length) { wantNext = false; go(ci + 1); }
+      } catch (err) {
+        if (tok !== routeToken || els.length) return;
+        msg.replaceChildren('Shorts konnten nicht geladen werden.', h('button', { class:'sh-b', type:'button', onclick:() => { msg.replaceChildren('Shorts werden geladen …'); loading = false; more(); } }, 'Erneut versuchen'));
+        root.append(msg);
+        if (tv) msg.querySelector('button').focus();
+      } finally { loading = false; }
+    }
+    const onKey = ev => {
+      if (tok !== routeToken || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+      const k = ev.key, c = ev.keyCode, t = ev.target, s = els[ci], eat = f => { ev.preventDefault(); ev.stopImmediatePropagation(); f(); };
+      const mid = t === document.body || t.classList.contains('sh-stage');
+      if (s && (k === 'MediaPlayPause' || c === 179 || c === 10252)) return eat(s.toggle);
+      if (mid && (k === 'ArrowDown' || c === 40 || k === 'PageDown')) return eat(() => go(ci + 1));
+      if (mid && (k === 'ArrowUp' || c === 38 || k === 'PageUp')) return eat(() => go(ci - 1));
+      if (s && mid && (k === 'ArrowRight' || c === 39)) return eat(() => { const b = s.acts.querySelector('.sh-b'); b && b.focus(); });
+      if (s && mid && (k === 'Enter' || c === 13 || k === ' ')) return eat(s.toggle);
+      if (s && t.classList.contains('sh-b') && (k === 'ArrowLeft' || c === 37)) return eat(() => s.stage.focus({ preventScroll:true }));
+    };
+    document.addEventListener('keydown', onKey, true);
+    cleanups.push(() => { document.removeEventListener('keydown', onKey, true); io.disconnect(); els.forEach(s => { clearTimeout(s.t); s.v.pause(); s.v.removeAttribute('src'); s.v.load(); }); });
+    more();
+  }
+
+  return { shorts, live, subsPage, access, random, more, pairPage, sendPage, remotePage, connectPage, sendTv, init };
 })();
 
 (function init() {
