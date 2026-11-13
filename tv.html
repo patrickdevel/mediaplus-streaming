@@ -2312,17 +2312,24 @@ const ScreenSaver = (() => {
   async function fillRecs() {
     if (recBusy || recQ.length >= 3) return;
     recBusy = true;
-    try {
-      const topics = [...store.get('subs', []).map(x => x.topic), ...store.get('saved', []).map(x => x.topic), ...store.get('hist', []).slice(0, 30).map(x => x.topic)].filter(Boolean);
-      const seenW = store.get('seen', {});
-      for (let i = 0; i < 4 && recQ.length < 3; i++) {
+    const pick = a => a[Math.floor(Math.random() * a.length)];
+    const arr = k => { const v = store.get(k, []); return Array.isArray(v) ? v : []; };
+    const topics = [...arr('subs'), ...arr('saved'), ...arr('hist').slice(0, 30)].map(x => x && x.topic).filter(Boolean);
+    const seenW = store.get('seen', {}) || {};
+    const okv = e => e && (e.url_video || e.url_video_hd || e.url_video_low) && !recSeen.has(e.id);
+    for (let i = 0; i < 6 && recQ.length < 3; i++) {
+      try {
         let r;
-        if (topics.length && Math.random() < .7) r = await search({ topic:topics[Math.floor(Math.random() * topics.length)], min:600, offset:Math.floor(Math.random() * 6), size:25 });
-        else { const c = CHIPS[1 + Math.floor(Math.random() * (CHIPS.length - 1))]; r = await search({ text:c.q, min:Math.max(c.min, 600), offset:Math.floor(Math.random() * 30), size:25 }); }
-        const ok = r.items.filter(e => !recSeen.has(e.id) && !seenW[e.id] && (e.url_video || e.url_video_hd || e.url_video_low));
-        if (ok.length) { const e = ok[Math.floor(Math.random() * ok.length)]; recSeen.add(e.id); recQ.push(e); }
-      }
-    } catch {}
+        if (topics.length && Math.random() < .6) r = await search({ topic:pick(topics), min:300, size:30 });
+        else {
+          const c = CHIPS[1 + Math.floor(Math.random() * (CHIPS.length - 1))], mn = Math.max(c.min, 600);
+          r = await search({ text:c.q, min:mn, offset:Math.floor(Math.random() * 20), size:30 });
+          if (!r.items.length) r = await search({ text:c.q, min:mn, size:30 });
+        }
+        let ok = r.items.filter(okv); const fresh = ok.filter(e => !seenW[e.id]); if (fresh.length) ok = fresh;
+        if (ok.length) { const e = pick(ok); recSeen.add(e.id); recQ.push(e); }
+      } catch (err) { console.warn('Empfehlung', err); }
+    }
     recBusy = false;
   }
   function hideRec() { recCur = null; if (recEl) recEl.classList.remove('on'); if (hintEl) hintEl.textContent = HINT; }
@@ -2548,7 +2555,7 @@ const ScreenSaver = (() => {
       setTimeout(() => rollTime(true, true), already ? 40 : 180);
     });
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
-    fillRecs(); setTimeout(() => { if (visible && !recCur && recQ.length) showRec(recQ.shift()); }, 7000);
+    fillRecs().then(() => setTimeout(() => { if (visible && !recCur && recQ.length) showRec(recQ.shift()); }, 2500));
   }
 
   function schedule() { clearTimeout(timer); if (store.get('saverOn', true)) timer = setTimeout(show, delay()); }
