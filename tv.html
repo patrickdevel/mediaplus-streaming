@@ -42,7 +42,6 @@ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input,textarea{-webkit-user-select:text;user-select:text}
 a,img{-webkit-user-drag:none}
 
-/* Keine blauen Links / Auswahl-Highlights beim Tippen */
 a,button,img{-webkit-touch-callout:none;-webkit-user-drag:none}
 ::selection{background:color-mix(in srgb,var(--fg) 22%,transparent);color:inherit}
 ::-moz-selection{background:color-mix(in srgb,var(--fg) 22%,transparent);color:inherit}
@@ -58,7 +57,6 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border:0;background:transparent;border-radius:var(--r-sm);color:var(--fg-2);transition:background .12s,color .12s}
 .icon-btn:hover{background:var(--bg-3);color:var(--fg)}
 
-/* Header */
 .top{position:fixed;inset:0 0 auto 0;height:var(--hh);display:flex;align-items:center;gap:10px;padding:0 20px;background:var(--bg);border-bottom:1px solid var(--border);z-index:50}
 .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.015em;margin-right:6px}
 .logo .mark{width:28px;height:28px;border-radius:var(--r-sm);background:var(--fg);color:var(--bg);display:grid;place-items:center}
@@ -70,7 +68,6 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .search button:hover{background:var(--bg-2);color:var(--fg)}
 .top .spacer{width:36px}
 
-/* Sidebar */
 #side{position:fixed;top:var(--hh);bottom:0;left:0;width:var(--sw);background:var(--bg);overflow-y:auto;padding:16px 12px;transform:translateX(-100%);transition:transform .2s cubic-bezier(.2,.8,.2,1);z-index:40;display:flex;flex-direction:column;border-right:1px solid var(--border)}
 body.pinned #side,body.overlay #side{transform:none}
 body.overlay #side{box-shadow:var(--shadow-lg);z-index:55}
@@ -90,7 +87,6 @@ hr.sep{border:0;border-top:1px solid var(--border);margin:8px 0}
 .switch input:checked{background:var(--fg)}
 .switch input:checked::after{left:16px;background:var(--bg)}
 
-/* Main */
 main{padding:calc(var(--hf) + 24px) 28px 60px;min-height:100vh;transition:margin .2s}
 body.pinned main{margin-left:var(--sw)}
 .chips{position:sticky;top:var(--hh);z-index:20;background:var(--bg);display:flex;gap:8px;overflow-x:auto;padding:12px 0;margin:0 -28px;padding-inline:28px;scrollbar-width:none;border-bottom:1px solid var(--border)}
@@ -113,7 +109,6 @@ body.pinned main{margin-left:var(--sw)}
 .avatar{width:32px;height:32px;border-radius:var(--r-sm);background:var(--c);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700;flex:none;letter-spacing:-.02em}
 .avatar.lg{width:56px;height:56px;font-size:14px;border-radius:var(--r)}
 
-/* Grid + cards */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:28px 16px;padding-top:4px}
 .card{display:block;min-width:0}
 .thumb{position:relative;aspect-ratio:16/9;border-radius:var(--r);overflow:hidden;background:var(--bg-2);isolation:isolate;border:1px solid var(--border);transition:border-color .15s}
@@ -138,7 +133,6 @@ body.pinned main{margin-left:var(--sw)}
 .card.compact .thumb .tmark{font-size:18px;left:8px;bottom:4px}
 .card.compact .thumb .play .ic{width:28px;height:28px;padding:7px 5px 7px 9px}
 
-/* Skeleton */
 .sk .thumb{background:var(--bg-3)}
 .sk .l{height:10px;border-radius:4px;background:var(--bg-3);margin:8px 0}
 .sk .thumb,.sk .l{animation:pulse 1.4s ease-in-out infinite}
@@ -147,7 +141,6 @@ body.pinned main{margin-left:var(--sw)}
 .empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:80px 20px;color:var(--fg-3);text-align:center}
 .empty .ic{width:32px;height:32px;color:var(--fg-4)}
 
-/* Hero */
 .hero{position:relative;margin:0 0 28px;aspect-ratio:21/9;max-height:440px;border-radius:var(--r-lg);overflow:hidden;background:#000;color:#fff;display:flex;align-items:flex-end;isolation:isolate;border:1px solid var(--border)}
 .hbg{position:absolute;inset:0;z-index:-2}
 .hbg .frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.8}
@@ -160,7 +153,6 @@ body.pinned main{margin-left:var(--sw)}
 .hact{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .hact .sub{color:rgba(255,255,255,.65);font-size:13px}
 
-/* Watch */
 .watch{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:32px;max-width:1720px;margin:0 auto;padding-top:8px}
 .winfo h1{font-size:clamp(20px,2.2vw,26px);line-height:1.25;margin:20px 0 14px;letter-spacing:-.025em;font-weight:600}
 .wrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -177,7 +169,6 @@ body.pinned main{margin-left:var(--sw)}
 .related .list{display:grid;gap:14px}
 .related .list+h2{margin-top:24px}
 
-/* Player */
 .player{position:relative;aspect-ratio:16/9;background:#000;border-radius:var(--r-lg);overflow:hidden;outline:0;-webkit-user-select:none;user-select:none;border:1px solid var(--border)}
 .player video{width:100%;height:100%;display:block;background:#000;object-fit:contain;cursor:pointer}
 .player video::-webkit-media-controls{display:none!important}
@@ -189,7 +180,6 @@ body.pinned main{margin-left:var(--sw)}
 .player.idle.playing{cursor:none}
 .player.idle.playing .pc{opacity:0;transform:translateY(8px);pointer-events:none}
 
-/* Seek */
 .seek{position:relative;height:16px;display:flex;align-items:center;cursor:pointer;touch-action:none;padding:0 2px}
 .trk{position:absolute;left:2px;right:2px;height:4px;border-radius:2px;background:rgba(255,255,255,.22);transition:height .12s;overflow:hidden}
 .seek:hover .trk,.seek.drag .trk{height:5px}
@@ -201,7 +191,6 @@ body.pinned main{margin-left:var(--sw)}
 .tip{position:absolute;bottom:22px;left:0;transform:translateX(-50%);padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.9);color:#fff;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;opacity:0;pointer-events:none;border:1px solid rgba(255,255,255,.1)}
 .seek:hover .tip{opacity:1}
 
-/* Player buttons */
 .prow{display:flex;align-items:center;gap:2px;color:#fff}
 .pb{position:relative;width:38px;height:38px;border:0;border-radius:50%;background:transparent;color:rgba(255,255,255,.92);display:grid;place-items:center;transition:background .12s,color .12s;flex:none}
 .pb:hover{background:rgba(255,255,255,.14);color:#fff}
@@ -213,7 +202,6 @@ body.pinned main{margin-left:var(--sw)}
 .vol{width:0;opacity:0;transition:width .18s,opacity .18s,margin .18s;accent-color:#fff;margin:0;cursor:pointer;height:3px}
 .vwrap:hover .vol,.vol:focus{width:72px;opacity:1;margin-right:8px}
 
-/* Big play / spinner */
 .big-play{position:absolute;left:50%;top:50%;z-index:4;width:68px;height:68px;margin:-34px;border:0;border-radius:50%;background:rgba(255,255,255,.95);color:#000;display:grid;place-items:center;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(0,0,0,.06);transition:transform .2s,opacity .18s,background .12s}
 .big-play .ic{width:26px;height:26px;margin-left:3px}
 .big-play:hover{transform:scale(1.08);background:#fff}
@@ -225,7 +213,6 @@ body.pinned main{margin-left:var(--sw)}
 .ripple.go{animation:rp .5s}
 @keyframes rp{from{opacity:1}to{opacity:0}}
 
-/* Settings menu */
 .pmenu{position:absolute;right:12px;bottom:64px;z-index:10;min-width:240px;background:rgba(18,18,18,.98);border:1px solid rgba(255,255,255,.12);border-radius:var(--r);padding:6px;color:#fff;box-shadow:0 20px 48px rgba(0,0,0,.7);backdrop-filter:blur(20px);animation:pmIn .14s cubic-bezier(.2,.8,.2,1)}
 @keyframes pmIn{from{opacity:0;transform:translateY(6px) scale(.98)}}
 .pmenu[hidden]{display:none}
@@ -236,7 +223,6 @@ body.pinned main{margin-left:var(--sw)}
 .pmenu-btn.on{background:#fff;color:#000;font-weight:600}
 .pmenu-div{height:1px;background:rgba(255,255,255,.1);margin:4px 6px}
 
-/* Sticky Player */
 .sticky-player{position:fixed;top:var(--hh);left:0;right:0;z-index:45;background:var(--bg);border-bottom:1px solid var(--border);transform:translateY(-100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);overflow:hidden;box-shadow:var(--shadow-sm)}
 .sticky-player.show{transform:translateY(0)}
 .sticky-inner{max-width:1720px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:10px 28px;height:64px}
@@ -254,7 +240,6 @@ body.pinned main{margin-left:var(--sw)}
 .sticky-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--border)}
 .sticky-progress-fill{height:100%;background:var(--accent);width:0;transition:width .1s linear}
 
-/* Kompakte Topbar (wenn Mini-Player aktiv) */
 body{transition:--hh .35s cubic-bezier(.2,.8,.2,1)}
 body.compact{--hh:46px}
 .top{transition:padding .35s,gap .35s}
@@ -270,7 +255,6 @@ body.compact:not(.sopen) .search{max-width:34px;border-color:transparent;margin-
 body.compact:not(.sopen) .search input{opacity:0;padding:0;flex:0 0 0}
 body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent}
 
-/* Sidebar v2 */
 .nav .cnt{margin-left:auto;font-size:11.5px;color:var(--fg-4);font-variant-numeric:tabular-nums}
 .side-h.tg{display:flex;align-items:center;gap:8px;width:100%;cursor:pointer}
 .side-h.tg .n{font-weight:500;letter-spacing:0;color:var(--fg-4)}
@@ -281,7 +265,6 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 .chgrid .nav{height:38px;border:1px solid var(--border);padding:0 8px;gap:8px;font-size:12.5px;min-width:0}
 @media(max-width:700px){#side{width:min(86vw,320px);padding-bottom:calc(16px + env(safe-area-inset-bottom))}.nav{height:44px}.switch{padding:11px 10px}.chgrid .nav{height:40px}}
 
-/* Weiterschauen */
 .rowh{font-size:16px;font-weight:600;letter-spacing:-.015em;margin:24px 0 12px}
 .hrow{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;padding-bottom:4px}
 .hrow::-webkit-scrollbar{display:none}
@@ -295,12 +278,10 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 .who .topic-link{display:block;font-size:12.5px;color:var(--fg-3)}
 .who a:hover b,.who .topic-link:hover{text-decoration:underline}
 
-/* Suchverlauf */
 .sugg{position:fixed;z-index:60;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:6px}
 .sugg .row{display:flex;align-items:center}
 .sugg .row .nav{flex:1;min-width:0}
 
-/* Nächstes Video */
 .nextup{position:absolute;right:14px;bottom:76px;z-index:9;width:min(300px,calc(100% - 28px));display:none;flex-direction:column;gap:8px;padding:12px;border-radius:var(--r);background:rgba(18,18,18,.96);border:1px solid rgba(255,255,255,.12);color:#fff;backdrop-filter:blur(16px)}
 .nextup.show{display:flex}
 .nextup small{font-size:11px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
@@ -311,14 +292,12 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 .nextup .btn.primary{background:#fff;color:#000;border-color:#fff}
 .nextup .btn.primary:hover{background:#fff;color:#000}
 
-/* Zurück-Leiste im Player */
 .ptop{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:6px;padding:8px 10px 26px;background:linear-gradient(rgba(0,0,0,.7),transparent);color:#fff;pointer-events:none;transition:opacity .22s,transform .22s}
 .ptop .pb{pointer-events:auto}
 .ptop span{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .player.idle.playing .ptop{opacity:0;transform:translateY(-8px)}
 .player.idle.playing .ptop .pb{pointer-events:none}
 
-/* Miniplayer */
 .mini{position:fixed;left:0;top:0;z-index:48;border-radius:var(--r);overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.18);box-shadow:var(--shadow-lg);touch-action:none;transition:transform .28s cubic-bezier(.2,.8,.2,1),width .28s,height .28s}
 .mini[hidden]{display:none}
 .mini.drag,.mini.na{transition:none}
@@ -345,7 +324,6 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 #mtab[data-s=r]{right:0;border-right:0;border-radius:var(--r) 0 0 var(--r)}
 #mtab[data-s=r] .ic{transform:rotate(90deg)}
 
-/* Player: Höhe begrenzen, Blur beim automatischen Weiterspielen, Mobile-Leiste */
 .player{max-height:calc(100vh - var(--hf) - 12px);max-height:calc(100dvh - var(--hf) - 12px)}
 .player:fullscreen{max-height:none}
 .player video{transition:filter .5s,transform .5s}
@@ -357,7 +335,6 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 .player.nexting .nextup .r{justify-content:center}
 @media(max-width:700px){.pb{width:34px;height:34px}.vwrap,.pb.pipb{display:none}.pt{padding:0 6px;font-size:12px}.pc{padding:48px 8px 6px}}
 
-/* Toast */
 #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:.2s;z-index:100;box-shadow:var(--shadow-lg)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
@@ -379,9 +356,7 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* =========================================================
-   TV-MODUS v2 – 10-Fuß-Oberfläche
-   ========================================================= */
+/* TV-MODUS */
 html{font-size:clamp(10px,1.15vw,48px);scrollbar-width:none;cursor:none}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
 html,html *{cursor:none!important;-webkit-tap-highlight-color:transparent}
@@ -396,10 +371,9 @@ input{-webkit-user-select:text;user-select:text;caret-color:var(--fg)}
 *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .tv-hide,.vwrap,.pb.pipb,.sticky-player,#mtab,.mini{display:none!important}
 
-/* ---------- Fokus: Ring + leichtes Vergrößern ---------- */
 :focus{outline:none!important}
-.btn,.chip,.icon-btn,.pb,.nav,.pick,.stile,.card,.pmenu-btn,.desc button{transition:transform .14s,background .14s,color .14s,box-shadow .14s}
-.btn:focus,.chip:focus,.icon-btn:focus,.pick:focus,.desc button:focus{transform:scale(1.07);background:var(--fg);color:var(--bg);box-shadow:var(--fr);position:relative;z-index:4}
+.btn,.chip,.icon-btn,.pb,.nav,.pick,.stile,.card,.pmenu-btn,.desc button,.mbtn{transition:transform .14s,background .14s,color .14s,box-shadow .14s}
+.btn:focus,.chip:focus,.icon-btn:focus,.pick:focus,.desc button:focus,.mbtn:focus{transform:scale(1.07);background:var(--fg);color:var(--bg);box-shadow:var(--fr);position:relative;z-index:4}
 .nav:focus{background:var(--fg);color:var(--bg);transform:translateX(.5rem);box-shadow:0 0 2rem .2rem var(--glow)}
 .nav:focus .dot{box-shadow:0 0 0 .2rem var(--bg)}
 .card:focus{transform:scale(1.05);position:relative;z-index:4}
@@ -416,7 +390,6 @@ input{-webkit-user-select:text;user-select:text;caret-color:var(--fg)}
 .seek:focus .knob{transform:scale(1.5)}
 .player:focus{box-shadow:none}
 
-/* ---------- Grundgrößen ---------- */
 .ic{width:2rem;height:2rem;stroke-width:2.1}
 .icon-btn{width:4.6rem;height:4.6rem;border-radius:1.2rem;background:var(--bg-3);color:var(--fg)}
 .btn{height:4.4rem;padding:0 2.1rem;font-size:1.4rem;gap:.9rem;border:2px solid var(--border-2);border-radius:1.1rem;background:var(--bg-3);color:var(--fg);font-weight:600}
@@ -427,7 +400,6 @@ input{-webkit-user-select:text;user-select:text;caret-color:var(--fg)}
 .avatar.lg{width:6.4rem;height:6.4rem;font-size:1.5rem;border-radius:1.2rem}
 .pick{height:4.4rem;padding:0 1.4rem;font-size:1.4rem;border:2px solid var(--border-2);border-radius:1.1rem;background:var(--bg-3);color:var(--fg)}
 
-/* ---------- Kopfleiste ---------- */
 .top{padding:0 var(--pad);gap:1.4rem;border-bottom:2px solid var(--border)}
 .logo{font-size:1.9rem;gap:1.1rem;margin-right:1rem}
 .logo .mark{width:3.8rem;height:3.8rem;border-radius:.9rem}
@@ -437,7 +409,6 @@ input{-webkit-user-select:text;user-select:text;caret-color:var(--fg)}
 .search input{font-size:1.4rem;padding:0 1.5rem}
 .search button{width:5.2rem;border-left:2px solid var(--border-2)}
 
-/* ---------- Menü (immer Overlay) ---------- */
 #side{width:var(--sw);padding:1.6rem;border-right:2px solid var(--border-2)}
 #scrim{background:rgba(0,0,0,.75)}
 .nav{height:4.6rem;padding:0 1.4rem;font-size:1.4rem;gap:1.4rem;border-radius:1.1rem;margin:.2rem 0;font-weight:600}
@@ -454,7 +425,6 @@ input{-webkit-user-select:text;user-select:text;caret-color:var(--fg)}
 .chgrid .nav{height:4.2rem;font-size:1.15rem;padding:0 1rem;gap:.8rem}
 .sugg{padding:.8rem;border-radius:1.2rem}
 
-/* ---------- Inhalt ---------- */
 main{padding:calc(var(--hf) + 2rem) var(--pad) 6rem}
 .chips{gap:1rem;padding-block:1.4rem;padding-inline:var(--pad);margin:0 calc(-1*var(--pad))}
 .chip{padding:.9rem 2.1rem;font-size:1.35rem;border:2px solid var(--border-2);font-weight:600;background:var(--bg-3)}
@@ -471,7 +441,6 @@ main>div[style*="max-width:1200px"]{max-width:none!important}
 .lvchips{gap:1rem;padding:1.6rem 0}
 main p{font-size:1.3rem}
 
-/* Karten */
 .grid{grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:3.4rem 2rem;padding-top:1rem}
 .thumb{border-radius:1.2rem;border-width:2px}
 .thumb .tmark{font-size:2.8rem;left:1rem;bottom:.8rem}
@@ -489,14 +458,12 @@ main p{font-size:1.3rem}
 .card.compact .thumb .play .ic{width:5.4rem;height:5.4rem;padding:1.3rem 1.1rem 1.3rem 1.5rem}
 .seenb{font-size:1.05rem}
 
-/* Reihen (Platz für Fokus-Ring) */
 .hrow{gap:2.2rem;padding:2rem 2rem 2.4rem;margin:-2rem -2rem -.8rem}
 .hrow .card{flex:0 0 27rem}
 .stile{flex:0 0 23rem;padding:1.8rem;gap:.5rem;border:2px solid var(--border);border-radius:1.2rem}
 .stile b{font-size:1.5rem}
 .stile .sub{font-size:1.15rem}
 
-/* Hero */
 .hero{margin:0 0 3rem;max-height:36rem;border-radius:var(--r-lg)}
 .hin{padding:3.4rem 4rem;max-width:64rem}
 .hin h2{font-size:3.8rem;margin:1.2rem 0 1rem}
@@ -505,7 +472,6 @@ main p{font-size:1.3rem}
 .hact{gap:1.6rem}
 .hact .sub{font-size:1.25rem}
 
-/* ---------- Wiedergabe ---------- */
 .watch{--pw:min(100%,calc((100vh - var(--hf) - 3rem)*16/9));grid-template-columns:minmax(0,1fr);gap:2.4rem;max-width:none;padding-top:0}
 .player{width:var(--pw,min(100%,calc((100vh - var(--hf) - 9rem)*16/9)));margin:0 auto;max-height:none;border-radius:var(--r-lg)}
 .player:fullscreen{border-radius:0;border:0}
@@ -523,7 +489,6 @@ main p{font-size:1.3rem}
 .related h2{font-size:2rem;margin:0 0 1.2rem}
 .related .list{grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:3rem 2rem}
 
-/* Player-Steuerung */
 .perr{padding:3rem;gap:1.6rem}
 .perr .ic{width:4.8rem;height:4.8rem}
 .perr p{font-size:1.5rem;max-width:44rem}
@@ -559,7 +524,6 @@ main p{font-size:1.3rem}
 
 #toast{bottom:4rem;font-size:1.6rem;padding:1.2rem 2.4rem;border-radius:1.1rem}
 
-/* PLUS */
 .seenb{position:absolute;right:.5em;top:.5em;z-index:2;background:rgba(0,0,0,.72);color:#fff;font-size:.8em;padding:.15em .6em;border-radius:99px}
 .newb{background:var(--accent);color:#fff;font-size:.8em;padding:.15em .7em;border-radius:99px;font-weight:600}
 html.cw .grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--cw)),1fr))}
@@ -571,7 +535,7 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 .qrbox{background:#fff;color:#000;padding:1em;border-radius:1em;display:block;width:min(20em,100%);margin:1em 0}
 .qrbox svg{width:100%;height:auto;display:block}
 
-/* ===== TV v3: feste, einklappbare Seitenleiste, kein Header, Vollbild-Player, Suchscreen ===== */
+/* TV v3 */
 :root{--sw:22rem;--hh:0rem;--hf:0rem;--sw-collapsed:6.5rem}
 #scrim{display:none!important}
 .chips{top:0}
@@ -653,11 +617,19 @@ body[data-route=suche]{--pad:3rem}
 .key.w2{grid-column:span 2}.key.w3{grid-column:span 3}.key.w7{grid-column:span 7}
 .key.go{background:var(--accent);color:#fff;border-color:var(--accent)}
 .sres .grid{grid-template-columns:1fr;gap:1.6rem}
-.sres .rowh:first-child,.sres>.rowh{margin-top:0}
+.sres .rowh{margin-top:0}
 .sres .card.compact,.sres .card.sk{display:grid;grid-template-columns:20rem minmax(0,1fr);gap:1.6rem;align-items:center}
 .sres .card.compact .meta,.sres .card.sk .meta{padding-top:0}
 .sres .txt h3{font-size:1.5rem}
 .sres .txt p{font-size:1.15rem}
+
+/* Suchtabs bei den Treffern */
+.sres-tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:.6rem 0 1rem;margin:0 0 2rem;border-bottom:2px solid var(--border)}
+.sres-tabs .chip{font-size:1.4rem;padding:.9rem 2.2rem;gap:.8rem}
+.sres-tabs .chip .ic{width:1.8rem;height:1.8rem}
+.stabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.stabs .chip{display:inline-flex;align-items:center;gap:6px}
+.stabs .chip .ic{width:15px;height:15px}
 
 body[data-route=suche] .sscreen{display:block}
 body[data-route=suche] .sleft{
@@ -680,11 +652,6 @@ body:has(#side:focus-within)[data-route=suche] .sleft{left:calc(var(--sw) + 1rem
 body.sk-away[data-route=suche] .sleft{transform:translateX(-34rem);opacity:.5}
 body.sk-away[data-route=suche] .sres{margin-left:1rem}
 
-/* Suchtabs (Videos/Songs) */
-.skb .stabs{gap:.8rem;margin-bottom:1.4rem;flex-wrap:wrap}
-.skb .stabs .chip{padding:.7rem 1.6rem;font-size:1.3rem;height:auto;min-height:3.6rem}
-
-/* In-Seiten-Dialoge */
 .dlg-back{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:2em;opacity:0;transition:opacity .2s;font-size:16px}
 html[data-input=remote] .dlg-back{font-size:1.8rem}
 .dlg-back.show{opacity:1}
@@ -736,12 +703,10 @@ body[data-route=watch] .player{overflow:clip}
 .ipanel .pclose{position:absolute;top:1.6rem;right:1.8rem}
 .player.morep .pc,.player.morep .ptop{opacity:0!important;visibility:hidden;pointer-events:none!important;transform:translateY(1.2rem)!important;transition:opacity .25s,transform .25s,visibility 0s .25s}
 
-/* Fix schwarzes Bild: kein Filter/Transition auf dem Video im Normalfall */
 .player video{filter:none;transition:none;transform:none}
 html.br .player video{filter:brightness(var(--bright,1))}
 .player.nexting video{filter:blur(18px) brightness(.55);transform:scale(1.08)}
 
-/* Hero-Karussell */
 .hero::after{display:none}
 .hero{touch-action:pan-y}
 .htrack{display:flex;width:100%;height:100%;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
@@ -753,7 +718,6 @@ html.br .player video{filter:brightness(var(--bright,1))}
 .hdots{right:2.2rem;bottom:1.8rem;gap:.8rem}
 .hdots i{width:.9rem;height:.9rem}
 .hdots i.on{width:2.6rem;border-radius:.5rem}
-/* OSD */
 #osd{position:fixed;top:3.5rem;right:4rem;z-index:150;display:flex;align-items:center;gap:1.4rem;padding:1.4rem 2.4rem;border-radius:1.6rem;background:rgba(0,0,0,.85);color:#fff;font-size:1.9rem;font-weight:700;opacity:0;transform:translateY(-1rem);transition:opacity .2s,transform .2s;pointer-events:none}
 #osd.show{opacity:1;transform:none}
 #osd .ic{width:3rem;height:3rem}
@@ -762,7 +726,7 @@ html.br .player video{filter:brightness(var(--bright,1))}
 
 /* ===== Shorts ===== */
 :root{--bn:calc(56px + env(safe-area-inset-bottom,0px))}
-#bnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;height:var(--bn);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);border-top:1px solid var(--border);grid-template-columns:1fr 1fr 1fr}
+#bnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;height:var(--bn);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);border-top:1px solid var(--border);grid-template-columns:1fr 1fr}
 body[data-route="home"] #bnav,body[data-route="shorts"] #bnav{display:grid}
 #bnav a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:500;letter-spacing:.01em;color:var(--fg-3);border-radius:0;transition:color .12s,background .12s}
 #bnav a+a{border-left:1px solid var(--border)}
@@ -794,7 +758,6 @@ body[data-route="shorts"]{overflow:hidden}
 .sh-b.on{background:#fff;color:#000;border-color:#fff}
 .sh-msg{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:14px;color:rgba(255,255,255,.8)}
 .sh-msg .sh-b{width:auto;padding:10px 18px;flex-direction:row}
-/* TV */
 .sh.tv{position:relative;inset:auto;z-index:auto;height:calc(100vh - var(--hf) - 8rem);border:1px solid var(--border)}
 .sh.tv .sh-feed{overflow-y:hidden}
 .sh.tv .sh-it{display:flex}
@@ -832,7 +795,6 @@ body[data-route="shorts"] .mini,body[data-route="shorts"] .sticky-player{display
 .sh.tv .sh-end-t{font-size:1.8rem}.sh.tv .sh-end .sh-b{width:34rem;font-size:1.8rem;justify-content:center}
 .sh.tv .sh-end .sh-b.pri{background:#fff;color:#000}
 
-/* ===== Songs (SoundCloud) ===== */
 .sh-song .sh-bg{position:absolute;inset:-8%;background-size:cover;background-position:center;filter:blur(40px) brightness(.5) saturate(1.4)}
 .sh-song .sh-cover{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;padding-bottom:16%}
 .sh-song .sh-cover img{width:min(72%,44vh);aspect-ratio:1;object-fit:cover;border-radius:50%;box-shadow:0 14px 44px rgba(0,0,0,.6);background:#222}
@@ -847,50 +809,33 @@ body[data-route="shorts"] .mini,body[data-route="shorts"] .sticky-player{display
 .player.song .sbg{z-index:0}
 .player.song video{background:transparent!important;position:relative;z-index:1;opacity:0}
 
-/* ===== Songs: Suche & Gemerkt ===== */
-.ssearch{display:flex;gap:8px;margin:4px 0 14px}
-.sinp{flex:1;min-width:0;height:44px;padding:0 14px;border:1px solid var(--border-2);border-radius:var(--r);background:var(--bg);color:var(--fg);font:inherit;font-size:15px}
-.sinp:focus{outline:none;border-color:var(--fg)}
-.ssearch .btn{height:44px}
-.stabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
-.stabs .chip{display:inline-flex;align-items:center;gap:6px}
-.stabs .chip .ic{width:15px;height:15px}
-.slist{display:flex;flex-direction:column;gap:4px}
-.srow{display:flex;align-items:center;gap:8px}
-.srow-a{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:6px;border-radius:var(--r)}
+.ssearch{display:flex;gap:1.2rem;margin:0 0 2rem}
+.sinp{flex:1;min-width:0;height:4.4rem;padding:0 1.6rem;font-size:1.4rem;border:2px solid var(--border-2);border-radius:1.1rem;background:var(--bg-3);color:var(--fg);font:inherit}
+.sinp:focus{outline:none;box-shadow:var(--fr);border-color:transparent}
+.ssearch .btn{height:4.4rem}
+.stabs{gap:1.2rem;margin-bottom:2rem}
+.stabs .chip{font-size:1.4rem;padding:.9rem 2.2rem;gap:.8rem}
+.stabs .chip .ic{width:1.8rem;height:1.8rem}
+.slist{display:flex;flex-direction:column;gap:1rem}
+.srow{display:flex;align-items:center;gap:1.2rem}
+.srow-a{flex:1;min-width:0;display:flex;align-items:center;gap:2rem;padding:1rem 1.4rem;border-radius:1.2rem;transition:transform .14s,background .14s,box-shadow .14s}
 .srow-a:hover{background:var(--bg-3)}
-.srow-a:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
-.srow-c{flex:none;width:56px;height:56px;border-radius:var(--r-sm);overflow:hidden;background:var(--bg-3);display:grid;place-items:center;color:var(--fg-3)}
+.srow-a:focus{transform:scale(1.02);background:var(--bg-3);box-shadow:var(--fr);position:relative;z-index:4}
+.srow-c{flex:none;width:8rem;height:8rem;border-radius:1rem;overflow:hidden;background:var(--bg-3);display:grid;place-items:center;color:var(--fg-3)}
 .srow-c img{width:100%;height:100%;object-fit:cover}
 .srow .txt{min-width:0}
-.srow h3{margin:0;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.srow p{margin:2px 0 0;font-size:12.5px;color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.srow-l{flex:none;width:44px;height:44px;padding:0;justify-content:center}
+.srow h3{margin:0;font-size:1.7rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow p{margin:.3rem 0 0;font-size:1.3rem;color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow-l{flex:none;width:6rem;height:6rem;padding:0;justify-content:center}
 body[data-route="songs"] #bnav{display:grid}
 @media(min-width:1000px){body[data-route="songs"] #bnav{display:none!important}}
 body[data-route="songs"] main{padding-bottom:calc(var(--bn) + 24px)}
 body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
-/* Song-Fehler in den Shorts */
 .sh-it.failed .sh-end{display:flex}
 .sh-it.failed .sh-info,.sh-it.failed .sh-grad,.sh-it.failed .sh-pp,.sh-it.failed .sh-prog{display:none}
 .sh-fail .ic{width:34px;height:34px;color:rgba(255,255,255,.75)}
 .sh-fail .sh-end-s{font-size:12.5px;color:rgba(255,255,255,.55);max-width:90%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sh-fail .sh-cd{font-size:12.5px;color:rgba(255,255,255,.55);margin-bottom:4px}
-
-.ssearch{gap:1.2rem;margin:0 0 2rem}
-.sinp{height:4.4rem;padding:0 1.6rem;font-size:1.4rem;border:2px solid var(--border-2);border-radius:1.1rem;background:var(--bg-3);color:var(--fg)}
-.sinp:focus{box-shadow:var(--fr);border-color:transparent}
-.ssearch .btn{height:4.4rem}
-.stabs{gap:1.2rem;margin-bottom:2rem}
-.stabs .chip{font-size:1.4rem;padding:.9rem 2.2rem;gap:.8rem}
-.stabs .chip .ic{width:1.8rem;height:1.8rem}
-.slist{gap:1rem}
-.srow{gap:1.2rem}
-.srow-a{gap:2rem;padding:1rem 1.4rem;border-radius:1.2rem;transition:transform .14s,background .14s,box-shadow .14s}
-.srow-a:focus{transform:scale(1.02);background:var(--bg-3);box-shadow:var(--fr);position:relative;z-index:4}
-.srow-c{width:8rem;height:8rem;border-radius:1rem}
-.srow h3{font-size:1.7rem}.srow p{font-size:1.3rem;margin-top:.3rem}
-.srow-l{width:6rem;height:6rem;padding:0;justify-content:center}
 .sh.tv .sh-fail .ic{width:5rem;height:5rem}
 .sh.tv .sh-fail .sh-cd,.sh.tv .sh-fail .sh-end-s{font-size:1.5rem}
 
@@ -915,13 +860,14 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 .saver-hint{position:absolute;bottom:3.5rem;left:0;right:0;text-align:center;font-size:1.3rem;color:rgba(255,255,255,.45);letter-spacing:.05em}
 .tv-saver.hide-clock .saver-clock-wrap{display:none}
 
-/* ===== Mehr-Menü (v2) ===== */
-.mwrap{display:flex;flex-direction:column;gap:2.2rem;max-width:1200px}
-.msec{background:var(--bg-2);border:1px solid var(--border);border-radius:1.6rem;padding:1.8rem 2.2rem 2.2rem}
-.msec-h{font-size:1.15rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3);margin:0 0 1.4rem}
-.mgrid{display:flex;flex-wrap:wrap;gap:.9rem;align-items:center}
-.mbtn{display:inline-flex;align-items:center;gap:1rem;min-height:4.8rem;padding:0 1.8rem;background:var(--bg);border:2px solid var(--border);border-radius:1.1rem;color:var(--fg);font-size:1.4rem;font-weight:600;transition:transform .14s,background .14s,border-color .14s,box-shadow .14s;white-space:nowrap;text-align:left}
-.mbtn:hover{background:var(--bg-3);border-color:var(--border-2)}
+/* ===== Mehr-Menü (klare Karten, keine Überschneidungen) ===== */
+.mwrap{display:flex;flex-direction:column;gap:2.6rem;max-width:1100px;padding-top:.6rem}
+.msec{background:var(--bg-2);border:2px solid var(--border-2);border-radius:1.8rem;padding:2rem 2.4rem 2.4rem;box-shadow:0 2px 4px rgba(0,0,0,.06);position:relative}
+:root[data-theme="dark"] .msec{background:#0e0e0e;border-color:#2c2c2c;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.msec-h{font-size:1.2rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-3);margin:0 0 1.8rem;padding-bottom:1.2rem;border-bottom:2px solid var(--border)}
+.mgrid{display:flex;flex-wrap:wrap;gap:1.1rem;align-items:center}
+.mbtn{display:inline-flex;align-items:center;gap:1.1rem;min-height:4.8rem;padding:0 2rem;background:var(--bg);border:2px solid var(--border-2);border-radius:1.2rem;color:var(--fg);font-size:1.4rem;font-weight:600;transition:transform .14s,background .14s,border-color .14s,box-shadow .14s;white-space:nowrap;text-align:left}
+.mbtn:hover{background:var(--bg-3);border-color:var(--fg-4)}
 .mbtn:focus{background:var(--fg);color:var(--bg);border-color:transparent;transform:scale(1.04);box-shadow:var(--fr);position:relative;z-index:4}
 .mbtn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .mbtn .ic{flex:none}
@@ -1019,9 +965,6 @@ const CHIPS = [
 ];
 const HIDE_RE = /audiodeskription|hörfassung|gebärdensprache|\(mit untertitel|\(ad\)/i;
 
-/* =========================================================
-   Helfer
-   ========================================================= */
 const $ = (s, r = document) => r.querySelector(s);
 const NS = 'http://www.w3.org/2000/svg';
 const main = $('#main');
@@ -1078,9 +1021,6 @@ const slim = e => ({ id:e.id, channel:e.channel, topic:e.topic, title:e.title, d
   timestamp:e.timestamp, duration:e.duration, url_website:e.url_website, url_subtitle:e.url_subtitle,
   url_video:e.url_video, url_video_low:e.url_video_low, url_video_hd:e.url_video_hd });
 
-/* =========================================================
-   Daten
-   ========================================================= */
 const cache = new Map();
 
 async function api(path, body) {
@@ -1135,9 +1075,6 @@ function toggleSaved(e) {
 }
 const loadSaved = id => [...store.get('hist', []), ...store.get('saved', [])].find(x => x.id === id);
 
-/* =========================================================
-   Vorschaubilder
-   ========================================================= */
 let thumbActive = 0; const thumbQueue = [];
 const thumbIO = new IntersectionObserver(entries => {
   for (const en of entries) if (en.isIntersecting) { thumbIO.unobserve(en.target); thumbQueue.push(en.target); pump(); }
@@ -1175,9 +1112,6 @@ function grabFrame(e) {
   });
 }
 
-/* =========================================================
-   Komponenten
-   ========================================================= */
 function Avatar(ch, lg) { return h('span', { class:'avatar' + (lg ? ' lg' : ''), style:`--c:${ch.color}`, title:ch.name }, ch.short); }
 
 function Card(e, { compact = false } = {}) {
@@ -1244,9 +1178,6 @@ function StaticList(host, items, emptyText) {
   items.forEach(e => grid.append(Card(e)));
 }
 
-/* =========================================================
-   Seiten
-   ========================================================= */
 const norm = t => (t || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 function groupShows(items, q) {
   const m = new Map(), nq = norm(q), words = nq.split(' ').filter(Boolean);
@@ -1308,40 +1239,22 @@ function Browse(label) {
 const SORTS = { rel:['Relevanz', { sort:'rel' }], new:['Neueste zuerst', { sort:'timestamp', order:'desc' }], old:['Älteste zuerst', { sort:'timestamp', order:'asc' }], long:['Längste zuerst', { sort:'duration', order:'desc' }] };
 const DURS = { all:['Jede Länge', {}], s:['Unter 10 Min', { max:600 }], m:['10–45 Min', { min:600, max:2700 }], l:['Über 45 Min', { min:2700 }] };
 let sortKey = 'rel', durKey = 'all';
-function Search(q) {
-  document.title = `${q} – Media +`;
-  $('#q').value = q;
-  const qc = q.replace(/[.…!?,:;"“„”]+/g, ' ').replace(/\s+/g, ' ').trim() || q;
-  const host = h('div'), slot = h('div'), sub = h('span', { class:'sub' });
-  const sel = h('select', { class:'pick', 'aria-label':'Sortierung', onchange:ev => { sortKey = ev.target.value; run(); } },
-    Object.entries(SORTS).map(([k, v]) => h('option', { value:k, selected:k === sortKey }, v[0])));
-  const dsel = h('select', { class:'pick', 'aria-label':'Dauer', onchange:ev => { durKey = ev.target.value; run(); } },
-    Object.entries(DURS).map(([k, v]) => h('option', { value:k, selected:k === durKey }, v[0])));
-  main.append(h('div', { class:'page-h' }, h('h1', {}, `Ergebnisse für „${q}“`), sub, h('span', { class:'grow' }), dsel, sel), slot, h('h2', { class:'rowh' }, 'Folgen und Videos'), host);
-  function run() {
-    host.replaceChildren(); routeToken++; cleanups.forEach(f => f()); cleanups = [];
-    Feed(host, async off => { const r = await search({ text:qc, offset:off, ...SORTS[sortKey][1], ...DURS[durKey][1] }); if (r.total) sub.textContent = r.total.toLocaleString('de-DE') + ' Treffer'; return r; }, { emptyText:`Nichts gefunden für „${q}“.` });
-  }
-  run();
-  ShowsRow(slot, async () => {
-    const [a, b] = await Promise.all([search({ text:qc, size:150 }), search({ topic:qc, size:150 })]);
-    const ids = new Set(a.items.map(x => x.id));
-    return { items:[...a.items, ...b.items.filter(x => !ids.has(x.id))] };
-  }, qc);
-}
 
 /* =========================================================
-   Suchscreen mit Tabs Videos / Songs
+   Suchscreen: Tabs (Videos/Songs) jetzt BEI den Treffern
    ========================================================= */
 function SearchScreen(q0) {
   document.title = 'Suche – Media +';
   let q = q0 || '', t = 0, mode = 'videos';
 
-  const disp = h('div', { class:'sdisp' }), res = h('div', { class:'sres' });
+  const disp = h('div', { class:'sdisp' });
+  const resInner = h('div');
 
   const tabVideos = h('button', { class:'chip active', type:'button', 'data-mode':'videos', 'aria-pressed':'true' }, icon('film'), 'Videos');
   const tabSongs  = h('button', { class:'chip',         type:'button', 'data-mode':'songs',  'aria-pressed':'false' }, icon('music'), 'Songs');
-  const tabs = h('div', { class:'stabs' }, tabVideos, tabSongs);
+  const tabs = h('div', { class:'stabs sres-tabs' }, tabVideos, tabSongs);
+
+  const res = h('div', { class:'sres' }, tabs, resInner);
 
   const setMode = m => {
     if (m === mode) return;
@@ -1352,7 +1265,7 @@ function SearchScreen(q0) {
     tabSongs.setAttribute('aria-pressed',  String(m === 'songs'));
     document.title = (m === 'songs' ? 'Songsuche' : 'Suche') + ' – Media +';
     if (q.trim().length >= 2) go();
-    else res.replaceChildren(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
+    else resInner.replaceChildren(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
   };
   tabs.addEventListener('click', ev => {
     const b = ev.target.closest('.chip'); if (!b) return;
@@ -1364,14 +1277,14 @@ function SearchScreen(q0) {
   async function go(ff) {
     clearTimeout(t);
     const tok = routeToken, term = q.trim();
-    res.replaceChildren();
-    if (term.length < 2) { res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
+    resInner.replaceChildren();
+    if (term.length < 2) { resInner.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
     remember(term); drawHist();
 
     if (mode === 'songs') {
       const hd2 = h('h2', { class:'rowh' }, 'Songs · „' + term + '“');
       const slist = h('div', { class:'slist' }, emptyBox('search', 'Suche läuft …'));
-      res.append(hd2, slist);
+      resInner.append(hd2, slist);
       try {
         const l = await SC.search(term);
         if (tok !== routeToken || term !== q.trim() || mode !== 'songs') return;
@@ -1391,7 +1304,7 @@ function SearchScreen(q0) {
 
     const slot = h('div'), hd2 = h('h2', { class:'rowh' }, 'Folgen und Videos'),
           grid = h('div', { class:'grid' }, skeletons(4));
-    res.append(slot, hd2, grid);
+    resInner.append(slot, hd2, grid);
     ShowsRow(slot, async () => {
       const [a, b] = await Promise.all([search({ text:term, size:150 }), search({ topic:term, size:150 })]);
       const ids = new Set(a.items.map(x => x.id));
@@ -1400,12 +1313,12 @@ function SearchScreen(q0) {
     try {
       const r = await search({ text:term, size:24 });
       if (tok !== routeToken || term !== q.trim() || mode !== 'videos') return;
-      if (!r.items.length) { res.replaceChildren(emptyBox('search', `Nichts gefunden für „${term}“.`)); return; }
+      if (!r.items.length) { resInner.replaceChildren(emptyBox('search', `Nichts gefunden für „${term}“.`)); return; }
       grid.replaceChildren();
       if (r.total) hd2.textContent = 'Folgen und Videos · ' + r.total.toLocaleString('de-DE') + ' Treffer';
       r.items.forEach(e => grid.append(Card(e, { compact:true })));
       if (ff === true) focusEl(grid.querySelector('a'));
-    } catch (err) { if (tok === routeToken) res.replaceChildren(errorBox(err, go)); }
+    } catch (err) { if (tok === routeToken) resInner.replaceChildren(errorBox(err, go)); }
   }
 
   const edit = fn => { fn(); draw(); clearTimeout(t); t = setTimeout(go, 700); };
@@ -1428,9 +1341,9 @@ function SearchScreen(q0) {
   };
   drawHist();
 
-  main.append(h('div', { class:'sscreen' }, h('div', { class:'sleft' }, h('div', { class:'skb' }, tabs, disp, kb), hist), res));
+  main.append(h('div', { class:'sscreen' }, h('div', { class:'sleft' }, h('div', { class:'skb' }, disp, kb), hist), res));
   draw();
-  if (q) go(); else res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
+  if (q) go(); else resInner.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
 }
 
 function Channel(id) {
@@ -1456,7 +1369,6 @@ function Library(tab) {
   StaticList(host, list, hist ? 'Noch nichts angesehen.' : 'Noch nichts gemerkt. Tippe beim Video auf „Merken“.');
 }
 
-/* Untertitel: TTML -> WebVTT */
 function ttml2vtt(x) {
   const d = new DOMParser().parseFromString(x, 'application/xml');
   if (d.querySelector('parsererror')) return null;
@@ -1486,9 +1398,6 @@ function loadHls() {
   }));
 }
 
-/* =========================================================
-   Hero
-   ========================================================= */
 function Hero() {
   const tok = routeToken, shell = h('section', { class:'hero' });
   main.prepend(shell);
@@ -1544,15 +1453,13 @@ function Hero() {
   }).catch(() => shell.remove());
 }
 
-/* =========================================================
-   Player
-   ========================================================= */
+/* Player – FIX: kein exitFullscreen mehr */
 function buildPlayer(video, perr) {
   const root = h('div', { class:'player', tabindex:'0' });
   const dur = () => isFinite(video.duration) ? video.duration : 0;
   const toggle = () => video.paused ? video.play().catch(() => {}) : video.pause();
-  const fs = () => document.fullscreenElement ? document.exitFullscreen()
-    : root.requestFullscreen ? root.requestFullscreen() : video.webkitEnterFullscreen && video.webkitEnterFullscreen();
+  // NUR Vollbild betreten – niemals verlassen
+  const fs = () => { if (document.fullscreenElement) return; root.requestFullscreen ? root.requestFullscreen().catch(() => {}) : video.webkitEnterFullscreen && video.webkitEnterFullscreen(); };
   const ib = (ic, label, fn, cls = '') => h('button', { class:'pb ' + cls, type:'button', 'aria-label':label, title:label, onclick:fn }, icon(ic, ic === 'play' || ic === 'pause' ? 'fill' : ''));
 
   const rl = h('div', { class:'ripple', style:'left:0' }, '−10 s'), rr = h('div', { class:'ripple', style:'right:0' }, '+10 s');
@@ -1563,7 +1470,6 @@ function buildPlayer(video, perr) {
   const big = h('button', { class:'big-play', type:'button', 'aria-label':'Abspielen', onclick:toggle }, icon('play', 'fill'));
   const spin = h('div', { class:'spin' });
 
-  /* Seek */
   const buf = h('i', { class:'buf' }), fill = h('i', { class:'fill' }), knob = h('i', { class:'knob' }), tip = h('span', { class:'tip' }, '0:00');
   const seek = h('div', { class:'seek', role:'slider', tabindex:'-1', 'aria-label':'Position' }, h('div', { class:'trk' }, buf, fill), knob, tip);
   const time = h('span', { class:'pt' }, '0:00 / 0:00');
@@ -1581,7 +1487,6 @@ function buildPlayer(video, perr) {
   const endDrag = () => { drag = false; seek.classList.remove('drag'); };
   seek.addEventListener('pointerup', endDrag); seek.addEventListener('pointercancel', endDrag);
 
-  /* Buttons */
   const pp = ib('play', 'Wiedergabe (K)', toggle);
   const b10 = ib('back', '10 s zurück (J)', () => skip(-10, rl)); b10.append(h('small', {}, '10'));
   const f10 = ib('fwd', '10 s vor (L)', () => skip(10, rr)); f10.append(h('small', {}, '10'));
@@ -1592,7 +1497,6 @@ function buildPlayer(video, perr) {
   vol.addEventListener('input', () => { video.muted = false; video.volume = +vol.value; store.set('vol', +vol.value); });
   video.addEventListener('volumechange', () => { mute.replaceChildren(icon(video.muted || !video.volume ? 'mute' : 'vol')); vol.value = video.muted ? 0 : video.volume; });
 
-  /* Settings menu */
   const settingsBtn = h('button', { class:'pb', type:'button', 'aria-label':'Einstellungen', title:'Einstellungen' }, icon('settings'));
   const pmenu = h('div', { class:'pmenu', hidden:true });
   let qualities = [], currentQ = null, onQuality = null;
@@ -1642,14 +1546,12 @@ function buildPlayer(video, perr) {
     time, h('span', { class:'pf' }),
     cc, settingsBtn, pip, fsb);
 
-  /* State */
   const sync = () => { root.classList.toggle('playing', !video.paused && !video.ended); pp.replaceChildren(icon(video.paused ? 'play' : 'pause', 'fill')); };
   ['play', 'pause', 'ended'].forEach(t => video.addEventListener(t, sync));
   video.addEventListener('waiting', () => root.classList.add('wait'));
   ['playing', 'canplay', 'pause', 'error'].forEach(t => video.addEventListener(t, () => root.classList.remove('wait')));
   ['timeupdate', 'progress', 'durationchange', 'loadedmetadata'].forEach(t => video.addEventListener(t, paint));
 
-  /* Click / dblclick */
   let ct;
   video.addEventListener('click', ev => {
     if (!pmenu.hidden) { pmenu.hidden = true; return; }
@@ -1661,7 +1563,6 @@ function buildPlayer(video, perr) {
     ct = setTimeout(toggle, 230);
   });
 
-  /* Auto-Hide */
   let it;
   const HIDE_MS = 4000;
   const isPlaying = () => !video.paused && !video.ended;
@@ -1691,7 +1592,8 @@ function buildPlayer(video, perr) {
   });
 
   const ptitle = h('span', {});
-  const backBtn = ib('left', 'Zurück', () => document.fullscreenElement ? document.exitFullscreen() : (history.length > 1 ? history.back() : (location.hash = '#/')));
+  // FIX: backBtn verlässt nie das Vollbild
+  const backBtn = ib('left', 'Zurück', () => (history.length > 1 ? history.back() : (location.hash = '#/')));
   root.setTitle = t => { ptitle.textContent = t; };
   root.skip = s => skip(s, s < 0 ? rl : rr);
   root.toggle = toggle;
@@ -1708,8 +1610,7 @@ function buildPlayer(video, perr) {
   return root;
 }
 
-
-/* ===== SoundCloud ===== */
+/* SoundCloud */
 const SC_BASE = '';
 const SC = (() => {
   const cache = new Map(), seen = new Set();
@@ -1778,7 +1679,6 @@ const SC = (() => {
   return { api, art, norm, stream, feed, mix, search, cache, likes, isLiked, toggleLike };
 })();
 
-/* Song als "Video" */
 async function SongWatch(url) {
   Mini.close();
   const tok = routeToken, wrap = h('div', { class:'watch' });
@@ -1828,7 +1728,6 @@ async function SongWatch(url) {
   player.focus({ preventScroll:true });
 }
 
-/* ===== Songs: Suche & gemerkte Songs ===== */
 const fmtSongDur = ms => { const s = Math.round((ms || 0) / 1000); return s > 0 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : ''; };
 function SongRow(t) {
   const cov = SC.art(t.artworkUrl);
@@ -1855,7 +1754,6 @@ async function fillSongRecommendations(list, tok, excludeId) {
     list.replaceChildren(h('p', { style:'color:var(--fg-3);font-size:13px' }, 'Empfehlungen konnten nicht geladen werden.'));
   }
 }
-/* #/songs = Suche · #/songs/q/<Begriff> = Ergebnisse · #/songs/liked = gemerkte Songs */
 function Songs(arg) {
   const tok = routeToken, liked = arg === 'liked', q = /^q\//.test(arg) ? arg.slice(2).trim() : '';
   document.title = (liked ? 'Gemerkte Songs' : q || 'Songs') + ' – Media +';
@@ -1868,7 +1766,7 @@ function Songs(arg) {
       h('a', { class:'chip' + (liked ? ' active' : ''), href:'#/songs/liked' }, icon('heart', liked ? 'fill' : ''), 'Gemerkt' + (likes.length ? ' (' + likes.length + ')' : ''))));
   if (liked) {
     main.append(host);
-    if (!likes.length) host.append(emptyBox('heart', 'Noch keine Songs gemerkt. Tippe in den Shorts oder beim Song auf das Herz.', h('a', { class:'btn primary', href:'#/songs' }, icon('search'), 'Songs suchen')));
+    if (!likes.length) host.append(emptyBox('heart', 'Noch keine Songs gemerkt.', h('a', { class:'btn primary', href:'#/songs' }, icon('search'), 'Songs suchen')));
     else likes.forEach(t => host.append(SongRow(t)));
     return;
   }
@@ -1913,9 +1811,8 @@ async function Watch(id) {
   document.title = `${e.title} – Media +`;
   const ch = chanOf(e.channel);
 
-  /* Player */
   const video = h('video', { playsinline:true, preload:'auto', autoplay:true });
-  const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieses Video lässt sich hier nicht abspielen. Manche Sender erlauben die Einbettung außerhalb ihrer Mediathek nicht.'),
+  const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieses Video lässt sich hier nicht abspielen.'),
     e.url_website ? h('a', { class:'btn primary', href:e.url_website, target:'_blank', rel:'noopener noreferrer' }, icon('external'), 'Bei der ARD ansehen') : null);
   const player = buildPlayer(video, perr);
   player.setTitle(e.title);
@@ -1935,7 +1832,6 @@ async function Watch(id) {
   player.append(infoP, moreP);
   moreP.addEventListener('click', ev => { const a = ev.target.closest('a.card'); if (a) { ev.preventDefault(); location.replace(a.getAttribute('href')); } });
 
-  /* Quellen */
   const srcs = [['HD', e.url_video_hd], ['SD', e.url_video], ['LQ', e.url_video_low]].filter(s => s[1]);
   const order = ['HD', 'SD', 'LQ'], pref = store.get('q', 'HD');
   let cur = srcs.find(s => order.indexOf(s[0]) >= order.indexOf(pref)) || srcs[0];
@@ -2005,7 +1901,6 @@ async function Watch(id) {
   video.addEventListener('ended', () => saveProg(e, 0, video.duration));
   window.addEventListener('pagehide', () => { if (video.currentTime > 3) saveProg(e, video.currentTime, video.duration); }, { once:true });
 
-  /* Nächstes Video + Media Session */
   let nextE = null, nt = null;
   const nextBox = h('div', { class:'nextup' });
   player.append(nextBox);
@@ -2031,12 +1926,11 @@ async function Watch(id) {
     ms('nexttrack', goNext);
   }
 
-  /* Tastatur */
   function onKey(ev) {
     if (/input|select|textarea/i.test(ev.target.tagName) || ev.ctrlKey || ev.metaKey || ev.altKey) return;
     const k = ev.key.toLowerCase(), kc = ev.keyCode;
     if (k === ' ' || k === 'k') { if (ev.target.tagName === 'BUTTON') return; ev.preventDefault(); video.paused ? video.play() : video.pause(); }
-    else if (k === 'f') { document.fullscreenElement ? document.exitFullscreen() : player.requestFullscreen && player.requestFullscreen(); }
+    else if (k === 'f') { if (!document.fullscreenElement && player.requestFullscreen) player.requestFullscreen().catch(() => {}); }
     else if (k === 'm') video.muted = !video.muted;
     else if (k === 'j') video.currentTime -= 10;
     else if (k === 'l') video.currentTime += 10;
@@ -2047,7 +1941,6 @@ async function Watch(id) {
   }
   document.addEventListener('keydown', onKey);
 
-  /* Aktionen */
   const acts = h('div', { class:'acts' });
   const saveBtn = h('button', { class:'btn' + (isSaved(e.id) ? ' on' : '') }, icon('bookmark'), isSaved(e.id) ? 'Gemerkt' : 'Merken');
   saveBtn.onclick = () => {
@@ -2063,7 +1956,6 @@ async function Watch(id) {
     e.url_website ? h('a', { class:'btn tv-hide', href:e.url_website, target:'_blank', rel:'noopener noreferrer' }, icon('external'), 'ARD') : null,
     cur ? h('a', { class:'btn tv-hide', href:secure(cur[1]), target:'_blank', rel:'noopener noreferrer', download:'' }, icon('download')) : null);
 
-  /* Untertitel */
   if (e.url_subtitle) (async () => {
     try {
       const r = await fetch(secure(e.url_subtitle)); if (!r.ok) return;
@@ -2077,7 +1969,6 @@ async function Watch(id) {
     } catch {}
   })();
 
-  /* Beschreibung */
   const descText = (e.description || '').trim();
   const descBox = h('div', { class:'desc' },
     h('div', { class:'m' }, [fullDate(e.timestamp), e.duration ? fmtDur(e.duration) : ''].filter(Boolean).join(' · ')),
@@ -2096,7 +1987,6 @@ async function Watch(id) {
       acts),
     descBox);
 
-  /* Sticky Player */
   const sticky = h('div', { class:'sticky-player' },
     h('div', { class:'sticky-inner' },
       h('div', { class:'sticky-video' }),
@@ -2168,7 +2058,6 @@ async function Watch(id) {
     document.body.classList.remove('compact', 'sopen');
   });
 
-  /* Ähnliche Videos */
   const relList = h('div', { class:'list' });
   const related = h('aside', { class:'related' }, h('h2', {}, e.topic ? 'Mehr aus „' + e.topic + '“' : 'Weitere Videos'), relList);
   wrap.append(h('div', {}, player, info), related);
@@ -2194,9 +2083,7 @@ async function Watch(id) {
   })();
 }
 
-/* =========================================================
-   Router, Sidebar, Header
-   ========================================================= */
+/* Mini-Player (nicht genutzt im TV) */
 const Mini = (() => {
   const M = 12;
   let v = null, e = null, kill = null, corner = store.get('minicorner', 'br'), xs = false, docked = null, wasPlaying = false, pos = { x:0, y:0 }, ct, fromRect = null, lastTap = 0;
@@ -2210,80 +2097,27 @@ const Mini = (() => {
   const el = h('div', { class:'mini', hidden:true }, slot, shield, ctl, h('div', { class:'mprog' }, bar));
   const tab = h('button', { id:'mtab', hidden:true, 'aria-label':'Miniplayer öffnen', onclick:() => undock() }, icon('chev'));
   document.body.append(el, tab);
-
   const size = () => { const nar = innerWidth < 700, w = xs ? (nar ? 88 : 104) : Math.min(264, innerWidth * (nar ? .5 : .62)); return { w, h:w * 9 / 16 }; };
   const topY = () => (document.querySelector('.top')?.offsetHeight || 46) + M;
   const spot = c => { const { w, h } = size(); return { x:c[1] === 'l' ? M : innerWidth - w - M, y:c[0] === 't' ? topY() : innerHeight - h - M }; };
   const apply = () => { el.style.transform = `translate(${pos.x}px,${pos.y}px)`; };
-  function layout(anim = true) {
-    if (!anim) el.classList.add('na');
-    const { w, h } = size();
-    el.style.width = w + 'px'; el.style.height = h + 'px'; el.classList.toggle('xs', xs);
-    if (!docked) { pos = spot(corner); apply(); }
-    if (!anim) { void el.offsetWidth; el.classList.remove('na'); }
-  }
+  function layout(anim = true) { if (!anim) el.classList.add('na'); const { w, h } = size(); el.style.width = w + 'px'; el.style.height = h + 'px'; el.classList.toggle('xs', xs); if (!docked) { pos = spot(corner); apply(); } if (!anim) { void el.offsetWidth; el.classList.remove('na'); } }
   const ctlOff = () => { clearTimeout(ct); el.classList.remove('ctl'); };
   const ctlOn = () => { el.classList.add('ctl'); clearTimeout(ct); ct = setTimeout(ctlOff, 3200); };
   const sync = () => v && pp.replaceChildren(icon(v.paused ? 'play' : 'pause', 'fill'));
   const prog = () => { bar.style.width = (v && v.duration ? v.currentTime / v.duration * 100 : 0) + '%'; };
-
-  function dock(side) {
-    const { w, h } = size();
-    docked = side; wasPlaying = !v.paused; v.pause(); ctlOff();
-    pos.x = side === 'l' ? -w - 24 : innerWidth + 24; apply();
-    tab.dataset.s = side; tab.style.top = Math.max(topY(), Math.min(innerHeight - 70, pos.y + h / 2 - 28)) + 'px'; tab.hidden = false;
-  }
-  function undock() {
-    const side = docked; docked = null; tab.hidden = true;
-    corner = (pos.y + size().h / 2 < innerHeight / 2 ? 't' : 'b') + side;
-    layout(); if (wasPlaying) v.play().catch(() => {});
-  }
-  function release() {
-    const { w, h } = size(), cx = pos.x + w / 2, cy = pos.y + h / 2;
-    pos.y = Math.max(topY(), Math.min(innerHeight - h - M, pos.y));
-    if (pos.x < -w * .3) return dock('l');
-    if (pos.x + w > innerWidth + w * .3) return dock('r');
-    corner = (cy < innerHeight / 2 ? 't' : 'b') + (cx < innerWidth / 2 ? 'l' : 'r');
-    store.set('minicorner', corner); layout();
-  }
+  function dock(side) { const { w, h } = size(); docked = side; wasPlaying = !v.paused; v.pause(); ctlOff(); pos.x = side === 'l' ? -w - 24 : innerWidth + 24; apply(); tab.dataset.s = side; tab.style.top = Math.max(topY(), Math.min(innerHeight - 70, pos.y + h / 2 - 28)) + 'px'; tab.hidden = false; }
+  function undock() { const side = docked; docked = null; tab.hidden = true; corner = (pos.y + size().h / 2 < innerHeight / 2 ? 't' : 'b') + side; layout(); if (wasPlaying) v.play().catch(() => {}); }
+  function release() { const { w, h } = size(), cx = pos.x + w / 2, cy = pos.y + h / 2; pos.y = Math.max(topY(), Math.min(innerHeight - h - M, pos.y)); if (pos.x < -w * .3) return dock('l'); if (pos.x + w > innerWidth + w * .3) return dock('r'); corner = (cy < innerHeight / 2 ? 't' : 'b') + (cx < innerWidth / 2 ? 'l' : 'r'); store.set('minicorner', corner); layout(); }
   let sx, sy, ox, oy, drag = false, moved = false;
   shield.addEventListener('pointerdown', ev => { drag = true; moved = false; sx = ev.clientX; sy = ev.clientY; ox = pos.x; oy = pos.y; shield.setPointerCapture(ev.pointerId); });
-  shield.addEventListener('pointermove', ev => {
-    if (!drag) return;
-    const dx = ev.clientX - sx, dy = ev.clientY - sy;
-    if (!moved && Math.hypot(dx, dy) < 6) return;
-    if (!moved) { moved = true; el.classList.add('drag'); ctlOff(); }
-    pos = { x:ox + dx, y:oy + dy }; apply();
-  });
-  const up = () => {
-    if (!drag) return; drag = false; el.classList.remove('drag');
-    if (moved) return release();
-    const n = Date.now(); if (!xs && n - lastTap < 320) { lastTap = 0; return expand(); } lastTap = n;
-    if (xs) { xs = false; layout(); ctlOn(); } else el.classList.contains('ctl') ? ctlOff() : ctlOn();
-  };
+  shield.addEventListener('pointermove', ev => { if (!drag) return; const dx = ev.clientX - sx, dy = ev.clientY - sy; if (!moved && Math.hypot(dx, dy) < 6) return; if (!moved) { moved = true; el.classList.add('drag'); ctlOff(); } pos = { x:ox + dx, y:oy + dy }; apply(); });
+  const up = () => { if (!drag) return; drag = false; el.classList.remove('drag'); if (moved) return release(); const n = Date.now(); if (!xs && n - lastTap < 320) { lastTap = 0; return expand(); } lastTap = n; if (xs) { xs = false; layout(); ctlOn(); } else el.classList.contains('ctl') ? ctlOff() : ctlOn(); };
   shield.addEventListener('pointerup', up); shield.addEventListener('pointercancel', up);
   addEventListener('resize', () => { if (v && !docked) layout(false); });
-
   function expand() { fromRect = el.getBoundingClientRect(); location.hash = '#/watch/' + encodeURIComponent(e.id); }
-  function open(o) {
-    close(); v = o.video; e = o.e; kill = o.kill;
-    const pl = !v.paused;
-    slot.replaceChildren(v); xs = false; docked = null; tab.hidden = true; ctlOff();
-    ['play', 'pause', 'ended'].forEach(t => v.addEventListener(t, sync)); v.addEventListener('timeupdate', prog);
-    el.hidden = false; sync(); prog(); layout(false);
-    if (pl) v.play().catch(() => {});
-    if (o.from && !matchMedia('(prefers-reduced-motion:reduce)').matches) {
-      const { w, h } = size();
-      el.animate([{ transform:`translate(${o.from.left}px,${o.from.top}px) scale(${o.from.width / w},${o.from.height / h})`, transformOrigin:'0 0' },
-        { transform:`translate(${pos.x}px,${pos.y}px) scale(1)`, transformOrigin:'0 0' }], { duration:300, easing:'cubic-bezier(.2,.8,.2,1)' });
-    }
-  }
-  function close() {
-    if (!v) return;
-    ['play', 'pause', 'ended'].forEach(t => v.removeEventListener(t, sync)); v.removeEventListener('timeupdate', prog);
-    try { if (!v.ended && v.currentTime > 3) saveProg(e, v.currentTime, v.duration); } catch {}
-    kill && kill(); v = null; slot.replaceChildren(); el.hidden = true; tab.hidden = true; docked = null; ctlOff();
-  }
+  function open(o) { close(); v = o.video; e = o.e; kill = o.kill; const pl = !v.paused; slot.replaceChildren(v); xs = false; docked = null; tab.hidden = true; ctlOff(); ['play', 'pause', 'ended'].forEach(t => v.addEventListener(t, sync)); v.addEventListener('timeupdate', prog); el.hidden = false; sync(); prog(); layout(false); if (pl) v.play().catch(() => {}); }
+  function close() { if (!v) return; ['play', 'pause', 'ended'].forEach(t => v.removeEventListener(t, sync)); v.removeEventListener('timeupdate', prog); try { if (!v.ended && v.currentTime > 3) saveProg(e, v.currentTime, v.duration); } catch {} kill && kill(); v = null; slot.replaceChildren(); el.hidden = true; tab.hidden = true; docked = null; ctlOff(); }
   return { open, close, takeRect:() => { const r = fromRect; fromRect = null; return r; } };
 })();
 
@@ -2385,9 +2219,6 @@ function showSugg() {
   sugg.hidden = false;
 }
 
-/* =========================================================
-   TV: Fernbedienung
-   ========================================================= */
 const TV = { video:null, player:null, pending:true, last:null };
 const navSnd = new Audio('navigate.mp3'); navSnd.preload = 'auto';
 const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-sunset.jpg', 'tv-saver-mountains.jpg', 'tv-saver-night-lake.jpg', 'tv-saver-night-city.jpg', 'tv-saver-night-mountains.jpg', 'tv-saver-blue-night.jpg', 'tv-saver-sun-mountains.jpg', 'tv-saver-deep-forest.jpg'];
@@ -2398,14 +2229,11 @@ const ScreenSaver = (() => {
   const delay = () => Math.max(1, Number(store.get('saverDelay', 5)) || 5) * 60000;
   const interval = () => Math.max(5, Number(store.get('saverInterval', 30)) || 30) * 1000;
   const pad = n => String(n).padStart(2, '0');
-
   function ensure() {
     if (root) return;
     imgA = h('img', { alt:'', class:'saver-img' });
     imgB = h('img', { alt:'', class:'saver-img' });
-    const clockWrap = h('div', { class:'saver-clock-wrap' },
-      h('div', { class:'saver-clock' }),
-      h('div', { class:'saver-date' }));
+    const clockWrap = h('div', { class:'saver-clock-wrap' }, h('div', { class:'saver-clock' }), h('div', { class:'saver-date' }));
     clockEl = clockWrap.querySelector('.saver-clock');
     dateEl  = clockWrap.querySelector('.saver-date');
     root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
@@ -2430,11 +2258,7 @@ const ScreenSaver = (() => {
     next.classList.add('on'); old.classList.remove('on');
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
-  function hide() {
-    if (!visible) return;
-    visible = false; clearTimeout(slideTimer); root.classList.remove('show');
-    schedule();
-  }
+  function hide() { if (!visible) return; visible = false; clearTimeout(slideTimer); root.classList.remove('show'); schedule(); }
   function show() {
     if (!store.get('saverOn', true) || playing()) return schedule();
     ensure(); visible = true; index = 0;
@@ -2476,7 +2300,6 @@ function navTick() {
 }
 const FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex="0"]';
 
-/* ---------- In-Seiten-Dialoge ---------- */
 let dlgEl = null;
 function closeDlg(ret) {
   if (!dlgEl) return false;
@@ -2516,7 +2339,6 @@ document.addEventListener('keydown', ev => {
   const s = ev.target.tagName === 'SELECT' ? ev.target : null;
   if (s && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); ev.stopPropagation(); openChoice(s); }
 }, true);
-const sideOpen = () => false;
 
 function canFocus(el) {
   if (el.disabled || el.hidden || el.tabIndex < 0) return false;
@@ -2549,13 +2371,8 @@ function initialTarget() {
   if (document.body.dataset.route === 'watch') return $('.watch .player[tabindex]') || $('main .btn.primary');
   return $('main .chip.active, main .btn.primary, main .mbtn, main .stile, main .card');
 }
-function openSide() {
-  focusEl($('#side .nav.active') || $('#side .nav'));
-}
-function closeSide() {
-  const t = TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : initialTarget();
-  focusEl(t || $('#menu'));
-}
+function openSide() { focusEl($('#side .nav.active') || $('#side .nav')); }
+function closeSide() { const t = TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : initialTarget(); focusEl(t || $('#menu')); }
 
 function move(dir) {
   let cur = document.activeElement;
@@ -2565,12 +2382,10 @@ function move(dir) {
     (!dlgEl || dlgEl.contains(el)) &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))) &&
     !(cur && cur.closest('.sleft') && (dir === 'up' || dir === 'down') && !el.closest('.sleft')));
-
   if (!cur) {
     const t = (TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : null) || initialTarget() || all.find(canFocus);
     return focusEl(t);
   }
-
   const c = cur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, horiz = dir === 'left' || dir === 'right';
   if (horiz || TV.colFor !== cur) TV.col = null;
   if (!horiz && TV.col == null) TV.col = cx;
@@ -2598,12 +2413,11 @@ function move(dir) {
   scored.sort((a, b) => a[0] - b[0]);
   const hit = scored.find(s => canFocus(s[1]));
   if (hit) { TV.colFor = hit[1]; return focusEl(hit[1]); }
-
   if (cur.closest('#side') && dir === 'right') return closeSide();
   if (dir === 'left' && !cur.closest('#side,.pmenu,.player,.sticky-player,.sugg')) openSide();
 }
 
-/* FIX: Zurück navigiert zuerst, beendet NICHT vorher das Vollbild */
+/* FIX: goBack verlässt NIE das Vollbild */
 function goBack() {
   if (dlgEl) { (dlgEl._cancel || closeDlg)(); closeDlg(); return true; }
   if (TV.player && TV.player.classList.contains('panel')) { TV.player.closePanels(); focusEl(TV.player); return true; }
@@ -2618,7 +2432,7 @@ function goBack() {
     if (history.length > 1) history.back(); else location.hash = '#/';
     return true;
   }
-  if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return true; }
+  // Kein exitFullscreen mehr – Vollbild bleibt immer erhalten
   return false;
 }
 
@@ -2713,9 +2527,8 @@ $('#side').addEventListener('click', ev => {
   }, 150);
 });
 
-
 /* =========================================================
-   PLUS: Live-TV, Abos, Gesehen, Player-Extras, Kopplung, Daten
+   PLUS
    ========================================================= */
 const IS_TV = typeof TV !== 'undefined';
 const PLUS = (() => {
@@ -2840,7 +2653,6 @@ const PLUS = (() => {
     r.style.setProperty('--bright', store.get('bright', 1)); r.classList.toggle('br', store.get('bright', 1) !== 1);
   }
 
-  /* Neues, aufgeräumtes "Mehr"-Menü */
   function more() {
     document.title = 'Mehr – Media +';
     const B = (ic, l, fn, on) => h('button', { class:'mbtn' + (on ? ' on' : ''), type:'button', onclick:fn }, icon(ic), h('span', {}, l));
@@ -2853,7 +2665,6 @@ const PLUS = (() => {
       SEC('Entdecken',
         L('tv', 'Live-TV', '#/live'),
         L('shorts', 'Shorts', '#/shorts'),
-        L('music', 'Songs', '#/songs'),
         L('refresh', 'Überrasch mich', '#/random')),
       SEC('Zugänglichkeit',
         L('captions', 'Audiodeskription', '#/access/ad'),
@@ -2969,7 +2780,6 @@ const PLUS = (() => {
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
     main.append(h('div', { style:'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class:'btn primary', type:'button', onclick:go }, 'Senden')),
       h('div', { class:'side-h', style:'padding:20px 0 6px' }, 'Zuletzt angesehen'));
-
     store.get('hist', []).slice(0, 12).forEach(x => {
       main.append(h('div', { style:'display:flex;gap:8px;align-items:center;padding:6px 0' },
         h('span', { style:'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, x.title),
@@ -3011,18 +2821,23 @@ const PLUS = (() => {
   const lock = async () => { try { if (navigator.wakeLock && !wl) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } } catch {} };
 
   function init() {
-
     document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend', '<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></symbol><symbol id="i-shorts" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>');
     if (!IS_TV) {
-      const bn = h('nav', { id:'bnav', 'aria-label':'Hauptnavigation' }, h('a', { href:'#/', 'data-r':'home' }, icon('home'), 'Start'), h('a', { href:'#/shorts', 'data-r':'shorts' }, icon('shorts'), 'Shorts'), h('a', { href:'#/songs', 'data-r':'songs' }, icon('music'), 'Songs'));
+      const bn = h('nav', { id:'bnav', 'aria-label':'Hauptnavigation' }, h('a', { href:'#/', 'data-r':'home' }, icon('home'), 'Start'), h('a', { href:'#/shorts', 'data-r':'shorts' }, icon('shorts'), 'Shorts'));
       document.body.append(bn);
       const paintB = () => bn.querySelectorAll('a').forEach(a => a.classList.toggle('on', a.dataset.r === document.body.dataset.route));
       window.addEventListener('hashchange', paintB); paintB();
     }
     const nav = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href },
       icon(ic), h('span', { class:'lbl' }, label), cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
+    // FIX: "Songs" aus der Navigation entfernt – Songs sind jetzt in der Suche
     const home = document.querySelector('#side .nav[data-href="#/"]');
-    if (home) home.after(nav('shorts', 'Shorts', '#/shorts'), nav('music', 'Songs', '#/songs'), nav('heart', 'Gemerkte Songs', '#/songs/liked', 'scLikes'), nav('tv', 'Live-TV', '#/live'), nav('plus', 'Abos', '#/subs', 'subNew'), nav('refresh', 'Überrasch mich', '#/random'), nav('settings', 'Mehr', '#/plus'));
+    if (home) home.after(
+      nav('shorts', 'Shorts', '#/shorts'),
+      nav('tv', 'Live-TV', '#/live'),
+      nav('plus', 'Abos', '#/subs', 'subNew'),
+      nav('refresh', 'Überrasch mich', '#/random'),
+      nav('settings', 'Mehr', '#/plus'));
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
       document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend', '<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></symbol>');
@@ -3084,7 +2899,6 @@ const PLUS = (() => {
     const l = subs(), s = l.find(x => x.k === sk(c, t)); if (s) { s.seen = now(); store.set('subs', l); setTimeout(refreshBadge, 800); }
   };
 
-  /* ---------- Shorts ---------- */
   const SH_Q = ['Comedy', 'Kabarett', 'Dokumentation', 'Wissen', 'Tatort', 'Krimi', 'Reportage', 'Sport', 'Musik', 'Natur', 'Reise', 'Satire', 'Serie', 'Spielfilm', 'Kinder', 'Tagesschau'];
   const shSeen = new Set();
   function shBump(t, d) { if (!t || !d) return; const w = store.get('shW', {}); w[t] = Math.max(-5, Math.min(12, (w[t] || 0) + d)); const k = Object.keys(w); if (k.length > 150) delete w[k[0]]; store.set('shW', w); }
@@ -3147,7 +2961,7 @@ const PLUS = (() => {
       }
       const like = h('button', { class:'sh-b', type:'button', 'aria-label':'Gefällt mir' });
       const paintLike = () => { const on = isSaved(e.id); like.classList.toggle('on', on); like.replaceChildren(icon('heart', on ? 'fill' : ''), h('span', {}, on ? lab('Gemerkt', 'Gemerkt') : 'Like')); };
-      like.onclick = ev => { ev.stopPropagation(); const on = toggleSaved(e); shBump(e.topic, on ? 3 : -3); toast(on ? 'Gemerkt – dein Like ist gespeichert' : 'Like entfernt'); paintLike(); };
+      like.onclick = ev => { ev.stopPropagation(); const on = toggleSaved(e); shBump(e.topic, on ? 3 : -3); toast(on ? 'Gemerkt' : 'Like entfernt'); paintLike(); };
       const sub = h('button', { class:'sh-b', type:'button', 'aria-label':'Sendung abonnieren' });
       const paintSub = () => { const on = isSub(cid, topic); sub.classList.toggle('on', on); sub.replaceChildren(icon('plus'), h('span', {}, on ? 'Abonniert' : lab('Abo', 'Abonnieren'))); };
       sub.onclick = ev => { ev.stopPropagation(); const on = toggleSub(cid, topic); shBump(topic, on ? 3 : -2); toast(on ? 'Sendung abonniert' : 'Abo beendet'); paintSub(); };
@@ -3207,7 +3021,7 @@ const PLUS = (() => {
       paintLike(); s.paintSound();
       s.acts = h('div', { class:'sh-acts' }, like, seek(-10, '−10', 'Zurück'), seek(10, '+10', 'Vor'), vid, snd);
       s.cd = h('div', { class:'sh-cd' }, '');
-      const nxt = h('button', { class:'sh-b pri', type:'button', 'aria-label':'Weiter zum nächsten Short' }, icon('play', 'fill'), h('span', {}, 'Weiter zum nächsten Short'));
+      const nxt = h('button', { class:'sh-b pri', type:'button', 'aria-label':'Weiter zum nächsten Short' }, icon('play', 'fill'), h('span', {}, 'Weiter'));
       nxt.onclick = ev => { ev.stopPropagation(); clearInterval(s.ft); go(ci + 1); };
       const again = h('button', { class:'sh-b', type:'button', 'aria-label':'Song erneut laden' }, icon('refresh'), h('span', {}, 'Erneut versuchen'));
       again.onclick = ev => { ev.stopPropagation(); songRetry(s); };
