@@ -2040,6 +2040,11 @@ const PLUS = (() => {
     s.onerror = () => { peerP = null; rej(new Error('peerjs')); }; document.head.append(s); })));
   const PID = t => 'mplus-' + t;
   let phPeer = null, phConn = null, phP = null, p2pDown = 0, p2pLast = 'noch nicht verbunden';
+  /* Jede Nachricht hat eine ID und wird vom TV bestätigt (ack). Kommt kein ack, ist die Leitung
+     still gestorben (z. B. NAT/Standby) – dann sofort ntfy nutzen und neu verbinden. */
+  const ackWait = new Map();
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const dropConn = c => { if (!c) return; try { c.close(); } catch {} if (phConn === c) phConn = null; };
   function phoneConn() {
     const t = store.get('tvTopic'); if (!t) return Promise.reject(new Error('no-tv'));
     if (phConn && phConn.peer !== PID(t)) { try { phConn.close(); } catch {} phConn = null; }
@@ -2058,6 +2063,7 @@ const PLUS = (() => {
       const p = phPeer;
       return await new Promise((res, rej) => {
         const c = p.connect(PID(t), { reliable:true, serialization:'json' });
+        c.on('data', d => { try { if (typeof d === 'string') d = JSON.parse(d); } catch { return; } if (d && d.t === 'ack' && ackWait.has(d.i)) ackWait.get(d.i)(); });
         const onErr = e => { if (e && e.type === 'peer-unavailable') fail(e); };
         const fail = e => { clearTimeout(to); p.off('error', onErr); if (phConn === c) phConn = null; try { c.close(); } catch {} rej(e); };
         const to = setTimeout(() => fail(new Error('conn-timeout')), 5000);
@@ -2069,11 +2075,22 @@ const PLUS = (() => {
     })().then(c => { p2pLast = 'Direkt verbunden (P2P)'; return c; }, e => { p2pLast = 'P2P-Fehler: ' + (e && (e.type || e.message) || e); throw e; }).finally(() => { phP = null; });
     return phP;
   }
+  async function sendP2P(d, tmo = 1800) {
+    const c = await phoneConn();
+    const i = d.i || newId(); d.i = i;
+    await new Promise((res, rej) => {
+      const to = setTimeout(() => { ackWait.delete(i); rej(new Error('no-ack')); }, tmo);
+      ackWait.set(i, () => { clearTimeout(to); ackWait.delete(i); res(); });
+      try { c.send(d); } catch (e) { clearTimeout(to); ackWait.delete(i); rej(e); }
+    }).catch(e => { dropConn(c); throw e; });
+    p2pDown = 0; p2pLast = 'Direkt verbunden (P2P)';
+  }
   async function sendMsg(d) {
     const t = store.get('tvTopic'); if (!t) throw new Error('no-tv');
+    d = { ...d, i:newId() };
     if (Date.now() > p2pDown) {
-      try { const c = await phoneConn(); c.send(d); p2pLast = 'Direkt verbunden (P2P)'; return 'p2p'; }
-      catch (e) { p2pDown = Date.now() + 15000; setTimeout(() => phoneConn().catch(() => {}), 15000); }
+      try { await sendP2P(d); return 'p2p'; }
+      catch (e) { p2pDown = Date.now() + 4000; setTimeout(() => phoneConn().catch(() => {}), 4000); }
     }
     const r = await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) });
     if (!r.ok) throw new Error(r.status);
@@ -2362,7 +2379,9 @@ const PLUS = (() => {
     }, true);
     /* Kopplung */
     if (IS_TV) { if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); }
-    else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); if (store.get('tvTopic')) setTimeout(() => phoneConn().catch(() => {}), 500); document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) phoneConn().catch(() => {}); }); }
+    else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); if (store.get('tvTopic')) setTimeout(() => phoneConn().catch(() => {}), 500); document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) phoneConn().catch(() => {}); });
+      /* Herzschlag: erkennt tote P2P-Leitungen, bevor die nächste Taste verloren geht */
+      setInterval(() => { if (!store.get('tvTopic') || document.hidden) return; sendP2P({ t:'ping' }, 2500).catch(() => {}); }, 5000); }
     setTimeout(refreshBadge, 3000); setInterval(refreshBadge, 600000);
   }
 
