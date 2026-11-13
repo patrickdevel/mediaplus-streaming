@@ -460,6 +460,24 @@ body[data-route="shorts"] .mini,body[data-route="shorts"] .sticky-player{display
 .sh-end .sh-b.pri{background:#fff;color:#000;border-color:#fff}
 .sh.tv .sh-end-t{font-size:1.8rem}.sh.tv .sh-end .sh-b{width:34rem;font-size:1.8rem;justify-content:center}
 .sh.tv .sh-end .sh-b.pri{background:#fff;color:#000}
+
+/* ===== Songs (SoundCloud) ===== */
+.sh-song .sh-bg{position:absolute;inset:-8%;background-size:cover;background-position:center;filter:blur(40px) brightness(.5) saturate(1.4)}
+.sh-song .sh-cover{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;padding-bottom:16%}
+.sh-song .sh-cover img{width:min(72%,44vh);aspect-ratio:1;object-fit:cover;border-radius:7%;box-shadow:0 14px 44px rgba(0,0,0,.6);background:#222}
+.sh-tag{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3)}
+.sh-song .sh-prog{height:6px;cursor:pointer;z-index:2}
+.sh-song .sh-prog::before{content:"";position:absolute;left:0;right:0;top:-16px;bottom:-4px}
+.sh-g{font-size:17px;font-weight:700;height:22px;line-height:22px}
+.sh.tv .sh-song .sh-cover{padding-bottom:10%}
+.sh.tv .sh-song .sh-cover img{width:auto;height:62%}
+.sh.tv .sh-tag{font-size:1.3rem}
+.sh.tv .sh-g{font-size:2.2rem;height:2.4rem;line-height:2.4rem;width:2.4rem;text-align:center}
+.player.song video{background:transparent!important;position:relative;z-index:1}
+.sbg{position:absolute;inset:0;overflow:hidden;background:#111}
+.sbg-b{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(36px) brightness(.55) saturate(1.4)}
+.sbg-c{position:absolute;inset:0;display:grid;place-items:center}
+.sbg-c img{height:68%;aspect-ratio:1;object-fit:cover;border-radius:7%;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
 </style>
 </head>
 <body>
@@ -1118,6 +1136,93 @@ function buildPlayer(video, perr) {
   return root;
 }
 
+
+/* ===== SoundCloud (Logik aus index.html) ===== */
+const SC_BASE = '';   /* leer = gleiche Domain wie index.html; sonst z.B. 'https://dein-server.de' */
+const SC = (() => {
+  const cache = new Map(), seen = new Set();
+  const GEN = ['all-music', 'hiphoprap', 'electronic', 'pop', 'danceedm', 'house', 'techno', 'trap', 'rbsoul', 'ambient'];
+  const api = async (p, q) => {
+    const r = await fetch(SC_BASE + '/api/' + p + '?' + new URLSearchParams(q), { headers:{ 'x-key':sessionStorage.getItem('key') || '' } });
+    if (r.status === 401) { const k = prompt('Zugriffscode:'); if (k) { sessionStorage.setItem('key', k); return api(p, q); } }
+    const d = await r.json().catch(() => ({ error:'Ungültige Antwort' }));
+    if (!r.ok) throw new Error(d.error || 'Fehler');
+    return d;
+  };
+  const art = u => u ? String(u).replace(/-(large|t\d+x\d+|crop|badge|small|tiny)\./, '-t500x500.') : '';
+  const stream = async t => {
+    if (t.streamUrl) return t.streamUrl;
+    const m = await api('track', { url:t.permalinkUrl });
+    t.streamUrl = m.streamUrl; t.duration = t.duration || m.duration;
+    if (!t.streamUrl) throw new Error('Kein Stream');
+    return t.streamUrl;
+  };
+  const likes = () => { const l = store.get('scLikes', []); return Array.isArray(l) ? l : []; };
+  const isLiked = id => likes().some(x => x.id == id);
+  const toggleLike = t => {
+    let l = likes(); const on = !l.some(x => x.id == t.id);
+    l = on ? [{ id:t.id, title:t.title, permalinkUrl:t.permalinkUrl, duration:t.duration, artworkUrl:t.artworkUrl, artist:t.artist ? { username:t.artist.username } : null }, ...l] : l.filter(x => x.id != t.id);
+    store.set('scLikes', l.slice(0, 300)); return on;
+  };
+  async function feed(n) {
+    const g = GEN[Math.floor(Math.random() * GEN.length)];
+    let l = await api('explore', { type:'trending', genre:g, kind:'trending' });
+    l = (Array.isArray(l) ? l : []).filter(t => t && t.id && t.permalinkUrl && !seen.has(t.id)).sort(() => Math.random() - .5).slice(0, n);
+    return l.map(t => { seen.add(t.id); cache.set(t.permalinkUrl, t); return { sc:t, id:'sc' + t.id, title:t.title, topic:'' }; });
+  }
+  /* mischt Songs zwischen die Video-Shorts (ca. jeder 3. Eintrag) */
+  async function mix(arr) {
+    let songs = []; try { songs = await feed(Math.max(1, Math.ceil(arr.length / 2))); } catch {}
+    if (!songs.length) return arr;
+    const out = [];
+    arr.forEach((e, i) => { out.push(e); if (i % 2 === 1 && songs.length) out.push(songs.shift()); });
+    return out.concat(songs);
+  }
+  return { api, art, stream, feed, mix, cache, isLiked, toggleLike };
+})();
+
+/* Song als "Video": 16:9, unscharfer Cover-Hintergrund + abgerundetes Cover */
+async function SongWatch(url) {
+  Mini.close();
+  const tok = routeToken, wrap = h('div', { class:'watch' });
+  main.append(wrap);
+  let t = SC.cache.get(url);
+  try {
+    if (!t || !t.streamUrl) { const m = await SC.api('track', { url }); t = Object.assign({}, t || {}, m); t.permalinkUrl = t.permalinkUrl || url; SC.cache.set(url, t); }
+  } catch (err) { wrap.append(h('div', { class:'perr show' }, icon('alert'), h('p', {}, 'Song konnte nicht geladen werden: ' + (err.message || err)))); return; }
+  if (tok !== routeToken) return;
+  document.title = `${t.title} – Media +`;
+  const video = h('video', { playsinline:true, preload:'auto', autoplay:true });
+  const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieser Song lässt sich hier nicht abspielen.'));
+  const player = buildPlayer(video, perr);
+  player.setTitle(t.title); player.classList.add('song');
+  const cov = SC.art(t.artworkUrl);
+  player.prepend(h('div', { class:'sbg' }, h('div', { class:'sbg-b', style: cov ? `background-image:url("${cov}")` : '' }), h('div', { class:'sbg-c' }, cov ? h('img', { src:cov, alt:'' }) : null)));
+  let hls = null;
+  const kill = () => { if (hls) { hls.destroy(); hls = null; } video.pause(); video.removeAttribute('src'); video.load(); };
+  const fail = () => perr.classList.add('show');
+  video.addEventListener('error', fail);
+  (async () => {
+    try {
+      const u = await SC.stream(t); if (tok !== routeToken) return;
+      if (/\.m3u8/.test(u) && !video.canPlayType('application/vnd.apple.mpegurl')) {
+        await loadHls(); if (tok !== routeToken) return;
+        if (!window.Hls || !Hls.isSupported()) return fail();
+        hls = new Hls(); hls.loadSource(u); hls.attachMedia(video);
+        hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) fail(); });
+      } else video.src = u;
+      video.play().catch(() => {});
+    } catch { fail(); }
+  })();
+  cleanups.push(kill);
+  if ('mediaSession' in navigator) try { navigator.mediaSession.metadata = new MediaMetadata({ title:t.title, artist:t.artist?.username || '', artwork: cov ? [{ src:cov, sizes:'500x500' }] : [] }); } catch {}
+  wrap.append(player, h('div', { style:'padding:14px 2px' },
+    h('div', { style:'font-size:1.2em;font-weight:700;line-height:1.3' }, t.title),
+    h('div', { style:'opacity:.7;margin-top:4px' }, t.artist?.username || ''),
+    t.permalinkUrl ? h('a', { href:t.permalinkUrl, target:'_blank', rel:'noopener noreferrer', style:'display:inline-block;margin-top:10px;text-decoration:underline;opacity:.85' }, 'Auf SoundCloud') : null));
+  player.focus({ preventScroll:true });
+}
+
 async function Watch(id) {
   Mini.close();
   const tok = routeToken;
@@ -1505,6 +1610,7 @@ function route() {
     case 'subs':    PLUS.subsPage(); break;
     case 'random':  PLUS.random(); break;
     case 'shorts':  PLUS.shorts(); break;
+    case 'song':    SongWatch(arg); break;
     case 'plus':    PLUS.more(); break;
     case 'access':  PLUS.access(arg); break;
     case 'send':    PLUS.sendPage(); break;
@@ -2060,6 +2166,7 @@ const PLUS = (() => {
     const lab = (a, b) => tv ? b : a;
 
     function build(e) {
+      if (e.sc) return buildSong(e);
       const ch = chanOf(e.channel), topic = e.topic || '', cid = ch.id || '_', v = h('video', { class:'sh-v', playsinline:true, preload:'none' });
       v.muted = true; v.setAttribute('webkit-playsinline', '');
       const bar = h('i'), art = h('article', { class:'sh-it paused' });
@@ -2115,6 +2222,64 @@ const PLUS = (() => {
       v.addEventListener('error', () => { if (v.getAttribute('src') && els[ci] === s && v.error) { toast('Nicht abspielbar – weiter'); go(ci + 1); } });
       return s;
     }
+
+    function buildSong(e) {
+      const t = e.sc, cov = SC.art(t.artworkUrl), v = h('audio', { preload:'none' });
+      v.muted = true;
+      const bar = h('i'), art = h('article', { class:'sh-it sh-song paused' });
+      const s = { art, v, e, loaded:false, ready:false, t:0, song:true, hls:null };
+      const time = h('div', { class:'sh-s' }, '');
+      const fmt = x => isFinite(x) ? Math.floor(x / 60) + ':' + String(Math.floor(x % 60)).padStart(2, '0') : '0:00';
+      const prog = h('div', { class:'sh-prog' }, bar);
+      prog.onclick = ev => { ev.stopPropagation(); if (!isFinite(v.duration)) return; const r = prog.getBoundingClientRect(); v.currentTime = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * v.duration; };
+      s.stage = h('div', { class:'sh-stage', tabindex:'0' },
+        h('div', { class:'sh-bg', style: cov ? `background-image:url("${cov}")` : '' }),
+        h('div', { class:'sh-cover' }, cov ? h('img', { src:cov, alt:'' }) : null), v,
+        h('span', { class:'sh-pp' }, icon('play', 'fill')), h('div', { class:'sh-grad' }),
+        h('div', { class:'sh-info' }, h('span', { class:'sh-tag' }, '♪ Song'), h('div', { class:'sh-t' }, t.title), h('div', { class:'sh-ch' }, t.artist ? t.artist.username : ''), time), prog);
+      s.toggle = () => v.paused ? play(s) : v.pause();
+      s.stage.onclick = s.toggle;
+      const like = h('button', { class:'sh-b', type:'button', 'aria-label':'Gefällt mir' });
+      const paintLike = () => { const on = SC.isLiked(t.id); like.classList.toggle('on', on); like.replaceChildren(icon('heart', on ? 'fill' : ''), h('span', {}, on ? 'Gemerkt' : 'Like')); };
+      like.onclick = ev => { ev.stopPropagation(); const on = SC.toggleLike(t); toast(on ? 'Song gemerkt' : 'Like entfernt'); paintLike(); };
+      const seek = (d, g, l) => { const b = h('button', { class:'sh-b', type:'button', 'aria-label':l }, h('span', { class:'sh-g' }, g), h('span', {}, l)); b.onclick = ev => { ev.stopPropagation(); if (isFinite(v.duration)) v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + d)); }; return b; };
+      const snd = h('button', { class:'sh-b', type:'button', 'aria-label':'Ton' });
+      s.paintSound = () => snd.replaceChildren(icon(v.muted ? 'mute' : 'vol'), h('span', {}, v.muted ? 'Ton aus' : 'Ton an'));
+      snd.onclick = ev => { ev.stopPropagation(); store.set('shSound', !sound()); els.forEach(x => { x.v.muted = !sound(); x.paintSound(); }); };
+      const vid = h('a', { class:'sh-b', href:'#/song/' + encodeURIComponent(t.permalinkUrl), 'aria-label':'Als Video ansehen' }, icon('film'), h('span', {}, lab('Video', 'Als Video')));
+      vid.addEventListener('click', () => { try { v.pause(); } catch {} });
+      paintLike(); s.paintSound();
+      s.acts = h('div', { class:'sh-acts' }, like, seek(-10, '−10', 'Zurück'), seek(10, '+10', 'Vor'), vid, snd);
+      s.end = h('div', { style:'display:none' }); s.cont = { focus() {} };
+      art.append(s.stage, s.acts); focusable(s, false);
+      v.addEventListener('play', () => { art.classList.remove('paused'); s.paintSound();
+        if ('mediaSession' in navigator) try { navigator.mediaSession.metadata = new MediaMetadata({ title:t.title, artist:t.artist ? t.artist.username : '', artwork: cov ? [{ src:cov, sizes:'500x500' }] : [] }); } catch {} });
+      v.addEventListener('pause', () => { if (!v.ended) art.classList.add('paused'); });
+      v.addEventListener('volumechange', s.paintSound);
+      v.addEventListener('timeupdate', () => { const d = v.duration; if (d > 0) bar.style.width = Math.min(100, v.currentTime / d * 100) + '%'; time.textContent = fmt(v.currentTime) + ' / ' + fmt(d || (t.duration || 0) / 1000); });
+      v.addEventListener('ended', () => { if (els[ci] === s) go(ci + 1); });
+      v.addEventListener('error', () => { if (v.getAttribute('src') && els[ci] === s && v.error) { toast('Song nicht abspielbar – weiter'); go(ci + 1); } });
+      return s;
+    }
+    function songLoad(s, act) {
+      const v = s.v;
+      if (s.loaded) { if (act) v.preload = 'auto'; return; }
+      s.loaded = true; s.ready = false;
+      const bad = () => { if (els[ci] === s) { toast('Song nicht abspielbar – weiter'); go(ci + 1); } };
+      v.addEventListener('canplay', () => { if (s.ready) return; s.ready = true; if (els[ci] === s) play(s); }, { once:true });
+      (async () => {
+        try {
+          const u = await SC.stream(s.e.sc); if (!s.loaded) return;
+          if (/\.m3u8/.test(u) && !v.canPlayType('application/vnd.apple.mpegurl')) {
+            await loadHls(); if (!s.loaded) return;
+            if (!window.Hls || !Hls.isSupported()) throw new Error('HLS');
+            s.hls = new Hls(); s.hls.loadSource(u); s.hls.attachMedia(v);
+            s.hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) bad(); });
+          } else v.src = u;
+          v.preload = 'auto';
+        } catch { bad(); }
+      })();
+    }
     function focusable(s, on) { [s.stage, ...s.acts.querySelectorAll('.sh-b'), ...s.end.querySelectorAll('.sh-b')].forEach(el => { el.tabIndex = on ? 0 : -1; }); }
     function finish(s) {
       if (s.done) return; s.done = true; s.v.pause(); s.art.classList.add('ended');
@@ -2127,6 +2292,7 @@ const PLUS = (() => {
       if (p) p.catch(() => { v.muted = true; return v.play(); }).catch(() => {}).then(s.paintSound);
     }
     function load(s, act) {
+      if (s.song) return songLoad(s, act);
       const v = s.v;
       if (!s.loaded) {
         s.loaded = true; s.ready = false;
@@ -2139,7 +2305,7 @@ const PLUS = (() => {
         v.preload = act ? 'auto' : 'metadata'; v.src = secure(s.e.url_video || s.e.url_video_low || s.e.url_video_hd);
       } else if (act) v.preload = 'auto';
     }
-    function release(s) { clearTimeout(s.t); s.v.pause(); s.v.removeAttribute('src'); s.v.load(); s.loaded = false; s.ready = false; }
+    function release(s) { clearTimeout(s.t); if (s.hls) { s.hls.destroy(); s.hls = null; } s.v.pause(); s.v.removeAttribute('src'); s.v.load(); s.loaded = false; s.ready = false; }
     function activate(i) {
       if (i === ci || !els[i]) return;
       const pv = els[ci]; if (pv && pv.t0) { const d = Date.now() - pv.t0; shBump(pv.e.topic, d < 2500 ? -1 : d > 8000 ? 1 : 0); }
@@ -2162,7 +2328,8 @@ const PLUS = (() => {
     async function more() {
       if (loading) return; loading = true;
       try {
-        const arr = await shFetch(els.length ? 8 : 6);
+        let arr = await shFetch(els.length ? 8 : 6);
+        try { arr = await SC.mix(arr); } catch {}
         if (tok !== routeToken) return;
         if (!arr.length && !els.length) throw new Error('Keine Videos gefunden');
         arr.forEach(e => { try { const s = build(e); s.art._i = els.length; els.push(s); feed.append(s.art); io.observe(s.art); } catch (x) { console.error('Shorts build', x); lastErr = x; } });
@@ -2188,7 +2355,7 @@ const PLUS = (() => {
       if (s && t.classList.contains('sh-b') && (k === 'ArrowLeft' || c === 37)) return eat(() => s.stage.focus({ preventScroll:true }));
     };
     document.addEventListener('keydown', onKey, true);
-    cleanups.push(() => { document.removeEventListener('keydown', onKey, true); io.disconnect(); els.forEach(s => { clearTimeout(s.t); s.v.pause(); s.v.removeAttribute('src'); s.v.load(); }); });
+    cleanups.push(() => { document.removeEventListener('keydown', onKey, true); io.disconnect(); els.forEach(s => { clearTimeout(s.t); if (s.hls) { s.hls.destroy(); s.hls = null; } s.v.pause(); s.v.removeAttribute('src'); s.v.load(); }); });
     more();
   }
 
