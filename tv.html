@@ -984,6 +984,24 @@ body.home .hero .hdots i.on{width:.7rem;height:2.2rem}
 .hprev::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(0,0,0,.92),rgba(0,0,0,.15) 55%,rgba(0,0,0,.05))}
 .hprev .hin{position:relative;z-index:2}
 .hero.prev .hdots{opacity:0}
+
+/* ===== v5: Leiste mit 2 Karten + Infos, Uhr ===== */
+.hglass{display:flex;align-items:stretch;gap:2.4rem}
+.hglass .hl{flex:none}
+.hglass .hrow{overflow:hidden;scroll-snap-type:none;width:calc(2*15rem + 1.2rem + 2rem);max-width:100%}
+.hglass .hrow .card{flex:0 0 15rem}
+.hinfo{display:none;width:46rem;max-width:46rem;flex-direction:column;justify-content:center;gap:.7rem;padding:.2rem .4rem .2rem 2.2rem;border-left:1px solid rgba(255,255,255,.28);color:#fff}
+.hglass.sel .hinfo{display:flex}
+.hinfo.in{animation:hinfoIn .35s ease both}
+@keyframes hinfoIn{from{opacity:0;transform:translateX(1.2rem)}}
+.hinfo .hbadge{align-self:flex-start;font-size:1.2rem}
+.hinfo h3{margin:0;font-size:2.2rem;line-height:1.15;font-weight:700;letter-spacing:-.02em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hinfo .hmeta{font-size:1.2rem;color:rgba(255,255,255,.7)}
+.hinfo p{margin:0;font-size:1.3rem;line-height:1.45;color:rgba(255,255,255,.85);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hprev .hin{display:none}
+.hclock{position:fixed;top:2.4rem;right:3.4rem;z-index:30;font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:2.6rem;line-height:1;color:#fff;letter-spacing:.02em;text-shadow:0 .1em .5em rgba(0,0,0,.6);pointer-events:none;transition:opacity .35s ease,transform .35s ease}
+body.home-prev .hclock,body.home-scrolled .hclock{opacity:0;transform:translateY(-.6rem)}
+body:not(.home) .hclock{display:none}
 </style>
 </head>
 <body>
@@ -1343,24 +1361,35 @@ function Continue(target) {
     document.body.classList.add('home-bar');
     const hero = document.querySelector('.hero');
     const prevs = items.map(e => {
-      const ch = chanOf(e.channel), pr = getProg(e.id), bg = h('div', { class:'hbg' });
+      const bg = h('div', { class:'hbg' });
       if (store.get('thumbs', true)) bg._e = e;
-      const pct = pr && pr.dur ? Math.min(100, Math.round(pr.pos / pr.dur * 100)) : 0;
-      const el = h('div', { class:'hprev' }, bg, h('div', { class:'hin' },
-        h('span', { class:'hbadge' }, Avatar(ch), ch.name),
-        h('h2', {}, e.title),
-        h('p', {}, (e.description || '').trim()),
-        h('div', { class:'hact' }, h('span', { class:'sub' }, ['Weiterschauen', pct > 2 ? pct + '% gesehen' : '', e.duration ? fmtDur(e.duration) : '', rel(e.timestamp)].filter(Boolean).join(' · ')))));
+      const el = h('div', { class:'hprev' }, bg);
       if (hero) hero.append(el);
       return { el, bg };
     });
+    const info = h('div', { class:'hinfo' });
     let cur = -1;
+    const fill = e => {
+      const ch = chanOf(e.channel), pr = getProg(e.id);
+      const pct = pr && pr.dur ? Math.min(100, Math.round(pr.pos / pr.dur * 100)) : 0;
+      info.replaceChildren(
+        h('span', { class:'hbadge' }, Avatar(ch), ch.name),
+        h('h3', {}, e.title),
+        h('div', { class:'hmeta' }, [pct > 2 ? pct + '% gesehen' : '', e.duration ? fmtDur(e.duration) : '', rel(e.timestamp)].filter(Boolean).join(' · ')),
+        h('p', {}, (e.description || '').trim()));
+    };
     const show = i => {
       if (i === cur) return; cur = i;
       prevs.forEach((p, k) => p.el.classList.toggle('on', k === i));
       if (hero) hero.classList.toggle('prev', i >= 0);
-      const p = prevs[i];
-      if (p && p.bg._e && !p.bg._q) { p.bg._q = 1; thumbQueue.push(p.bg); pump(); }
+      document.body.classList.toggle('home-prev', i >= 0);
+      glass.classList.toggle('sel', i >= 0);
+      if (i >= 0) {
+        fill(items[i]);
+        info.classList.remove('in'); void info.offsetWidth; info.classList.add('in');
+        const p = prevs[i];
+        if (p.bg._e && !p.bg._q) { p.bg._q = 1; thumbQueue.push(p.bg); pump(); }
+      }
     };
     const cards = items.map((e, i) => {
       const pr = getProg(e.id), ch = chanOf(e.channel);
@@ -1371,10 +1400,10 @@ function Continue(target) {
       a._i = i; return a;
     });
     const row = h('div', { class:'hrow' }, cards);
-    const glass = h('section', { class:'hglass' }, h('h2', { class:'rowh' }, 'Weiterschauen'), row);
+    const glass = h('section', { class:'hglass' }, h('div', { class:'hl' }, h('h2', { class:'rowh' }, 'Weiterschauen'), row), info);
     const idxOf = ev => { const c = ev.target.closest && ev.target.closest('.card'); return c && c._i != null ? c._i : -1; };
     row.addEventListener('focusin', ev => { const i = idxOf(ev); if (i >= 0) show(i); });
-    row.addEventListener('mouseover', ev => { const i = idxOf(ev); if (i >= 0) show(i); });
+    row.addEventListener('mouseover', ev => { const i = idxOf(ev); if (i >= 0) { show(i); row.scrollTo({ left:Math.max(0, cards[Math.max(0, i - 1)].offsetLeft - cards[0].offsetLeft), behavior:'smooth' }); } });
     glass.addEventListener('focusout', ev => { if (!ev.relatedTarget || !glass.contains(ev.relatedTarget)) show(-1); });
     glass.addEventListener('mouseleave', () => { if (!glass.contains(document.activeElement)) show(-1); });
     target.append(glass);
@@ -1428,6 +1457,10 @@ function Browse(label) {
       document.body.style.setProperty('--hp', p.toFixed(3));
       document.body.classList.toggle('home-scrolled', y > H * .18);
     };
+    const clk = h('div', { class:'hclock' });
+    const tick = () => { const d = new Date(); clk.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+    tick(); const ct = setInterval(tick, 10000); document.body.append(clk);
+    cleanups.push(() => { clearInterval(ct); clk.remove(); });
     window.addEventListener('scroll', onScroll, { passive:true }); onScroll();
     cleanups.push(() => { window.removeEventListener('scroll', onScroll); document.body.style.removeProperty('--hp'); });
     Rows();
@@ -2334,7 +2367,7 @@ function route() {
   thumbQueue.length = 0;
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   const a = parts[0] || '', arg = decodeURIComponent(parts.slice(1).join('/') || '');
-  main.replaceChildren(); window.scrollTo(0, 0); document.body.classList.remove('sk-away', 'home', 'home-scrolled', 'home-bar'); document.body.style.removeProperty('--hp');
+  main.replaceChildren(); window.scrollTo(0, 0); document.body.classList.remove('sk-away', 'home', 'home-scrolled', 'home-bar', 'home-prev'); document.body.style.removeProperty('--hp');
   document.body.dataset.route = a || 'home';
   if (a !== 'search') $('#q').value = '';
   switch (a) {
@@ -2859,8 +2892,8 @@ function focusEl(el) {
   }
   if (document.body.classList.contains('home') && el.closest('.hero,.hglass')) {
     if (window.scrollY > 2) window.scrollTo({ top:0, behavior:'smooth' });
-    const row = el.closest('.hrow');
-    if (row) { const a = el.getBoundingClientRect(), b = row.getBoundingClientRect(); row.scrollBy({ left:(a.left + a.width / 2) - (b.left + b.width / 2), behavior:'smooth' }); }
+    const row = el.closest('.hglass .hrow');
+    if (row) { const cs = row.children, i = Array.prototype.indexOf.call(cs, el); row.scrollTo({ left:Math.max(0, cs[Math.max(0, i - 1)].offsetLeft - cs[0].offsetLeft), behavior:'smooth' }); }
     return;
   }
   const fixedBar = el.closest('.chips,.top,#side,.sticky-player,.pmenu,.sugg');
