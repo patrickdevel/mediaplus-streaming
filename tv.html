@@ -1046,6 +1046,19 @@ body.home main>.hrow,body.home main .hsec>.hrow{margin-left:calc(-1*var(--pad));
 .hload-t{position:relative;font-size:6rem;font-weight:700;letter-spacing:-.04em;color:rgba(255,255,255,.88);animation:hloadPulse 1.6s ease-in-out infinite}
 .hload-t small{font-size:inherit;font-weight:500;margin-left:.04em}
 @keyframes hloadPulse{50%{opacity:.45}}
+
+/* ===== Willkommens-Overlay ===== */
+#welcome{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.2rem;padding:2rem;
+  background:rgba(0,0,0,.78);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .5s ease,backdrop-filter .7s ease,-webkit-backdrop-filter .7s ease,visibility 0s linear .7s}
+#welcome.show{opacity:1;visibility:visible;pointer-events:auto;-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);transition-delay:0s}
+#welcome img{max-width:min(86vw,90rem);max-height:62vh;object-fit:contain;border-radius:1.2rem;opacity:0;transform:scale(.94);transition:opacity .6s ease .35s,transform .6s ease .35s}
+#welcome.show img{opacity:1;transform:none}
+#welcome h1{display:none;margin:0;font-size:2.6em;color:#fff;text-align:center}
+#welcome.noimg h1{display:block}
+#welcome.noimg img{display:none}
+#welcome .btn{opacity:0;transform:translateY(10px);transition:opacity .5s ease .7s,transform .5s ease .7s,background .15s,color .15s}
+#welcome.show .btn{opacity:1;transform:none}
 </style>
 </head>
 <body>
@@ -1555,6 +1568,7 @@ function SearchScreen(q0) {
     const tok = routeToken, term = q.trim();
     const tl = term.toLowerCase();
     if (tl === '///clock') { ScreenSaver.show(true); return; }
+    if (tl === '///hi') { Welcome.show(); return; }
     if (tl === '///reload') { history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return; }
     resInner.replaceChildren();
     if (term.length < 2) { resInner.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
@@ -3207,6 +3221,59 @@ $('#side').addEventListener('click', ev => {
 });
 
 /* =========================================================
+   WELCOME – Willkommens-Overlay (Blur + welcome.gif + Weiter)
+   ========================================================= */
+const Welcome = (() => {
+  let el = null, btn = null, prevFocus = null, open = false;
+  const KEYS_CLOSE = ['Enter', ' ', 'Escape', 'GoBack', 'BrowserBack'];
+  function ensure() {
+    if (el) return;
+    const img = h('img', { src:'welcome.gif', alt:'Willkommen', draggable:'false' });
+    el = h('div', { id:'welcome', role:'dialog', 'aria-modal':'true', 'aria-label':'Willkommen' },
+      img, h('h1', {}, 'Willkommen'));
+    img.addEventListener('error', () => el.classList.add('noimg'));
+    btn = h('button', { class:'btn primary', type:'button', onclick:() => hide() }, 'Weiter');
+    el.append(btn);
+    document.body.append(el);
+  }
+  function onKey(ev) {
+    if (!open) return;
+    const k = ev.key, c = ev.keyCode;
+    ev.preventDefault(); ev.stopImmediatePropagation();
+    if (KEYS_CLOSE.includes(k) || c === 13 || c === 27 || c === 461 || c === 10009) hide();
+    else if (btn && document.activeElement !== btn) btn.focus();
+  }
+  function show() {
+    ensure();
+    if (open) return;
+    open = true;
+    prevFocus = document.activeElement;
+    el.classList.remove('noimg');
+    const im = el.querySelector('img'); if (im) { const src = im.getAttribute('src'); im.removeAttribute('src'); im.setAttribute('src', src); }   /* GIF startet jedes Mal von vorn */
+    void el.offsetWidth;
+    el.classList.add('show');
+    document.addEventListener('keydown', onKey, true);
+    setTimeout(() => { if (open && btn) btn.focus(); }, 900);
+  }
+  function hide() {
+    if (!open) return;
+    open = false;
+    store.set('welcomed', true);
+    el.classList.remove('show');
+    document.removeEventListener('keydown', onKey, true);
+    try { if (prevFocus && prevFocus.isConnected && prevFocus !== document.body) prevFocus.focus(); } catch {}
+    prevFocus = null;
+  }
+  /* Erststart: erst alles laden lassen, dann nach kurzer Zeit verblurren */
+  function firstRun() {
+    if (store.get('welcomed', false)) return;
+    const go = () => setTimeout(show, 500);
+    if (document.readyState === 'complete') go(); else window.addEventListener('load', go, { once:true });
+  }
+  return { show, hide, firstRun, isOpen:() => open };
+})();
+
+/* =========================================================
    PLUS
    ========================================================= */
 const IS_TV = typeof TV !== 'undefined';
@@ -3492,6 +3559,7 @@ const PLUS = (() => {
       if (d.t === 'clock' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///clock')) {
         ScreenSaver.show(true); return;
       }
+      if (d.t === 'hi' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///hi')) { Welcome.show(); return; }
       if (d.t === 'k') { remoteKey(d.v); return; }
       if (d.t === 'q') location.hash = '#/search/' + encodeURIComponent(d.v);
       else if (d.t === 'w') { if (d.e && d.e.id) cache.set(d.v, d.e); location.hash = '#/watch/' + encodeURIComponent(d.v); }
@@ -3983,6 +4051,11 @@ const PLUS = (() => {
     const q = $('#q').value.trim();
     const ql = q.toLowerCase();
     if (ql === '///reload' && store.get('tvTopic')) { PLUS.sendTv({ t:'reload' }); $('#q').value = ''; return; }
+    if (ql === '///hi') {
+      if (store.get('tvTopic')) PLUS.sendTv({ t:'hi' });
+      else Welcome.show();
+      $('#q').value = ''; return;
+    }
     if (ql === '///clock') {
       if (store.get('tvTopic')) PLUS.sendTv({ t:'clock' });
       else ScreenSaver.show(true);
@@ -3998,6 +4071,7 @@ const PLUS = (() => {
   window.addEventListener('resize', applyPin);
   PLUS.init();
   route();
+  Welcome.firstRun();
 })();
 </script>
 </body>
