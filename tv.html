@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="referrer" content="no-referrer">
+<meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
 <meta name="theme-color" content="#000000">
 <title>Media + TV – ARD-Videos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M14 7h4v7h7v4h-7v7h-4v-7H7v-4h7z' fill='white'/%3E%3C/svg%3E">
@@ -40,6 +41,18 @@ button{cursor:pointer;background:none;border:0;padding:0}
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input,textarea{-webkit-user-select:text;user-select:text}
 a,img{-webkit-user-drag:none}
+
+/* Keine blauen Links / Auswahl-Highlights beim Tippen */
+a,button,img{-webkit-touch-callout:none;-webkit-user-drag:none}
+::selection{background:color-mix(in srgb,var(--fg) 22%,transparent);color:inherit}
+::-moz-selection{background:color-mix(in srgb,var(--fg) 22%,transparent);color:inherit}
+input,textarea,select{caret-color:var(--fg);-webkit-text-fill-color:currentColor}
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,textarea:-webkit-autofill{
+  -webkit-text-fill-color:var(--fg);
+  -webkit-box-shadow:0 0 0 1000px var(--bg) inset;
+  transition:background-color 5000s ease-in-out 0s;
+}
+
 .ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .ic.fill{fill:currentColor;stroke:none}
 .icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border:0;background:transparent;border-radius:var(--r-sm);color:var(--fg-2);transition:background .12s,color .12s}
@@ -667,6 +680,10 @@ body:has(#side:focus-within)[data-route=suche] .sleft{left:calc(var(--sw) + 1rem
 body.sk-away[data-route=suche] .sleft{transform:translateX(-34rem);opacity:.5}
 body.sk-away[data-route=suche] .sres{margin-left:1rem}
 
+/* Suchtabs (Videos/Songs) */
+.skb .stabs{gap:.8rem;margin-bottom:1.4rem;flex-wrap:wrap}
+.skb .stabs .chip{padding:.7rem 1.6rem;font-size:1.3rem;height:auto;min-height:3.6rem}
+
 /* In-Seiten-Dialoge */
 .dlg-back{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:2em;opacity:0;transition:opacity .2s;font-size:16px}
 html[data-input=remote] .dlg-back{font-size:1.8rem}
@@ -882,16 +899,32 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 .sbg-c{position:absolute;inset:0;display:grid;place-items:center}
 .sbg-c img{width:min(42%,260px);height:auto;max-height:48%;aspect-ratio:1;object-fit:cover;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
 
-/* TV-Screensaver */
-.tv-saver{position:fixed;inset:0;z-index:180;background:#050505;color:#fff;display:grid;place-items:center;opacity:0;visibility:hidden;transition:opacity .5s;overflow:hidden}
+/* ===== Screensaver (v2) ===== */
+.tv-saver{position:fixed;inset:0;z-index:180;background:#050505;color:#fff;opacity:0;visibility:hidden;transition:opacity .8s;overflow:hidden}
 .tv-saver.show{opacity:1;visibility:visible}
-.tv-saver img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.04);transition:opacity 1.2s,transform 14s ease-out;filter:brightness(.58) saturate(.9)}
-.tv-saver img.on{opacity:1;transform:scale(1)}
-.tv-saver::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.35) 70%,rgba(0,0,0,.7))}
-.tv-saver-clock{position:relative;z-index:2;margin-top:48vh;font-size:clamp(4rem,10vw,11rem);font-weight:300;letter-spacing:-.06em;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 .08em .3em rgba(0,0,0,.55)}
-.tv-saver-date{position:relative;z-index:2;margin-top:1.2rem;font-size:clamp(1rem,2vw,2.2rem);letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82)}
-.tv-saver-hint{position:absolute;z-index:2;bottom:3rem;left:0;right:0;text-align:center;font-size:1.2rem;color:rgba(255,255,255,.65)}
-.tv-saver.hide-clock .tv-saver-clock,.tv-saver.hide-clock .tv-saver-date{display:none}
+.saver-bg{position:absolute;inset:0}
+.saver-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.08);transition:opacity 1.4s ease,transform 26s ease-out;filter:brightness(.42) saturate(.85)}
+.saver-img.on{opacity:1;transform:scale(1)}
+.saver-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.1) 0%,rgba(0,0,0,.55) 70%,rgba(0,0,0,.88) 100%)}
+.saver-clock-wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;text-align:center;animation:saverRise .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes saverRise{from{opacity:0;transform:translateY(1.5rem)}}
+.saver-clock{font-size:clamp(7rem,20vw,22rem);font-weight:100;letter-spacing:-.04em;line-height:.9;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.08em;text-shadow:0 .02em .3em rgba(0,0,0,.45)}
+.saver-colon{opacity:.9;animation:blink 2s ease-in-out infinite;font-weight:200}
+@keyframes blink{0%,40%,60%,100%{opacity:1}50%{opacity:.15}}
+.saver-date{margin-top:1.8rem;font-size:clamp(1.4rem,2.6vw,2.8rem);letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.82);font-weight:400}
+.saver-hint{position:absolute;bottom:3.5rem;left:0;right:0;text-align:center;font-size:1.3rem;color:rgba(255,255,255,.45);letter-spacing:.05em}
+.tv-saver.hide-clock .saver-clock-wrap{display:none}
+
+/* ===== Mehr-Menü (v2) ===== */
+.mwrap{display:flex;flex-direction:column;gap:2.2rem;max-width:1200px}
+.msec{background:var(--bg-2);border:1px solid var(--border);border-radius:1.6rem;padding:1.8rem 2.2rem 2.2rem}
+.msec-h{font-size:1.15rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3);margin:0 0 1.4rem}
+.mgrid{display:flex;flex-wrap:wrap;gap:.9rem;align-items:center}
+.mbtn{display:inline-flex;align-items:center;gap:1rem;min-height:4.8rem;padding:0 1.8rem;background:var(--bg);border:2px solid var(--border);border-radius:1.1rem;color:var(--fg);font-size:1.4rem;font-weight:600;transition:transform .14s,background .14s,border-color .14s,box-shadow .14s;white-space:nowrap;text-align:left}
+.mbtn:hover{background:var(--bg-3);border-color:var(--border-2)}
+.mbtn:focus{background:var(--fg);color:var(--bg);border-color:transparent;transform:scale(1.04);box-shadow:var(--fr);position:relative;z-index:4}
+.mbtn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.mbtn .ic{flex:none}
 </style>
 </head>
 <body>
@@ -933,7 +966,7 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 
 <div id="legacy" hidden>
   <button id="menu"></button><span id="logoMark"></span><button id="theme"></button>
-  <form id="sf"><input id="q" type="search"><button type="submit" id="sbtn"></button></form>
+  <form id="sf"><input id="q" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="submit" id="sbtn"></button></form>
 </div>
 
 <aside id="side" aria-label="Navigation"></aside>
@@ -1297,18 +1330,67 @@ function Search(q) {
   }, qc);
 }
 
+/* =========================================================
+   Suchscreen mit Tabs Videos / Songs
+   ========================================================= */
 function SearchScreen(q0) {
   document.title = 'Suche – Media +';
-  let q = q0 || '', t = 0;
+  let q = q0 || '', t = 0, mode = 'videos';
+
   const disp = h('div', { class:'sdisp' }), res = h('div', { class:'sres' });
+
+  const tabVideos = h('button', { class:'chip active', type:'button', 'data-mode':'videos', 'aria-pressed':'true' }, icon('film'), 'Videos');
+  const tabSongs  = h('button', { class:'chip',         type:'button', 'data-mode':'songs',  'aria-pressed':'false' }, icon('music'), 'Songs');
+  const tabs = h('div', { class:'stabs' }, tabVideos, tabSongs);
+
+  const setMode = m => {
+    if (m === mode) return;
+    mode = m;
+    tabVideos.classList.toggle('active', m === 'videos');
+    tabSongs.classList.toggle('active',  m === 'songs');
+    tabVideos.setAttribute('aria-pressed', String(m === 'videos'));
+    tabSongs.setAttribute('aria-pressed',  String(m === 'songs'));
+    document.title = (m === 'songs' ? 'Songsuche' : 'Suche') + ' – Media +';
+    if (q.trim().length >= 2) go();
+    else res.replaceChildren(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
+  };
+  tabs.addEventListener('click', ev => {
+    const b = ev.target.closest('.chip'); if (!b) return;
+    setMode(b.dataset.mode);
+  });
+
   const draw = () => { disp.replaceChildren(h('span', {}, q || 'Suchbegriff eingeben …'), h('i', { class:'caret' })); disp.classList.toggle('ph', !q); };
+
   async function go(ff) {
     clearTimeout(t);
     const tok = routeToken, term = q.trim();
     res.replaceChildren();
     if (term.length < 2) { res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
     remember(term); drawHist();
-    const slot = h('div'), hd2 = h('h2', { class:'rowh' }, 'Folgen und Videos'), grid = h('div', { class:'grid' }, skeletons(4));
+
+    if (mode === 'songs') {
+      const hd2 = h('h2', { class:'rowh' }, 'Songs · „' + term + '“');
+      const slist = h('div', { class:'slist' }, emptyBox('search', 'Suche läuft …'));
+      res.append(hd2, slist);
+      try {
+        const l = await SC.search(term);
+        if (tok !== routeToken || term !== q.trim() || mode !== 'songs') return;
+        if (!l.length) { slist.replaceChildren(emptyBox('music', `Keine Songs für „${term}“ gefunden.`)); }
+        else {
+          slist.replaceChildren(...l.map(SongRow));
+          hd2.textContent = 'Songs · ' + l.length + ' Treffer';
+          if (ff === true) { const a = slist.querySelector('.srow-a'); if (a) focusEl(a); }
+        }
+      } catch (err) {
+        if (tok !== routeToken) return;
+        slist.replaceChildren(emptyBox('alert', 'Die Songsuche ist gerade nicht möglich.',
+          h('div', { style:'font-size:12.5px;color:var(--fg-4)' }, String(err.message || err))));
+      }
+      return;
+    }
+
+    const slot = h('div'), hd2 = h('h2', { class:'rowh' }, 'Folgen und Videos'),
+          grid = h('div', { class:'grid' }, skeletons(4));
     res.append(slot, hd2, grid);
     ShowsRow(slot, async () => {
       const [a, b] = await Promise.all([search({ text:term, size:150 }), search({ topic:term, size:150 })]);
@@ -1317,12 +1399,15 @@ function SearchScreen(q0) {
     }, term);
     try {
       const r = await search({ text:term, size:24 });
-      if (tok !== routeToken || term !== q.trim()) return;
+      if (tok !== routeToken || term !== q.trim() || mode !== 'videos') return;
       if (!r.items.length) { res.replaceChildren(emptyBox('search', `Nichts gefunden für „${term}“.`)); return; }
-      grid.replaceChildren(); if (r.total) hd2.textContent = 'Folgen und Videos · ' + r.total.toLocaleString('de-DE') + ' Treffer'; r.items.forEach(e => grid.append(Card(e, { compact:true })));
+      grid.replaceChildren();
+      if (r.total) hd2.textContent = 'Folgen und Videos · ' + r.total.toLocaleString('de-DE') + ' Treffer';
+      r.items.forEach(e => grid.append(Card(e, { compact:true })));
       if (ff === true) focusEl(grid.querySelector('a'));
     } catch (err) { if (tok === routeToken) res.replaceChildren(errorBox(err, go)); }
   }
+
   const edit = fn => { fn(); draw(); clearTimeout(t); t = setTimeout(go, 700); };
   const key = (label, fn, cls = '') => h('button', { class:'key ' + cls, type:'button', onclick:fn }, label);
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß0123456789'.split('');
@@ -1331,6 +1416,7 @@ function SearchScreen(q0) {
     key('Leerzeichen', () => edit(() => { if (q && !q.endsWith(' ')) q += ' '; }), 'w3'),
     key('⌫ Löschen', () => edit(() => { q = q.slice(0, -1); }), 'w2'),
     key('Leeren', () => edit(() => { q = ''; }), 'w2'));
+
   const hist = h('div', { class:'shist' });
   const drawHist = () => {
     const list = store.get('recent', []);
@@ -1341,7 +1427,8 @@ function SearchScreen(q0) {
       h('button', { class:'hitem clr', type:'button', onclick:async () => { if (await askConfirm('Suchverlauf wirklich leeren?')) { store.set('recent', []); drawHist(); const f = main.querySelector('.skb .key'); f && focusEl(f); } } }, 'Verlauf leeren'));
   };
   drawHist();
-  main.append(h('div', { class:'sscreen' }, h('div', { class:'sleft' }, h('div', { class:'skb' }, disp, kb), hist), res));
+
+  main.append(h('div', { class:'sscreen' }, h('div', { class:'sleft' }, h('div', { class:'skb' }, tabs, disp, kb), hist), res));
   draw();
   if (q) go(); else res.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
 }
@@ -1574,11 +1661,7 @@ function buildPlayer(video, perr) {
     ct = setTimeout(toggle, 230);
   });
 
-  /* =========================================================
-     Auto-Hide: Steuerung (Play/Pause/Info/Weitere usw.)
-     blendet sich nach ein paar Sekunden automatisch aus
-     und bei jeder Eingabe wieder ein.
-     ========================================================= */
+  /* Auto-Hide */
   let it;
   const HIDE_MS = 4000;
   const isPlaying = () => !video.paused && !video.ended;
@@ -1591,14 +1674,11 @@ function buildPlayer(video, perr) {
   const showControls = () => { clearTimeout(it); root.classList.remove('idle'); };
   const onAnyInput = () => { if (root.isConnected) wake(); };
 
-  /* Maus: nur im Player */
   root.addEventListener('pointermove', wake);
   root.addEventListener('pointerdown', wake);
   root.addEventListener('pointerleave', () => { if (isPlaying()) { clearTimeout(it); root.classList.add('idle'); } });
-  /* TV/Tastatur: jede Taste zählt als Bedienung */
   document.addEventListener('keydown', onAnyInput, true);
 
-  /* Abspielzustand */
   video.addEventListener('play', wake);
   video.addEventListener('playing', wake);
   video.addEventListener('waiting', showControls);
@@ -1629,8 +1709,8 @@ function buildPlayer(video, perr) {
 }
 
 
-/* ===== SoundCloud (Logik aus index.html) ===== */
-const SC_BASE = '';   /* leer = gleiche Domain wie index.html; sonst z.B. 'https://dein-server.de' */
+/* ===== SoundCloud ===== */
+const SC_BASE = '';
 const SC = (() => {
   const cache = new Map(), seen = new Set();
   const GEN = ['all-music', 'hiphoprap', 'electronic', 'pop', 'danceedm', 'house', 'techno', 'trap', 'rbsoul', 'ambient'];
@@ -1672,7 +1752,6 @@ const SC = (() => {
     }
     return [];
   };
-  /* Songsuche: erwartet am Server /api/search?q=… (Liste von Tracks wie bei /api/explore) */
   async function search(q) {
     const d = await api('search', { q, query:q, type:'tracks', kind:'tracks' });
     const l = listFrom(d);
@@ -1689,7 +1768,6 @@ const SC = (() => {
       .sort(() => Math.random() - .5).slice(0, n);
     return l.map(t => { seen.add(t.id); cache.set(t.permalinkUrl, t); return { sc:t, id:'sc' + t.id, title:t.title, topic:'' }; });
   }
-  /* mischt Songs zwischen die Video-Shorts (ca. jeder 3. Eintrag) */
   async function mix(arr) {
     let songs = []; try { songs = await feed(Math.max(1, Math.ceil(arr.length / 2))); } catch {}
     if (!songs.length) return arr;
@@ -1700,7 +1778,7 @@ const SC = (() => {
   return { api, art, norm, stream, feed, mix, search, cache, likes, isLiked, toggleLike };
 })();
 
-/* Song als "Video": 16:9, unscharfer Cover-Hintergrund + abgerundetes Cover */
+/* Song als "Video" */
 async function SongWatch(url) {
   Mini.close();
   const tok = routeToken, wrap = h('div', { class:'watch' });
@@ -1794,7 +1872,7 @@ function Songs(arg) {
     else likes.forEach(t => host.append(SongRow(t)));
     return;
   }
-  const inp = h('input', { class:'sinp', type:'search', placeholder:'Song oder Künstler suchen …', 'aria-label':'Songsuche', enterkeyhint:'search', autocomplete:'off', value:q });
+  const inp = h('input', { class:'sinp', type:'search', placeholder:'Song oder Künstler suchen …', 'aria-label':'Songsuche', enterkeyhint:'search', autocomplete:'off', autocorrect:'off', autocapitalize:'off', spellcheck:'false', value:q });
   main.append(h('form', { class:'ssearch', onsubmit:ev => {
     ev.preventDefault(); const v = inp.value.trim(); if (!v) return; inp.blur();
     const target = /^https?:\/\/([\w-]+\.)?soundcloud\.com\//i.test(v) ? '#/song/' + encodeURIComponent(v) : '#/songs/q/' + encodeURIComponent(v);
@@ -2018,7 +2096,7 @@ async function Watch(id) {
       acts),
     descBox);
 
-  /* Sticky Player (TV: inaktiv) */
+  /* Sticky Player */
   const sticky = h('div', { class:'sticky-player' },
     h('div', { class:'sticky-inner' },
       h('div', { class:'sticky-video' }),
@@ -2027,8 +2105,8 @@ async function Watch(id) {
         h('div', { class:'sticky-sub' }, ch.name + (e.topic ? ' · ' + e.topic : ''))
       ),
       h('div', { class:'sticky-actions' },
-        h('button', { class:'btn', onclick: () => saveBtn.click() }, icon('bookmark'), 'Merken'),
-        h('button', { class:'icon-btn play-toggle', onclick: () => video.paused ? video.play() : video.pause() }, icon('play', 'fill'))
+        h('button', { class:'btn', onclick:() => saveBtn.click() }, icon('bookmark'), 'Merken'),
+        h('button', { class:'icon-btn play-toggle', onclick:() => video.paused ? video.play() : video.pause() }, icon('play', 'fill'))
       )
     ),
     h('div', { class:'sticky-progress' },
@@ -2313,31 +2391,43 @@ function showSugg() {
 const TV = { video:null, player:null, pending:true, last:null };
 const navSnd = new Audio('navigate.mp3'); navSnd.preload = 'auto';
 const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-sunset.jpg', 'tv-saver-mountains.jpg', 'tv-saver-night-lake.jpg', 'tv-saver-night-city.jpg', 'tv-saver-night-mountains.jpg', 'tv-saver-blue-night.jpg', 'tv-saver-sun-mountains.jpg', 'tv-saver-deep-forest.jpg'];
+
 const ScreenSaver = (() => {
-  let root = null, imgA = null, imgB = null, clock = null, date = null, timer = 0, slideTimer = 0, index = 0, visible = false;
+  let root = null, imgA = null, imgB = null, clockEl = null, dateEl = null, timer = 0, slideTimer = 0, index = 0, visible = false;
   const playing = () => [...document.querySelectorAll('video')].some(v => !v.paused && !v.ended);
   const delay = () => Math.max(1, Number(store.get('saverDelay', 5)) || 5) * 60000;
   const interval = () => Math.max(5, Number(store.get('saverInterval', 30)) || 30) * 1000;
+  const pad = n => String(n).padStart(2, '0');
+
   function ensure() {
     if (root) return;
-    imgA = h('img', { alt:'', src:TV_SAVER_IMAGES[0] });
-    imgB = h('img', { alt:'', src:TV_SAVER_IMAGES[1] });
-    clock = h('div', { class:'tv-saver-clock' }); date = h('div', { class:'tv-saver-date' });
-    root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' }, imgA, imgB, clock, date,
-      h('div', { class:'tv-saver-hint' }, 'Taste oder Bewegung zum Fortfahren'));
+    imgA = h('img', { alt:'', class:'saver-img' });
+    imgB = h('img', { alt:'', class:'saver-img' });
+    const clockWrap = h('div', { class:'saver-clock-wrap' },
+      h('div', { class:'saver-clock' }),
+      h('div', { class:'saver-date' }));
+    clockEl = clockWrap.querySelector('.saver-clock');
+    dateEl  = clockWrap.querySelector('.saver-date');
+    root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
+      h('div', { class:'saver-bg' }, imgA, imgB),
+      h('div', { class:'saver-overlay' }),
+      clockWrap,
+      h('div', { class:'saver-hint' }, 'Taste oder Bewegung zum Fortfahren'));
     document.body.append(root);
+    TV_SAVER_IMAGES.forEach(src => { const i = new Image(); i.src = src; });
   }
   function tickClock() {
-    if (!clock) return;
+    if (!clockEl) return;
     const now = new Date();
-    clock.textContent = now.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
-    date.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+    clockEl.innerHTML = `<span>${pad(now.getHours())}</span><span class="saver-colon">:</span><span>${pad(now.getMinutes())}</span>`;
+    dateEl.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
   }
   function nextImage() {
     if (!root || !visible) return;
     index = (index + 1) % TV_SAVER_IMAGES.length;
     const next = index % 2 ? imgB : imgA, old = index % 2 ? imgA : imgB;
-    next.src = TV_SAVER_IMAGES[index]; next.classList.add('on'); old.classList.remove('on');
+    next.src = TV_SAVER_IMAGES[index];
+    next.classList.add('on'); old.classList.remove('on');
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
   function hide() {
@@ -2347,8 +2437,11 @@ const ScreenSaver = (() => {
   }
   function show() {
     if (!store.get('saverOn', true) || playing()) return schedule();
-    ensure(); visible = true; index = 0; imgA.src = TV_SAVER_IMAGES[0]; imgB.src = TV_SAVER_IMAGES[1]; imgA.classList.add('on'); imgB.classList.remove('on');
-    root.classList.toggle('hide-clock', !store.get('saverClock', true)); root.classList.add('show'); tickClock();
+    ensure(); visible = true; index = 0;
+    imgA.src = TV_SAVER_IMAGES[0]; imgB.src = TV_SAVER_IMAGES[1];
+    imgA.classList.add('on'); imgB.classList.remove('on');
+    root.classList.toggle('hide-clock', !store.get('saverClock', true));
+    root.classList.add('show'); tickClock();
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
   function schedule() { clearTimeout(timer); if (store.get('saverOn', true)) timer = setTimeout(show, delay()); }
@@ -2362,6 +2455,7 @@ const ScreenSaver = (() => {
   }
   return { start, show, hide, schedule };
 })();
+
 let tvFullscreenTried = false;
 function enterTvFullscreen() {
   if (tvFullscreenTried || document.fullscreenElement) return;
@@ -2382,7 +2476,7 @@ function navTick() {
 }
 const FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex="0"]';
 
-/* ---------- In-Seiten-Dialoge statt Browser-Dialoge ---------- */
+/* ---------- In-Seiten-Dialoge ---------- */
 let dlgEl = null;
 function closeDlg(ret) {
   if (!dlgEl) return false;
@@ -2453,7 +2547,7 @@ function focusEl(el) {
 function initialTarget() {
   if (document.body.dataset.route === 'suche') return $('main .key');
   if (document.body.dataset.route === 'watch') return $('.watch .player[tabindex]') || $('main .btn.primary');
-  return $('main .chip.active, main .btn.primary, main .stile, main .card');
+  return $('main .chip.active, main .btn.primary, main .mbtn, main .stile, main .card');
 }
 function openSide() {
   focusEl($('#side .nav.active') || $('#side .nav'));
@@ -2509,6 +2603,7 @@ function move(dir) {
   if (dir === 'left' && !cur.closest('#side,.pmenu,.player,.sticky-player,.sugg')) openSide();
 }
 
+/* FIX: Zurück navigiert zuerst, beendet NICHT vorher das Vollbild */
 function goBack() {
   if (dlgEl) { (dlgEl._cancel || closeDlg)(); closeDlg(); return true; }
   if (TV.player && TV.player.classList.contains('panel')) { TV.player.closePanels(); focusEl(TV.player); return true; }
@@ -2517,9 +2612,13 @@ function goBack() {
   if (!sugg.hidden) { sugg.hidden = true; return true; }
   const a = document.activeElement;
   if (TV.player && a && a !== TV.player && a.closest('.pc,.ptop')) { focusEl(TV.player); return true; }
-  if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return true; }
+
   const hash = location.hash;
-  if (hash && hash !== '#/' && hash !== '#') { if (history.length > 1) history.back(); else location.hash = '#/'; return true; }
+  if (hash && hash !== '#/' && hash !== '#') {
+    if (history.length > 1) history.back(); else location.hash = '#/';
+    return true;
+  }
+  if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return true; }
   return false;
 }
 
@@ -2740,41 +2839,48 @@ const PLUS = (() => {
     r.style.setProperty('--cs', c.size || 1); r.style.setProperty('--cb', c.bg || 'rgba(0,0,0,.6)'); r.style.setProperty('--cf', c.fg || '#fff');
     r.style.setProperty('--bright', store.get('bright', 1)); r.classList.toggle('br', store.get('bright', 1) !== 1);
   }
+
+  /* Neues, aufgeräumtes "Mehr"-Menü */
   function more() {
     document.title = 'Mehr – Media +';
-    const sec = (t, k) => [h('div', { class:'side-h', style:'padding:20px 0 8px' }, t), h('div', { class:'lvchips', style:'padding:0' }, ...k)];
-    const lnk = (ic, l, href) => h('a', { class:'btn', href }, icon(ic), l);
-    const act = (l, fn, on) => h('button', { class:'btn' + (on ? ' primary' : ''), type:'button', onclick:fn }, l);
+    const B = (ic, l, fn, on) => h('button', { class:'mbtn' + (on ? ' on' : ''), type:'button', onclick:fn }, icon(ic), h('span', {}, l));
+    const L = (ic, l, href) => h('a', { class:'mbtn', href }, icon(ic), h('span', {}, l));
+    const SEC = (title, ...items) => h('section', { class:'msec' }, h('h2', { class:'msec-h' }, title), h('div', { class:'mgrid' }, ...items));
     const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => {
       try { importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
 
-    const entdecken = sec('Entdecken', [
-      lnk('tv', 'Live-TV', '#/live'), lnk('refresh', 'Überrasch mich', '#/random'), lnk('captions', 'Audiodeskription', '#/access/ad'),
-      lnk('captions', 'Gebärdensprache', '#/access/dgs'), lnk('captions', 'Mit Untertitel', '#/access/ut')
-    ]);
-    const kopplung = sec('Kopplung Handy ↔ TV', [
-      IS_TV ? lnk('share', 'Mit Handy koppeln (QR)', '#/pair') : lnk('share', 'An TV senden', '#/send')
-    ]);
-    const akzent = sec('Akzentfarbe', [
-      act('Standard', () => { store.set('accent', ''); applyLook(); route(); }, !store.get('accent', '')),
-      COLORS.map(c => h('button', { class:'swatch' + (store.get('accent', '') === c ? ' on' : ''), type:'button', style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); route(); } }))
-    ]);
-    const karten = sec('Kartengröße', [
-      ['Klein', .8], ['Mittel', 1], ['Groß', 1.3]
-    ].map(([l, f]) => act(l, () => { store.set('cw', f); applyLook(); route(); }, store.get('cw', 1) === f)));
-    const saver = sec('Screensaver', [
-      act('Screensaver an', () => { store.set('saverOn', true); ScreenSaver.schedule(); route(); }, store.get('saverOn', true)),
-      act('Screensaver aus', () => { store.set('saverOn', false); ScreenSaver.hide(); route(); }, !store.get('saverOn', true)),
-      ...[1, 5, 10, 20, 30].map(m => act('Nach ' + m + ' Min', () => { store.set('saverDelay', m); ScreenSaver.schedule(); route(); }, (store.get('saverDelay', 5) || 5) === m)),
-      ...[10, 30, 60].map(s => act('Bildwechsel ' + s + ' s', () => { store.set('saverInterval', s); ScreenSaver.schedule(); route(); }, (store.get('saverInterval', 30) || 30) === s)),
-      act('Uhr anzeigen', () => { store.set('saverClock', true); ScreenSaver.schedule(); route(); }, store.get('saverClock', true)),
-      act('Uhr ausblenden', () => { store.set('saverClock', false); ScreenSaver.schedule(); route(); }, !store.get('saverClock', true))
-    ]);
-    const daten = sec('Daten (Merkliste, Verlauf, Abos)', [
-      act('Exportieren (JSON)', exportData), act('Importieren …', () => file.click()), file
-    ]);
-
-    main.append(hd('Mehr'), ...entdecken, ...kopplung, ...akzent, ...karten, ...saver, ...daten);
+    const wrap = h('div', { class:'mwrap' },
+      SEC('Entdecken',
+        L('tv', 'Live-TV', '#/live'),
+        L('shorts', 'Shorts', '#/shorts'),
+        L('music', 'Songs', '#/songs'),
+        L('refresh', 'Überrasch mich', '#/random')),
+      SEC('Zugänglichkeit',
+        L('captions', 'Audiodeskription', '#/access/ad'),
+        L('captions', 'Gebärdensprache', '#/access/dgs'),
+        L('captions', 'Mit Untertitel', '#/access/ut')),
+      SEC('Kopplung Handy ↔ TV',
+        IS_TV ? L('share', 'Mit Handy koppeln (QR)', '#/pair') : L('share', 'An TV senden', '#/send')),
+      SEC('Akzentfarbe',
+        B('x', 'Standard', () => { store.set('accent', ''); applyLook(); route(); }, !store.get('accent', '')),
+        ...COLORS.map(c => h('button', { class:'swatch' + (store.get('accent', '') === c ? ' on' : ''), type:'button', style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); route(); } }))),
+      SEC('Kartengröße',
+        B('grid', 'Klein',  () => { store.set('cw', .8);  applyLook(); route(); }, store.get('cw', 1) === .8),
+        B('grid', 'Mittel', () => { store.set('cw', 1);   applyLook(); route(); }, store.get('cw', 1) === 1),
+        B('grid', 'Groß',   () => { store.set('cw', 1.3); applyLook(); route(); }, store.get('cw', 1) === 1.3)),
+      SEC('Screensaver',
+        B('sun', 'An',  () => { store.set('saverOn', true);  ScreenSaver.schedule(); route(); }, store.get('saverOn', true)),
+        B('moon', 'Aus', () => { store.set('saverOn', false); ScreenSaver.hide();     route(); }, !store.get('saverOn', true)),
+        B('sun', 'Uhr anzeigen',   () => { store.set('saverClock', true);  ScreenSaver.schedule(); route(); }, store.get('saverClock', true)),
+        B('moon', 'Uhr ausblenden', () => { store.set('saverClock', false); ScreenSaver.schedule(); route(); }, !store.get('saverClock', true)),
+        ...([1, 5, 10, 20, 30].map(m => B('history', 'Nach ' + m + ' Min', () => { store.set('saverDelay', m); ScreenSaver.schedule(); route(); }, (store.get('saverDelay', 5) || 5) === m))),
+        ...([10, 30, 60].map(s => B('film', 'Bildwechsel ' + s + ' s', () => { store.set('saverInterval', s); ScreenSaver.schedule(); route(); }, (store.get('saverInterval', 30) || 30) === s)))),
+      SEC('Daten',
+        B('download', 'Exportieren (JSON)', exportData),
+        B('refresh', 'Importieren …', () => file.click())),
+      file
+    );
+    main.append(hd('Mehr'), wrap);
   }
 
   const sendTv = async d => {
@@ -2844,7 +2950,7 @@ const PLUS = (() => {
       s.onload = res; s.onerror = rej; document.head.append(s);
     }).then(() => { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag({ cellSize:6, margin:0 }); })
       .catch(() => { box.textContent = 'QR-Code nicht verfügbar – Adresse unten am Handy öffnen.'; });
-    const inp = h('input', { class:'pick', type:'url', value:base, 'aria-label':'Adresse der Handy-Seite', style:'width:100%;max-width:40em' });
+    const inp = h('input', { class:'pick', type:'url', autocomplete:'off', spellcheck:'false', value:base, 'aria-label':'Adresse der Handy-Seite', style:'width:100%;max-width:40em' });
     main.append(hd('Mit Handy koppeln'),
       h('p', {}, 'Scanne den Code mit dem Handy. Dort kannst du Suchbegriffe eintippen oder Videos auf den TV schicken.'), box,
       h('div', { class:'side-h', style:'padding:16px 0 6px' }, 'Oder Code am Handy eingeben (Mehr → TV koppeln)'),
@@ -2858,12 +2964,12 @@ const PLUS = (() => {
     document.title = 'An TV senden – Media +';
     const t = store.get('tvTopic'); main.append(hd('An TV senden'));
     if (!t) return main.append(emptyBox('share', 'Nicht gekoppelt. Scanne am TV unter „Mehr → Mit Handy koppeln“ den QR-Code.'));
-    const inp = h('input', { class:'pick', type:'search', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'send', style:'width:100%;max-width:40em' });
+    const inp = h('input', { class:'pick', type:'search', autocomplete:'off', autocorrect:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'send', style:'width:100%;max-width:40em' });
     const go = () => { const v = inp.value.trim(); if (v) { sendTv({ t:'q', v }); inp.value = ''; } };
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
     main.append(h('div', { style:'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class:'btn primary', type:'button', onclick:go }, 'Senden')),
       h('div', { class:'side-h', style:'padding:20px 0 6px' }, 'Zuletzt angesehen'));
-      
+
     store.get('hist', []).slice(0, 12).forEach(x => {
       main.append(h('div', { style:'display:flex;gap:8px;align-items:center;padding:6px 0' },
         h('span', { style:'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, x.title),
@@ -2940,7 +3046,6 @@ const PLUS = (() => {
           const id = decodeURIComponent(location.hash.split('/')[2] || ''); const en = cache.get(id) || loadSaved(id); sendTv({ t:'w', v:id, n:document.title.replace(/ – Media \+$/, ''), e:en ? { ...slim(en), description:(en.description || '').slice(0, 300) } : undefined }); } }, icon('tv'), 'Auf TV'));
       });
     }).observe(main, { childList:true, subtree:true });
-    /* Bildschirm während der gesamten TV-App wach halten – auch bei Pause und Screensaver. */
     lock();
     document.addEventListener('play', lock, true);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) lock(); });
@@ -3033,7 +3138,7 @@ const PLUS = (() => {
           const now = Date.now();
           if (now - lastTap < 300) {
             clearTimeout(tapT); lastTap = 0;
-            const r = s.stage.getBoundingClientRect(), hh = h('span', { class:'sh-heart' }, icon('heart', 'fill'));
+            const hh = h('span', { class:'sh-heart' }, icon('heart', 'fill'));
             s.stage.append(hh); hh.addEventListener('animationend', () => hh.remove());
             if (!isSaved(e.id)) { toggleSaved(e); shBump(e.topic, 3); paintLike(); }
             if (navigator.vibrate) try { navigator.vibrate(12); } catch {}
