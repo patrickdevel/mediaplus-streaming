@@ -513,6 +513,12 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 .sbg-b{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(36px) brightness(.55) saturate(1.4)}
 .sbg-c{position:absolute;inset:0;display:grid;place-items:center}
 .sbg-c img{width:min(42%,260px);height:auto;max-height:48%;aspect-ratio:1;object-fit:cover;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
+
+button.stile{font:inherit;color:inherit;text-align:left;cursor:pointer}
+.stile.qa{flex:0 0 148px;gap:2px}
+.stile.qa .qi{width:42px;height:42px;border-radius:12px;background:var(--fg);color:var(--bg);display:grid;place-items:center;margin-bottom:10px}
+.stile.qa .qi .ic{width:22px;height:22px}
+.stile.qa:active{transform:scale(.96)}
 </style>
 </head>
 <body>
@@ -916,12 +922,33 @@ function Rows() {
   main.append(h('h2', { class:'rowh' }, 'Alle neuen Videos'));
 }
 
+function Quick() {
+  const tv = !!store.get('tvTopic');
+  const T = (ic, label, sub, o) => h(o.href ? 'a' : 'button', { class:'stile qa', type:o.href ? null : 'button', href:o.href || null, onclick:o.fn || null },
+    h('span', { class:'qi' }, icon(ic)), h('b', {}, label), h('span', { class:'sub' }, sub));
+  const tiles = [
+    ...(tv ? [
+      T('tv', 'Fernbedienung', 'Am TV steuern', { href:'#/remote' }),
+      T('play', 'Play / Pause', 'Am TV', { fn:() => PLUS.sendTv({ t:'k', v:'pp' }) }),
+      T('mute', 'Ton am TV', 'Stumm / an', { fn:() => PLUS.sendTv({ t:'k', v:'mute' }) }),
+      T('share', 'An TV senden', 'Suche & Videos', { href:'#/send' })
+    ] : [T('tv', 'TV koppeln', 'QR-Code scannen', { href:'#/connect' })]),
+    T('tv', 'Live-TV', 'Sender ansehen', { href:'#/live' }),
+    T('shorts', 'Shorts', 'Kurz & endlos', { href:'#/shorts' }),
+    T('refresh', 'Überrasch mich', 'Zufälliger Film', { href:'#/random' }),
+    T('plus', 'Abos', 'Neue Folgen', { href:'#/subs' }),
+    T('bookmark', 'Gemerkt', 'Deine Liste', { href:'#/library/saved' }),
+    T('history', 'Verlauf', 'Zuletzt gesehen', { href:'#/library/history' })
+  ];
+  main.append(h('h2', { class:'rowh' }, tv ? 'Schnellzugriff · TV verbunden' : 'Schnellzugriff'), h('div', { class:'hrow' }, tiles));
+}
+
 function Browse(label) {
   const idx = Math.max(0, CHIPS.findIndex(c => c.label === label)), chip = CHIPS[idx];
   document.title = 'Media + – ARD-Videos';
   const row = h('div', { class:'chips' }, CHIPS.map(c => h('a', { class:'chip' + (c === chip ? ' active' : ''), href:c.label === 'Neu' ? '#/' : '#/browse/' + encodeURIComponent(c.label) }, c.label)));
   main.append(row);
-  if (chip.label === 'Neu') { Hero(); Continue(); Rows(); }
+  if (chip.label === 'Neu') { Hero(); Quick(); Continue(); Rows(); }
   Feed(main, off => search({ text:chip.q, min:chip.min, offset:off }), { emptyText:'Dazu gibt es gerade nichts.' });
 }
 
