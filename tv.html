@@ -893,6 +893,18 @@ body.saver-on main,body.saver-on #side{pointer-events:none}
 .mgrid .swatch{width:3.6rem;height:3.6rem;border-radius:50%;border:2px solid var(--border-2);flex:none;align-self:center}
 .mgrid:has(.swatch){flex-direction:row;flex-wrap:wrap;gap:1.2rem;align-items:center}
 .mgrid:has(.swatch) .mopt{width:auto;min-width:12rem}
+
+/* ===== TV: Toast, schwebende Navbar, sticky Logo ===== */
+html body #toast,html body[data-route] #toast{left:auto;right:3rem;top:2.6rem;bottom:auto;transform:translateX(130%);opacity:0;background:rgba(62,62,68,.94);color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:1.4rem;padding:1.3rem 2.4rem;font-size:1.6rem;font-weight:600;max-width:min(46rem,70vw);box-shadow:0 1rem 3rem rgba(0,0,0,.45);z-index:160;transition:transform .5s cubic-bezier(.2,.9,.2,1),opacity .3s}
+html body #toast.show,html body[data-route] #toast.show{transform:none;opacity:1}
+#tblur{position:fixed;top:0;right:0;width:62rem;height:34rem;z-index:155;pointer-events:none;opacity:0;transition:opacity .45s;-webkit-backdrop-filter:blur(2rem)!important;backdrop-filter:blur(2rem)!important;-webkit-mask-image:radial-gradient(ellipse 100% 100% at 100% 0%,#000 0%,#000 28%,transparent 70%);mask-image:radial-gradient(ellipse 100% 100% at 100% 0%,#000 0%,#000 28%,transparent 70%)}
+#tblur.show{opacity:1}
+
+#side{padding:0 0 2rem;--sbg:var(--bg);scroll-padding:9rem 0 2rem;transition:width .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s,top .28s cubic-bezier(.2,.8,.2,1),bottom .28s cubic-bezier(.2,.8,.2,1),left .28s cubic-bezier(.2,.8,.2,1),border-radius .28s,background .28s,border-color .28s}
+#side:hover,#side:focus-within{--sbg:var(--bg-2);top:1.6rem;bottom:1.6rem;left:1.6rem;border:1px solid var(--border-2);border-radius:2.6rem;background:var(--bg-2);box-shadow:0 2rem 6rem rgba(0,0,0,.55)}
+#side>.side-logo{position:sticky;top:0;z-index:5;background:var(--sbg);padding-top:2rem!important;transition:background .28s}
+#side>.side-logo::after{content:"";position:absolute;left:0;right:0;top:100%;height:2.8rem;background:linear-gradient(var(--sbg),transparent);pointer-events:none}
+body:has(#side:hover) main,body:has(#side:focus-within) main{margin-left:var(--sw-collapsed)}
 </style>
 </head>
 <body>
@@ -1037,7 +1049,9 @@ function fmtDur(s) {
 let toastT;
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+  let b = $('#tblur'); if (!b) { b = h('div', { id:'tblur' }); document.body.append(b); }
+  void b.offsetWidth; b.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => { t.classList.remove('show'); b.classList.remove('show'); }, 2600);
 }
 const slim = e => ({ id:e.id, channel:e.channel, topic:e.topic, title:e.title, description:(e.description || '').slice(0, 600),
   timestamp:e.timestamp, duration:e.duration, url_website:e.url_website, url_subtitle:e.url_subtitle,
