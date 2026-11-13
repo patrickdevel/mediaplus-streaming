@@ -1002,6 +1002,24 @@ body.home .hero .hdots i.on{width:.7rem;height:2.2rem}
 .hclock{position:fixed;top:2.4rem;right:3.4rem;z-index:30;font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:2.6rem;line-height:1;color:#fff;letter-spacing:.02em;text-shadow:0 .1em .5em rgba(0,0,0,.6);pointer-events:none;transition:opacity .35s ease,transform .35s ease}
 body.home-prev .hclock,body.home-scrolled .hclock{opacity:0;transform:translateY(-.6rem)}
 body:not(.home) .hclock{display:none}
+
+/* ===== v6: Pills mit sanftem grauem Verlaufsrand (kein Glow) ===== */
+.hglass{border:0;box-shadow:none}
+.hglass::before{display:none}
+.hglass::after,.hclock::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(210,210,216,.45),rgba(210,210,216,.07) 50%,rgba(210,210,216,.26));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.hclock{top:2.4rem;right:3.4rem;padding:.8rem 1.6rem;border-radius:999px;font-size:1.6rem;font-weight:400;
+  background:rgba(10,10,14,.22);
+  -webkit-backdrop-filter:blur(3rem) saturate(1.5)!important;backdrop-filter:blur(3rem) saturate(1.5)!important;
+  text-shadow:none}
+
+/* ===== v7: Info-Strich: Karten werden erst am Strich abgeschnitten ===== */
+.hglass{gap:0}
+.hglass .hl{margin-right:0}
+.hglass .hrow{padding-right:1rem;margin-right:0}
+.hinfo{padding-left:2.4rem}
 </style>
 </head>
 <body>
@@ -2897,7 +2915,32 @@ function focusEl(el) {
     return;
   }
   const fixedBar = el.closest('.chips,.top,#side,.sticky-player,.pmenu,.sugg');
-  el.scrollIntoView({ block:fixedBar ? 'nearest' : 'center', inline:el.closest('.chips,.hrow') ? 'center' : 'nearest', behavior:'smooth' });
+  /* Startseite: erster Schritt nach unten → Weiterschauen-Pill rutscht nach ganz oben, darunter geht es los */
+  if (document.body.classList.contains('home') && !el.closest('.hero,.hglass,#side')) {
+    const g = document.querySelector('.hglass');
+    if (g) {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 10;
+      const snap = g.getBoundingClientRect().top + window.scrollY - 2 * rem;
+      if (window.scrollY < snap - 4) {
+        const r = el.getBoundingClientRect(), want = window.scrollY + r.top + r.height / 2 - window.innerHeight / 2;
+        const row = el.closest('.chips,.hrow');
+        if (row) { const a = r, b = row.getBoundingClientRect(); row.scrollBy({ left:(a.left + a.width / 2) - (b.left + b.width / 2), behavior:'smooth' }); }
+        window.scrollTo({ top:fixedBar ? snap : Math.max(snap, want), behavior:'smooth' });
+        return;
+      }
+    }
+  }
+  const inl = el.closest('.chips,.hrow') ? 'center' : 'nearest';
+  if (!fixedBar) {
+    /* Läge die Seite nach dem Zentrieren nur knapp unter dem Anfang, wäre oben etwas abgeschnitten (z. B. Überschrift, 2-zeilige Titel) → ganz nach oben */
+    const r = el.getBoundingClientRect(), want = window.scrollY + r.top + r.height / 2 - window.innerHeight / 2;
+    if (want < window.innerHeight * .25 && !document.body.classList.contains('home')) {
+      el.scrollIntoView({ block:'nearest', inline:inl, behavior:'smooth' });
+      window.scrollTo({ top:0, behavior:'smooth' });
+      return;
+    }
+  }
+  el.scrollIntoView({ block:fixedBar ? 'nearest' : 'center', inline:inl, behavior:'smooth' });
 }
 function initialTarget() {
   if (document.body.dataset.route === 'suche') return $('main .key');
