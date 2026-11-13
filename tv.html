@@ -848,17 +848,25 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 .sbg-c img{width:min(42%,260px);height:auto;max-height:48%;aspect-ratio:1;object-fit:cover;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
 
 /* ===== Screensaver (v2) ===== */
-.tv-saver{position:fixed;inset:0;z-index:180;background:#050505;color:#fff;opacity:0;visibility:hidden;transition:opacity .8s;overflow:hidden}
-.tv-saver.show{opacity:1;visibility:visible}
+.tv-saver{position:fixed;inset:0;z-index:180;background:#050505;color:#fff;opacity:0;visibility:hidden;overflow:hidden;pointer-events:none;transition:opacity .9s ease,filter .9s ease,transform .9s ease;filter:blur(18px);transform:scale(1.04)}
+.tv-saver.show{opacity:1;visibility:visible;pointer-events:auto;filter:blur(0);transform:scale(1)}
+.tv-saver.leaving{opacity:0;filter:blur(14px);transform:scale(1.03)}
+body.saver-on main,body.saver-on #side{filter:blur(12px);transform:scale(.985);transition:filter .9s ease,transform .9s ease;pointer-events:none}
+body:not(.saver-on) main,body:not(.saver-on) #side{filter:none;transform:none;transition:filter .7s ease,transform .7s ease}
 .saver-bg{position:absolute;inset:0}
 .saver-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.08);transition:opacity 1.4s ease,transform 26s ease-out;filter:brightness(.82) saturate(.95)}
 .saver-img.on{opacity:1;transform:scale(1)}
 .saver-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.02) 0%,rgba(0,0,0,.18) 65%,rgba(0,0,0,.38) 100%)}
-.saver-clock-wrap{position:absolute;top:3.5rem;left:4rem;right:auto;bottom:auto;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;pointer-events:none;text-align:left;animation:saverRise .9s cubic-bezier(.2,.8,.2,1) both}
-@keyframes saverRise{from{opacity:0;transform:translateY(1.5rem)}}
-.saver-clock{font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:clamp(4.2rem,8.5vw,10.5rem);font-weight:400;letter-spacing:.02em;line-height:.95;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.04em;text-shadow:0 .04em .5em rgba(0,0,0,.55)}
-.saver-colon{opacity:.9;font-weight:400;animation:none}
-.saver-date{margin-top:1rem;font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;font-size:clamp(1.25rem,2vw,2.2rem);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.78);font-weight:400;text-shadow:0 .1em .4em rgba(0,0,0,.5)}
+.saver-clock-wrap{position:absolute;top:3.5rem;left:4rem;right:auto;bottom:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;pointer-events:none;text-align:center;animation:saverRise 1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes saverRise{from{opacity:0;transform:translateY(1.2rem)}}
+.saver-clock{font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:clamp(4.2rem,8.5vw,10.5rem);font-weight:400;letter-spacing:.02em;line-height:1;display:flex;align-items:center;gap:.08em;text-shadow:0 .04em .5em rgba(0,0,0,.55);height:1.05em}
+.saver-digit{position:relative;display:inline-block;width:.72em;height:1.05em;overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 18%,#000 82%,transparent 100%);
+  mask-image:linear-gradient(to bottom,transparent 0%,#000 18%,#000 82%,transparent 100%)}
+.saver-strip{display:flex;flex-direction:column;align-items:center;will-change:transform;transition:transform 1.1s cubic-bezier(.15,.85,.25,1)}
+.saver-strip span{display:block;height:1.05em;line-height:1.05em;font-variant-numeric:tabular-nums}
+.saver-colon{opacity:.9;font-weight:400;animation:none;width:.35em;text-align:center;line-height:1.05em;align-self:center}
+.saver-date{margin-top:.85rem;font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;font-size:clamp(1.05rem,1.7vw,1.75rem);letter-spacing:.04em;text-transform:none;color:rgba(255,255,255,.72);font-weight:400;text-shadow:0 .1em .4em rgba(0,0,0,.5);text-align:center;width:100%}
 .saver-hint{position:absolute;bottom:2.8rem;right:3.5rem;left:auto;text-align:right;font-size:1.15rem;color:rgba(255,255,255,.22);letter-spacing:.04em}
 .tv-saver.hide-clock .saver-clock-wrap{display:none}
 
@@ -2231,31 +2239,103 @@ const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-s
 
 const ScreenSaver = (() => {
   let root = null, imgA = null, imgB = null, clockEl = null, dateEl = null, timer = 0, slideTimer = 0, index = 0, visible = false;
+  let digits = [], lastHM = '';
   const playing = () => [...document.querySelectorAll('video')].some(v => !v.paused && !v.ended);
   const delay = () => Math.max(1, Number(store.get('saverDelay', 5)) || 5) * 60000;
   const interval = () => Math.max(5, Number(store.get('saverInterval', 30)) || 30) * 1000;
   const pad = n => String(n).padStart(2, '0');
+  const DIGITS = '0123456789';
+
+  function makeDigit() {
+    const strip = h('div', { class:'saver-strip' }, ...DIGITS.split('').map(d => h('span', {}, d)));
+    const box = h('div', { class:'saver-digit' }, strip);
+    return { box, strip, val: -1 };
+  }
+
+  function setDigit(d, n, { animate = true, delayMs = 0, forceFrom = null } = {}) {
+    const target = ((n % 10) + 10) % 10;
+    if (d.val === target && animate && forceFrom == null) return;
+    const apply = () => {
+      if (forceFrom != null) {
+        d.strip.style.transition = 'none';
+        d.strip.style.transform = `translateY(${-((forceFrom % 10 + 10) % 10) * 1.05}em)`;
+        void d.strip.offsetWidth;
+        d.strip.style.transition = 'transform 1.25s cubic-bezier(.15,.85,.25,1)';
+        d.strip.style.transform = `translateY(${-target * 1.05}em)`;
+      } else if (!animate || d.val < 0) {
+        d.strip.style.transition = 'none';
+        d.strip.style.transform = `translateY(${-target * 1.05}em)`;
+        void d.strip.offsetWidth;
+        d.strip.style.transition = '';
+      } else {
+        /* Casino: ggf. über mehrere Ziffern rollen */
+        const from = d.val < 0 ? 0 : d.val;
+        let steps = (target - from + 10) % 10;
+        if (steps === 0) steps = 10;
+        d.strip.style.transition = `transform ${0.55 + steps * 0.09}s cubic-bezier(.15,.85,.25,1)`;
+        d.strip.style.transform = `translateY(${-target * 1.05}em)`;
+      }
+      d.val = target;
+    };
+    if (delayMs > 0) setTimeout(apply, delayMs);
+    else apply();
+  }
+
+  function buildClock() {
+    digits = [makeDigit(), makeDigit(), makeDigit(), makeDigit()];
+    clockEl.replaceChildren(
+      digits[0].box, digits[1].box,
+      h('span', { class:'saver-colon' }, ':'),
+      digits[2].box, digits[3].box
+    );
+  }
+
+  function rollTime(animate, stagger) {
+    const now = new Date();
+    const hh = pad(now.getHours()), mm = pad(now.getMinutes());
+    const s = hh + mm;
+    if (s === lastHM && animate) {
+      dateEl.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+      return;
+    }
+    const changed = lastHM ? s.split('').map((c, i) => c !== lastHM[i]) : [true, true, true, true];
+    const entrance = !lastHM && animate && stagger;
+    lastHM = s;
+    const base = stagger ? 80 : 0;
+    digits.forEach((d, i) => {
+      if (!animate) {
+        setDigit(d, +s[i], { animate: false });
+        return;
+      }
+      if (!changed[i] && !entrance) return;
+      const forceFrom = entrance ? ( (+s[i] + 3 + i * 2) % 10 ) : null;
+      setDigit(d, +s[i], { animate: true, delayMs: base + i * 160, forceFrom });
+    });
+    dateEl.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+  }
+
   function ensure() {
     if (root) return;
     imgA = h('img', { alt:'', class:'saver-img' });
     imgB = h('img', { alt:'', class:'saver-img' });
-    const clockWrap = h('div', { class:'saver-clock-wrap' }, h('div', { class:'saver-clock' }), h('div', { class:'saver-date' }));
-    clockEl = clockWrap.querySelector('.saver-clock');
-    dateEl  = clockWrap.querySelector('.saver-date');
+    clockEl = h('div', { class:'saver-clock' });
+    dateEl  = h('div', { class:'saver-date' });
+    const clockWrap = h('div', { class:'saver-clock-wrap' }, clockEl, dateEl);
     root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
       h('div', { class:'saver-bg' }, imgA, imgB),
       h('div', { class:'saver-overlay' }),
       clockWrap,
       h('div', { class:'saver-hint' }, 'Taste oder Bewegung zum Fortfahren'));
     document.body.append(root);
+    buildClock();
     TV_SAVER_IMAGES.forEach(src => { const i = new Image(); i.src = src; });
   }
+
   function tickClock() {
-    if (!clockEl) return;
-    const now = new Date();
-    clockEl.innerHTML = `<span>${pad(now.getHours())}</span><span class="saver-colon">:</span><span>${pad(now.getMinutes())}</span>`;
-    dateEl.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+    if (!clockEl || !visible) return;
+    rollTime(true, false);
   }
+
   function nextImage() {
     if (!root || !visible) return;
     index = (index + 1) % TV_SAVER_IMAGES.length;
@@ -2264,16 +2344,34 @@ const ScreenSaver = (() => {
     next.classList.add('on'); old.classList.remove('on');
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
-  function hide() { if (!visible) return; visible = false; clearTimeout(slideTimer); root.classList.remove('show'); schedule(); }
+
+  function hide() {
+    if (!visible) return;
+    visible = false;
+    clearTimeout(slideTimer);
+    root.classList.add('leaving');
+    root.classList.remove('show');
+    document.body.classList.remove('saver-on');
+    setTimeout(() => { if (root) root.classList.remove('leaving'); }, 900);
+    schedule();
+  }
+
   function show() {
     if (!store.get('saverOn', true) || playing()) return schedule();
-    ensure(); visible = true; index = 0;
+    ensure(); visible = true; index = 0; lastHM = '';
+    digits.forEach(d => { d.val = -1; });
     imgA.src = TV_SAVER_IMAGES[0]; imgB.src = TV_SAVER_IMAGES[1];
     imgA.classList.add('on'); imgB.classList.remove('on');
     root.classList.toggle('hide-clock', !store.get('saverClock', true));
-    root.classList.add('show'); tickClock();
+    root.classList.remove('leaving');
+    document.body.classList.add('saver-on');
+    requestAnimationFrame(() => {
+      root.classList.add('show');
+      setTimeout(() => rollTime(true, true), 180);
+    });
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
+
   function schedule() { clearTimeout(timer); if (store.get('saverOn', true)) timer = setTimeout(show, delay()); }
   function activity() { if (visible) hide(); else schedule(); }
   function start() {
