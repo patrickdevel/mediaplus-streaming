@@ -881,6 +881,17 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 .sbg-b{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(36px) brightness(.55) saturate(1.4)}
 .sbg-c{position:absolute;inset:0;display:grid;place-items:center}
 .sbg-c img{width:min(42%,260px);height:auto;max-height:48%;aspect-ratio:1;object-fit:cover;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
+
+/* TV-Screensaver */
+.tv-saver{position:fixed;inset:0;z-index:180;background:#050505;color:#fff;display:grid;place-items:center;opacity:0;visibility:hidden;transition:opacity .5s;overflow:hidden}
+.tv-saver.show{opacity:1;visibility:visible}
+.tv-saver img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.04);transition:opacity 1.2s,transform 14s ease-out;filter:brightness(.58) saturate(.9)}
+.tv-saver img.on{opacity:1;transform:scale(1)}
+.tv-saver::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.35) 70%,rgba(0,0,0,.7))}
+.tv-saver-clock{position:relative;z-index:2;margin-top:48vh;font-size:clamp(4rem,10vw,11rem);font-weight:300;letter-spacing:-.06em;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 .08em .3em rgba(0,0,0,.55)}
+.tv-saver-date{position:relative;z-index:2;margin-top:1.2rem;font-size:clamp(1rem,2vw,2.2rem);letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82)}
+.tv-saver-hint{position:absolute;z-index:2;bottom:3rem;left:0;right:0;text-align:center;font-size:1.2rem;color:rgba(255,255,255,.65)}
+.tv-saver.hide-clock .tv-saver-clock,.tv-saver.hide-clock .tv-saver-date{display:none}
 </style>
 </head>
 <body>
@@ -2301,6 +2312,70 @@ function showSugg() {
    ========================================================= */
 const TV = { video:null, player:null, pending:true, last:null };
 const navSnd = new Audio('navigate.mp3'); navSnd.preload = 'auto';
+const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-sunset.jpg', 'tv-saver-mountains.jpg', 'tv-saver-night-lake.jpg', 'tv-saver-night-city.jpg', 'tv-saver-night-mountains.jpg', 'tv-saver-blue-night.jpg', 'tv-saver-sun-mountains.jpg', 'tv-saver-deep-forest.jpg'];
+const ScreenSaver = (() => {
+  let root = null, imgA = null, imgB = null, clock = null, date = null, timer = 0, slideTimer = 0, index = 0, visible = false;
+  const playing = () => [...document.querySelectorAll('video')].some(v => !v.paused && !v.ended);
+  const delay = () => Math.max(1, Number(store.get('saverDelay', 5)) || 5) * 60000;
+  const interval = () => Math.max(5, Number(store.get('saverInterval', 30)) || 30) * 1000;
+  function ensure() {
+    if (root) return;
+    imgA = h('img', { alt:'', src:TV_SAVER_IMAGES[0] });
+    imgB = h('img', { alt:'', src:TV_SAVER_IMAGES[1] });
+    clock = h('div', { class:'tv-saver-clock' }); date = h('div', { class:'tv-saver-date' });
+    root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' }, imgA, imgB, clock, date,
+      h('div', { class:'tv-saver-hint' }, 'Taste oder Bewegung zum Fortfahren'));
+    document.body.append(root);
+  }
+  function tickClock() {
+    if (!clock) return;
+    const now = new Date();
+    clock.textContent = now.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+    date.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+  }
+  function nextImage() {
+    if (!root || !visible) return;
+    index = (index + 1) % TV_SAVER_IMAGES.length;
+    const next = index % 2 ? imgB : imgA, old = index % 2 ? imgA : imgB;
+    next.src = TV_SAVER_IMAGES[index]; next.classList.add('on'); old.classList.remove('on');
+    clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
+  }
+  function hide() {
+    if (!visible) return;
+    visible = false; clearTimeout(slideTimer); root.classList.remove('show');
+    schedule();
+  }
+  function show() {
+    if (!store.get('saverOn', true) || playing()) return schedule();
+    ensure(); visible = true; index = 0; imgA.src = TV_SAVER_IMAGES[0]; imgB.src = TV_SAVER_IMAGES[1]; imgA.classList.add('on'); imgB.classList.remove('on');
+    root.classList.toggle('hide-clock', !store.get('saverClock', true)); root.classList.add('show'); tickClock();
+    clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
+  }
+  function schedule() { clearTimeout(timer); if (store.get('saverOn', true)) timer = setTimeout(show, delay()); }
+  function activity() { if (visible) hide(); else schedule(); }
+  function start() {
+    ensure();
+    ['pointerdown', 'keydown', 'click', 'mousemove'].forEach(t => document.addEventListener(t, activity, true));
+    document.addEventListener('play', hide, true);
+    setInterval(() => { if (visible) tickClock(); }, 1000);
+    schedule();
+  }
+  return { start, show, hide, schedule };
+})();
+let tvFullscreenTried = false;
+function enterTvFullscreen() {
+  if (tvFullscreenTried || document.fullscreenElement) return;
+  tvFullscreenTried = true;
+  const el = document.documentElement;
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (fn) Promise.resolve(fn.call(el)).catch(() => { tvFullscreenTried = false; });
+}
+function armTvFullscreen() {
+  if (document.fullscreenElement) return;
+  const wake = () => { enterTvFullscreen(); ['pointerdown', 'keydown', 'click'].forEach(t => document.removeEventListener(t, wake, true)); };
+  ['pointerdown', 'keydown', 'click'].forEach(t => document.addEventListener(t, wake, true));
+  setTimeout(enterTvFullscreen, 80);
+}
 function navTick() {
   if ([...document.querySelectorAll('video')].some(v => !v.paused && !v.ended)) return;
   try { navSnd.currentTime = 0; navSnd.play().catch(() => {}); } catch {}
@@ -2687,11 +2762,19 @@ const PLUS = (() => {
     const karten = sec('Kartengröße', [
       ['Klein', .8], ['Mittel', 1], ['Groß', 1.3]
     ].map(([l, f]) => act(l, () => { store.set('cw', f); applyLook(); route(); }, store.get('cw', 1) === f)));
+    const saver = sec('Screensaver', [
+      act('Screensaver an', () => { store.set('saverOn', true); ScreenSaver.schedule(); route(); }, store.get('saverOn', true)),
+      act('Screensaver aus', () => { store.set('saverOn', false); ScreenSaver.hide(); route(); }, !store.get('saverOn', true)),
+      ...[1, 5, 10, 20, 30].map(m => act('Nach ' + m + ' Min', () => { store.set('saverDelay', m); ScreenSaver.schedule(); route(); }, (store.get('saverDelay', 5) || 5) === m)),
+      ...[10, 30, 60].map(s => act('Bildwechsel ' + s + ' s', () => { store.set('saverInterval', s); ScreenSaver.schedule(); route(); }, (store.get('saverInterval', 30) || 30) === s)),
+      act('Uhr anzeigen', () => { store.set('saverClock', true); ScreenSaver.schedule(); route(); }, store.get('saverClock', true)),
+      act('Uhr ausblenden', () => { store.set('saverClock', false); ScreenSaver.schedule(); route(); }, !store.get('saverClock', true))
+    ]);
     const daten = sec('Daten (Merkliste, Verlauf, Abos)', [
       act('Exportieren (JSON)', exportData), act('Importieren …', () => file.click()), file
     ]);
 
-    main.append(hd('Mehr'), ...entdecken, ...kopplung, ...akzent, ...karten, ...daten);
+    main.append(hd('Mehr'), ...entdecken, ...kopplung, ...akzent, ...karten, ...saver, ...daten);
   }
 
   const sendTv = async d => {
@@ -2847,6 +2930,8 @@ const PLUS = (() => {
       document.head.append(h('link', { rel:'manifest', href:'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(m)) }));
     } catch {}
     applyLook();
+    armTvFullscreen();
+    ScreenSaver.start();
     new MutationObserver(() => {
       main.querySelectorAll('.player:not([data-plus])').forEach(enhance);
       main.querySelectorAll('.acts:not([data-plus])').forEach(a => {
