@@ -885,15 +885,15 @@ body:not(.saver-on) main,body:not(.saver-on) #side{filter:none;transform:none;tr
 :root[data-theme="dark"] .msec{background:#0e0e0e;border-color:#2c2c2c;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .msec-h{font-size:1.15rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-3);margin:0 0 1.4rem;padding-bottom:1rem;border-bottom:2px solid var(--border)}
 .mgrid{display:flex;flex-direction:column;gap:1rem;align-items:stretch}
-.mbtn{display:flex;align-items:center;gap:1.4rem;width:100%;min-height:5.6rem;height:auto;padding:1.2rem 2rem;background:var(--bg);border:2px solid var(--border-2);border-radius:1.2rem;color:var(--fg);font-size:1.55rem;font-weight:600;transition:transform .14s,background .14s,border-color .14s,box-shadow .14s;white-space:nowrap;text-align:left;box-sizing:border-box;overflow:hidden}
-.mbtn:hover{background:var(--bg-3);border-color:var(--fg-4)}
-.mbtn:focus{background:var(--fg);color:var(--bg);border-color:transparent;transform:scale(1.02);box-shadow:var(--fr);position:relative;z-index:4}
-.mbtn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.mbtn .ic{flex:none;width:2.4rem;height:2.4rem}
-.mbtn span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.mopt{display:flex;align-items:center;gap:1.4rem;width:100%;min-height:5.6rem;height:auto;padding:1.2rem 2rem;background:var(--bg);border:2px solid var(--border-2);border-radius:1.2rem;color:var(--fg);font-size:1.55rem;font-weight:600;transition:transform .14s,background .14s,border-color .14s,box-shadow .14s;white-space:nowrap;text-align:left;box-sizing:border-box;overflow:hidden}
+.mopt:hover{background:var(--bg-3);border-color:var(--fg-4)}
+.mopt:focus{background:var(--fg);color:var(--bg);border-color:transparent;transform:scale(1.02);box-shadow:var(--fr);position:relative;z-index:4}
+.mopt.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.mopt .ic{flex:none;width:2.4rem;height:2.4rem}
+.mopt span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .mgrid .swatch{width:3.6rem;height:3.6rem;border-radius:50%;border:2px solid var(--border-2);flex:none;align-self:center}
 .mgrid:has(.swatch){flex-direction:row;flex-wrap:wrap;gap:1.2rem;align-items:center}
-.mgrid:has(.swatch) .mbtn{width:auto;min-width:12rem}
+.mgrid:has(.swatch) .mopt{width:auto;min-width:12rem}
 </style>
 </head>
 <body>
@@ -2523,7 +2523,7 @@ function focusEl(el) {
 function initialTarget() {
   if (document.body.dataset.route === 'suche') return $('main .key');
   if (document.body.dataset.route === 'watch') return $('.watch .player[tabindex]') || $('main .btn.primary');
-  return $('main .chip.active, main .btn.primary, main .mbtn, main .stile, main .card');
+  return $('main .chip.active, main .btn.primary, main .mopt, main .stile, main .card');
 }
 function openSide() { focusEl($('#side .nav.active') || $('#side .nav')); }
 function closeSide() { const t = TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : initialTarget(); focusEl(t || $('#menu')); }
@@ -2846,8 +2846,8 @@ const PLUS = (() => {
 
   function more() {
     document.title = 'Mehr – Media +';
-    const B = (ic, l, fn, on) => h('button', { class:'mbtn' + (on ? ' on' : ''), type:'button', onclick:fn }, icon(ic), h('span', {}, l));
-    const L = (ic, l, href) => h('a', { class:'mbtn', href }, icon(ic), h('span', {}, l));
+    const B = (ic, l, fn, on) => h('button', { class:'mopt' + (on ? ' on' : ''), type:'button', onclick:fn }, icon(ic), h('span', {}, l));
+    const L = (ic, l, href) => h('a', { class:'mopt', href }, icon(ic), h('span', {}, l));
     const SEC = (title, ...items) => h('section', { class:'msec' }, h('h2', { class:'msec-h' }, title), h('div', { class:'mgrid' }, ...items));
     const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => {
       try { importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
