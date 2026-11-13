@@ -1049,13 +1049,17 @@ body.home main>.hrow,body.home main .hsec>.hrow{margin-left:calc(-1*var(--pad));
 
 /* ===== Willkommens-Overlay ===== */
 #welcome{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.2rem;padding:2rem;
-  background:rgba(0,0,0,.78);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);opacity:0;visibility:hidden;pointer-events:none;
+  background:rgba(0,0,0,.22);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);opacity:0;visibility:hidden;pointer-events:none;
   transition:opacity .5s ease,backdrop-filter .7s ease,-webkit-backdrop-filter .7s ease,visibility 0s linear .7s}
 #welcome.show{opacity:1;visibility:visible;pointer-events:auto;-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);transition-delay:0s}
 #welcome img{max-width:min(86vw,90rem);max-height:62vh;object-fit:contain;border-radius:1.2rem;opacity:0;transform:scale(.94);transition:opacity .6s ease .35s,transform .6s ease .35s}
 #welcome.show img{opacity:1;transform:none}
 #welcome h1{display:none;margin:0;font-size:2.6em;color:#fff;text-align:center}
 #welcome.noimg h1{display:block}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  body>*:not(#welcome){transition:filter .6s ease}
+  body.welcome-on>*:not(#welcome){filter:blur(18px)}
+}
 #welcome.noimg img{display:none}
 #welcome .btn{opacity:0;transform:translateY(10px);transition:opacity .5s ease .7s,transform .5s ease .7s,background .15s,color .15s}
 #welcome.show .btn{opacity:1;transform:none}
@@ -3252,6 +3256,7 @@ const Welcome = (() => {
     const im = el.querySelector('img'); if (im) { const src = im.getAttribute('src'); im.removeAttribute('src'); im.setAttribute('src', src); }   /* GIF startet jedes Mal von vorn */
     void el.offsetWidth;
     el.classList.add('show');
+    document.body.classList.add('welcome-on');
     document.addEventListener('keydown', onKey, true);
     setTimeout(() => { if (open && btn) btn.focus(); }, 900);
   }
@@ -3260,6 +3265,7 @@ const Welcome = (() => {
     open = false;
     store.set('welcomed', true);
     el.classList.remove('show');
+    document.body.classList.remove('welcome-on');
     document.removeEventListener('keydown', onKey, true);
     try { if (prevFocus && prevFocus.isConnected && prevFocus !== document.body) prevFocus.focus(); } catch {}
     prevFocus = null;
