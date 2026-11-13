@@ -3020,7 +3020,8 @@ function move(dir) {
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
     (!dlgEl || dlgEl.contains(el)) &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))) &&
-    !(cur && cur.closest('.sleft') && (dir === 'up' || dir === 'down') && !el.closest('.sleft')));
+    !(cur && cur.closest('.sleft') && (dir === 'up' || dir === 'down') && !el.closest('.sleft')) &&
+    !(cur && cur.closest('#side') && (dir === 'up' || dir === 'down') && !el.closest('#side')));
   if (!cur) {
     const t = (TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : null) || initialTarget() || all.find(canFocus);
     return focusEl(t);
