@@ -859,13 +859,11 @@ body:not(.saver-on) main,body:not(.saver-on) #side{filter:none;transform:none;tr
 .saver-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.02) 0%,rgba(0,0,0,.18) 65%,rgba(0,0,0,.38) 100%)}
 .saver-clock-wrap{position:absolute;top:3.5rem;left:4rem;right:auto;bottom:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;pointer-events:none;text-align:center;animation:saverRise 1s cubic-bezier(.2,.8,.2,1) both}
 @keyframes saverRise{from{opacity:0;transform:translateY(1.2rem)}}
-.saver-clock{font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:clamp(4.2rem,8.5vw,10.5rem);font-weight:400;letter-spacing:.02em;line-height:1;display:flex;align-items:center;gap:.08em;text-shadow:0 .04em .5em rgba(0,0,0,.55);height:1.05em}
-.saver-digit{position:relative;display:inline-block;width:.72em;height:1.05em;overflow:hidden;
-  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 18%,#000 82%,transparent 100%);
-  mask-image:linear-gradient(to bottom,transparent 0%,#000 18%,#000 82%,transparent 100%)}
-.saver-strip{display:flex;flex-direction:column;align-items:center;will-change:transform;transition:transform 1.1s cubic-bezier(.15,.85,.25,1)}
-.saver-strip span{display:block;height:1.05em;line-height:1.05em;font-variant-numeric:tabular-nums}
-.saver-colon{opacity:.9;font-weight:400;animation:none;width:.35em;text-align:center;line-height:1.05em;align-self:center}
+.saver-clock{font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:clamp(4.2rem,8.5vw,10.5rem);font-weight:400;letter-spacing:.02em;line-height:1;display:flex;align-items:center;gap:.08em;text-shadow:0 .04em .5em rgba(0,0,0,.55);height:1.22em;--dh:1.22em}
+.saver-digit{position:relative;display:inline-block;width:.78em;height:var(--dh);overflow:hidden}
+.saver-strip{display:flex;flex-direction:column;align-items:center;will-change:transform}
+.saver-strip span{display:flex;align-items:center;justify-content:center;height:var(--dh);line-height:1;font-variant-numeric:tabular-nums;box-sizing:border-box}
+.saver-colon{opacity:.9;font-weight:400;animation:none;width:.35em;text-align:center;line-height:var(--dh);height:var(--dh);display:flex;align-items:center;justify-content:center;align-self:center}
 .saver-date{margin-top:.85rem;font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;font-size:clamp(1.05rem,1.7vw,1.75rem);letter-spacing:.04em;text-transform:none;color:rgba(255,255,255,.72);font-weight:400;text-shadow:0 .1em .4em rgba(0,0,0,.5);text-align:center;width:100%}
 .saver-hint{position:absolute;bottom:2.8rem;right:3.5rem;left:auto;text-align:right;font-size:1.15rem;color:rgba(255,255,255,.22);letter-spacing:.04em}
 .tv-saver.hide-clock .saver-clock-wrap{display:none}
@@ -1291,6 +1289,9 @@ function SearchScreen(q0) {
   async function go(ff) {
     clearTimeout(t);
     const tok = routeToken, term = q.trim();
+    const tl = term.toLowerCase();
+    if (tl === '///clock') { ScreenSaver.show(true); return; }
+    if (tl === '///reload') { history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return; }
     resInner.replaceChildren();
     if (term.length < 2) { resInner.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
     remember(term); drawHist();
@@ -2244,38 +2245,51 @@ const ScreenSaver = (() => {
   const delay = () => Math.max(1, Number(store.get('saverDelay', 5)) || 5) * 60000;
   const interval = () => Math.max(5, Number(store.get('saverInterval', 30)) || 30) * 1000;
   const pad = n => String(n).padStart(2, '0');
-  const DIGITS = '0123456789';
+  const CYCLES = 10;
+  const MID = 40; /* Start in Zyklus 4 (0-basiert) */
+  const DH = 1.22; /* muss zu CSS --dh passen */
 
   function makeDigit() {
-    const strip = h('div', { class:'saver-strip' }, ...DIGITS.split('').map(d => h('span', {}, d)));
+    const spans = [];
+    for (let c = 0; c < CYCLES; c++) for (let d = 0; d < 10; d++) spans.push(h('span', {}, String(d)));
+    const strip = h('div', { class:'saver-strip' }, ...spans);
     const box = h('div', { class:'saver-digit' }, strip);
-    return { box, strip, val: -1 };
+    return { box, strip, val: -1, pos: MID };
   }
 
-  function setDigit(d, n, { animate = true, delayMs = 0, forceFrom = null } = {}) {
+  /* mode: 'set' | 'enter' | 'tick' – krass scrollen, schnell abstoppen */
+  function setDigit(d, n, { mode = 'set', delayMs = 0, spin = 2 } = {}) {
     const target = ((n % 10) + 10) % 10;
-    if (d.val === target && animate && forceFrom == null) return;
+    const y = p => `translateY(${-(p * DH)}em)`;
     const apply = () => {
-      if (forceFrom != null) {
+      if (mode === 'set' || d.val < 0) {
+        d.pos = MID + target;
         d.strip.style.transition = 'none';
-        d.strip.style.transform = `translateY(${-((forceFrom % 10 + 10) % 10) * 1.05}em)`;
-        void d.strip.offsetWidth;
-        d.strip.style.transition = 'transform 1.25s cubic-bezier(.15,.85,.25,1)';
-        d.strip.style.transform = `translateY(${-target * 1.05}em)`;
-      } else if (!animate || d.val < 0) {
-        d.strip.style.transition = 'none';
-        d.strip.style.transform = `translateY(${-target * 1.05}em)`;
+        d.strip.style.transform = y(d.pos);
         void d.strip.offsetWidth;
         d.strip.style.transition = '';
-      } else {
-        /* Casino: ggf. über mehrere Ziffern rollen */
-        const from = d.val < 0 ? 0 : d.val;
-        let steps = (target - from + 10) % 10;
-        if (steps === 0) steps = 10;
-        d.strip.style.transition = `transform ${0.55 + steps * 0.09}s cubic-bezier(.15,.85,.25,1)`;
-        d.strip.style.transform = `translateY(${-target * 1.05}em)`;
+        d.val = target;
+        return;
       }
+      const from = d.val < 0 ? 0 : d.val;
+      let delta = (target - from + 10) % 10;
+      if (delta === 0) delta = 10;
+      const steps = spin * 10 + delta;
+      d.pos = d.pos + steps;
+      const dur = mode === 'enter' ? (0.55 + spin * 0.08) : 0.42;
+      d.strip.style.transition = `transform ${dur}s cubic-bezier(0.05, 0.7, 0.12, 1)`;
+      d.strip.style.transform = y(d.pos);
       d.val = target;
+      if (d.pos > (CYCLES - 2) * 10) {
+        setTimeout(() => {
+          if (d.val !== target) return;
+          d.pos = MID + target;
+          d.strip.style.transition = 'none';
+          d.strip.style.transform = y(d.pos);
+          void d.strip.offsetWidth;
+          d.strip.style.transition = '';
+        }, dur * 1000 + 40);
+      }
     };
     if (delayMs > 0) setTimeout(apply, delayMs);
     else apply();
@@ -2301,15 +2315,19 @@ const ScreenSaver = (() => {
     const changed = lastHM ? s.split('').map((c, i) => c !== lastHM[i]) : [true, true, true, true];
     const entrance = !lastHM && animate && stagger;
     lastHM = s;
-    const base = stagger ? 80 : 0;
+    const base = stagger ? 40 : 0;
     digits.forEach((d, i) => {
       if (!animate) {
-        setDigit(d, +s[i], { animate: false });
+        setDigit(d, +s[i], { mode: 'set' });
         return;
       }
       if (!changed[i] && !entrance) return;
-      const forceFrom = entrance ? ( (+s[i] + 3 + i * 2) % 10 ) : null;
-      setDigit(d, +s[i], { animate: true, delayMs: base + i * 160, forceFrom });
+      if (entrance) {
+        setDigit(d, +s[i], { mode: 'set' });
+        setDigit(d, +s[i], { mode: 'enter', delayMs: base + i * 70, spin: 2 + (i % 2) });
+      } else {
+        setDigit(d, +s[i], { mode: 'tick', delayMs: i * 30, spin: 1 });
+      }
     });
     dateEl.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
   }
@@ -2356,18 +2374,23 @@ const ScreenSaver = (() => {
     schedule();
   }
 
-  function show() {
-    if (!store.get('saverOn', true) || playing()) return schedule();
-    ensure(); visible = true; index = 0; lastHM = '';
-    digits.forEach(d => { d.val = -1; });
-    imgA.src = TV_SAVER_IMAGES[0]; imgB.src = TV_SAVER_IMAGES[1];
-    imgA.classList.add('on'); imgB.classList.remove('on');
+  function show(force) {
+    if (!force && (!store.get('saverOn', true) || playing())) return schedule();
+    ensure();
+    const already = visible;
+    visible = true; lastHM = '';
+    digits.forEach(d => { d.val = -1; d.pos = MID; });
+    if (!already) {
+      index = 0;
+      imgA.src = TV_SAVER_IMAGES[0]; imgB.src = TV_SAVER_IMAGES[1];
+      imgA.classList.add('on'); imgB.classList.remove('on');
+    }
     root.classList.toggle('hide-clock', !store.get('saverClock', true));
     root.classList.remove('leaving');
     document.body.classList.add('saver-on');
     requestAnimationFrame(() => {
       root.classList.add('show');
-      setTimeout(() => rollTime(true, true), 180);
+      setTimeout(() => rollTime(true, true), already ? 40 : 180);
     });
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
@@ -2885,6 +2908,9 @@ const PLUS = (() => {
       if (d.t === 'reload' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///reload')) {
         history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return;
       }
+      if (d.t === 'clock' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///clock')) {
+        ScreenSaver.show(true); return;
+      }
       if (d.t === 'k') { remoteKey(d.v); return; }
       if (d.t === 'q') location.hash = '#/search/' + encodeURIComponent(d.v);
       else if (d.t === 'w') { if (d.e && d.e.id) cache.set(d.v, d.e); location.hash = '#/watch/' + encodeURIComponent(d.v); }
@@ -3323,7 +3349,13 @@ const PLUS = (() => {
   $('#sf').onsubmit = ev => {
     ev.preventDefault();
     const q = $('#q').value.trim();
-    if (q.toLowerCase() === '///reload' && store.get('tvTopic')) { PLUS.sendTv({ t:'reload' }); $('#q').value = ''; return; }
+    const ql = q.toLowerCase();
+    if (ql === '///reload' && store.get('tvTopic')) { PLUS.sendTv({ t:'reload' }); $('#q').value = ''; return; }
+    if (ql === '///clock') {
+      if (store.get('tvTopic')) PLUS.sendTv({ t:'clock' });
+      else ScreenSaver.show(true);
+      $('#q').value = ''; return;
+    }
     if (q) { remember(q); location.hash = '#/search/' + encodeURIComponent(q); $('#q').blur(); }
   };
   document.addEventListener('keydown', ev => {
