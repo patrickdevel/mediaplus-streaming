@@ -1030,6 +1030,9 @@ body:not(.home) .hclock{display:none}
   mask-image:linear-gradient(to right,transparent 0,#000 var(--mq-p),#000 calc(100% - var(--mq-p)),transparent 100%)}
 .hin .mq.mq-on .mq-in{animation:mqScroll var(--mq-d,12s) ease-in-out infinite alternate}
 @keyframes mqScroll{0%,14%{transform:translateX(0)}86%,100%{transform:translateX(var(--mq-x))}}
+
+/* ===== v9: Startseite – Reihen laufen bis zum Trennstrich der Navbar ===== */
+body.home main>.hrow,body.home main .hsec>.hrow{margin-left:calc(-1*var(--pad));margin-right:calc(-1*var(--pad));padding-left:var(--pad);padding-right:var(--pad);scroll-padding-inline:var(--pad)}
 </style>
 </head>
 <body>
@@ -2951,6 +2954,15 @@ function focusEl(el) {
   const fixedBar = el.closest('.chips,.top,#side,.sticky-player,.pmenu,.sugg');
   /* Startseite: erster Schritt nach unten → Weiterschauen-Pill rutscht nach ganz oben, darunter geht es los */
   if (document.body.classList.contains('home') && !el.closest('.hero,.hglass,#side')) {
+    const sp = document.querySelector('.hspacer'), chipEl = el.closest('.chips');
+    if (chipEl && sp) {
+      /* Chips (Neu, …) fokussiert → Chips stehen ganz oben, Weiterschauen ist weggescrollt */
+      const top = sp.getBoundingClientRect().bottom + window.scrollY;
+      const b = chipEl.getBoundingClientRect(), a = el.getBoundingClientRect();
+      chipEl.scrollBy({ left:(a.left + a.width / 2) - (b.left + b.width / 2), behavior:'smooth' });
+      if (Math.abs(window.scrollY - top) > 4) window.scrollTo({ top, behavior:'smooth' });
+      return;
+    }
     const g = document.querySelector('.hglass');
     if (g) {
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 10;
