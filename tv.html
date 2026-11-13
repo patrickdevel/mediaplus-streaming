@@ -1033,6 +1033,19 @@ body:not(.home) .hclock{display:none}
 
 /* ===== v9: Startseite – Reihen laufen bis zum Trennstrich der Navbar ===== */
 body.home main>.hrow,body.home main .hsec>.hrow{margin-left:calc(-1*var(--pad));margin-right:calc(-1*var(--pad));padding-left:var(--pad);padding-right:var(--pad);scroll-padding-inline:var(--pad)}
+
+/* ===== v10: Ladeanimationen ===== */
+.thumb:not(:has(.frame))::before,.hbg:not(:has(.frame))::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(100deg,transparent 15%,rgba(160,160,170,.22) 50%,transparent 85%) 0 0/250% 100% no-repeat;
+  animation:thShimmer 1.4s ease-in-out infinite}
+@keyframes thShimmer{from{background-position:130% 0}to{background-position:-30% 0}}
+.hbg:not(:has(.frame))::before{background-color:#2b2b30}
+.hload{position:absolute;inset:0;z-index:1;display:grid;place-items:center;background:#2b2b30;transition:opacity .5s ease}
+.hload.out{opacity:0;pointer-events:none}
+.hload::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.07) 50%,transparent 80%) 0 0/250% 100% no-repeat;animation:thShimmer 1.8s ease-in-out infinite}
+.hload-t{position:relative;font-size:6rem;font-weight:700;letter-spacing:-.04em;color:rgba(255,255,255,.88);animation:hloadPulse 1.6s ease-in-out infinite}
+.hload-t small{font-size:inherit;font-weight:500;margin-left:.04em}
+@keyframes hloadPulse{50%{opacity:.45}}
 </style>
 </head>
 <body>
@@ -1684,6 +1697,8 @@ function mqFit(el) {
 }
 function Hero() {
   const tok = routeToken, shell = h('section', { class:'hero' });
+  const ld = h('div', { class:'hload' }, h('span', { class:'hload-t' }, 'Media', h('small', {}, '+')));
+  shell.append(ld);
   document.body.insertBefore(shell, main);
   cleanups.push(() => shell.remove());
   search({ min:1800, size:30 }).then(r => {
@@ -1712,6 +1727,7 @@ function Hero() {
     });
     slides.forEach(s => track.append(s.el));
     shell.append(track, dots);
+    ld.classList.add('out'); setTimeout(() => ld.remove(), 600);
     const mqEls = slides.flatMap(sl => [sl.el.querySelector('h2'), sl.el.querySelector('p')]);
     mqEls.forEach(mq);
     const mqAll = () => mqEls.forEach(mqFit);
