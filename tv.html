@@ -849,29 +849,28 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 
 /* ===== Screensaver (v2) ===== */
 .tv-saver{position:fixed;inset:0;z-index:180;background:#050505;color:#fff;opacity:0;visibility:hidden;overflow:hidden;pointer-events:none;transition:opacity .9s ease,filter .9s ease,transform .9s ease;filter:blur(18px);transform:scale(1.04)}
-.tv-saver.show{opacity:1;visibility:visible;pointer-events:auto;filter:blur(0);transform:scale(1)}
+.tv-saver.show{opacity:1;visibility:visible;pointer-events:auto;filter:none;transform:none}
 .tv-saver.leaving{opacity:0;filter:blur(14px);transform:scale(1.03)}
 body.saver-on main,body.saver-on #side{filter:blur(12px);transform:scale(.985);transition:filter .9s ease,transform .9s ease;pointer-events:none}
 body:not(.saver-on) main,body:not(.saver-on) #side{filter:none;transform:none;transition:filter .7s ease,transform .7s ease}
 .saver-bg{position:absolute;inset:0;overflow:hidden}
-.saver-img{position:absolute;inset:-4%;width:108%;height:108%;object-fit:cover;opacity:0;transform:scale(1.06) translate(0,0);transition:opacity 2.2s ease;will-change:transform,opacity;backface-visibility:hidden;filter:brightness(.84) saturate(.95)}
-.saver-img.on{opacity:1;animation:saverKen 34s linear forwards}
+.saver-slide{position:absolute;inset:0;opacity:0;transition:opacity 2.2s ease;will-change:transform,opacity;backface-visibility:hidden;transform:translate3d(0,0,0) scale(1.16)}
+.saver-slide.on{opacity:1}
+.saver-slide.ken{animation:saverKen var(--kd,36s) linear forwards}
 @keyframes saverKen{
-  from{transform:scale(1.1) translate(1.2%,1%)}
-  to{transform:scale(1) translate(-.6%,-.4%)}
+  from{transform:translate3d(1.2%,1%,0) scale(1.16)}
+  to{transform:translate3d(-.6%,-.4%,0) scale(1.04)}
 }
-.saver-overlay{position:absolute;inset:0;background:
+.saver-img,.saver-soft{position:absolute;inset:0;width:100%;height:100%;display:block}
+.saver-img{object-fit:cover}
+.saver-soft{-webkit-mask-image:radial-gradient(ellipse 75% 70% at 8% 6%,#000 0%,#000 24%,transparent 64%);mask-image:radial-gradient(ellipse 75% 70% at 8% 6%,#000 0%,#000 24%,transparent 64%)}
+.saver-overlay{position:absolute;inset:0;z-index:3;background:linear-gradient(rgba(0,0,0,.14),rgba(0,0,0,.14)),
   radial-gradient(ellipse 70% 60% at 12% 10%,rgba(0,0,0,.45) 0%,rgba(0,0,0,.12) 45%,transparent 70%),
   radial-gradient(ellipse at center,rgba(0,0,0,.02) 0%,rgba(0,0,0,.16) 65%,rgba(0,0,0,.36) 100%)}
-/* Weicher Blur Richtung Uhr (oben links) */
-.saver-blur{position:absolute;inset:0;pointer-events:none;z-index:1;
-  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  -webkit-mask-image:radial-gradient(ellipse 75% 70% at 8% 6%,#000 0%,#000 22%,transparent 62%);
-  mask-image:radial-gradient(ellipse 75% 70% at 8% 6%,#000 0%,#000 22%,transparent 62%)}
-.saver-clock-wrap{position:absolute;top:3.5rem;left:4rem;right:auto;bottom:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;pointer-events:none;text-align:center;animation:saverRise 1s cubic-bezier(.2,.8,.2,1) both}
+.saver-clock-wrap{z-index:4;position:absolute;top:3.5rem;left:4rem;right:auto;bottom:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;pointer-events:none;text-align:center;animation:saverRise 1s cubic-bezier(.2,.8,.2,1) both}
 @keyframes saverRise{from{opacity:0;transform:translateY(1.2rem)}}
-.saver-clock{font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:clamp(4.2rem,8.5vw,10.5rem);font-weight:400;letter-spacing:.02em;line-height:1;display:flex;align-items:center;gap:.08em;text-shadow:0 .05em .35em rgba(0,0,0,.65);height:1.22em;--dh:1.22em;background:transparent}
-.saver-digit{position:relative;display:inline-block;width:.78em;height:var(--dh);overflow:hidden;background:transparent}
+.saver-clock{font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:clamp(4.2rem,8.5vw,10.5rem);font-weight:400;letter-spacing:.02em;line-height:1;display:flex;align-items:center;gap:.08em;filter:drop-shadow(0 .05em .22em rgba(0,0,0,.55));height:1.22em;--dh:1.22em;background:transparent}
+.saver-digit{position:relative;display:inline-block;width:.78em;height:var(--dh);overflow:hidden;background:transparent;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 19%,#000 81%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 19%,#000 81%,transparent 100%)}
 .saver-strip{display:flex;flex-direction:column;align-items:center;will-change:transform;background:transparent}
 .saver-strip span{display:flex;align-items:center;justify-content:center;height:var(--dh);line-height:1;font-variant-numeric:tabular-nums;box-sizing:border-box;background:transparent;color:#fff}
 .saver-colon{opacity:.9;font-weight:400;animation:none;width:.35em;text-align:center;line-height:var(--dh);height:var(--dh);display:flex;align-items:center;justify-content:center;align-self:center;background:transparent;color:#fff}
@@ -2345,16 +2344,28 @@ const ScreenSaver = (() => {
     dateEl.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
   }
 
+  const mkSlide = () => {
+    const a = h('img', { alt:'', class:'saver-img', decoding:'async' }), b = h('canvas', { class:'saver-soft', 'aria-hidden':'true' });
+    return { el:h('div', { class:'saver-slide' }, a, b), a, b, kt:0 };
+  };
+  const setSlide = (s, src) => {
+    s.a.src = src;
+    return (s.a.decode ? s.a.decode() : new Promise(r => { s.a.onload = r; })).then(() => {
+      const cw = 256, ch = Math.max(64, Math.round(cw * innerHeight / innerWidth)), iw = s.a.naturalWidth, ih = s.a.naturalHeight;
+      s.b.width = cw; s.b.height = ch;
+      const c = s.b.getContext('2d'), k = Math.max(cw / iw, ch / ih);
+      try { c.filter = 'blur(5px)'; } catch {}
+      c.drawImage(s.a, (cw - iw * k) / 2, (ch - ih * k) / 2, iw * k, ih * k);
+    }).catch(() => {});
+  };
   function ensure() {
     if (root) return;
-    imgA = h('img', { alt:'', class:'saver-img' });
-    imgB = h('img', { alt:'', class:'saver-img' });
+    imgA = mkSlide(); imgB = mkSlide();
     clockEl = h('div', { class:'saver-clock' });
     dateEl  = h('div', { class:'saver-date' });
     const clockWrap = h('div', { class:'saver-clock-wrap' }, clockEl, dateEl);
     root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
-      h('div', { class:'saver-bg' }, imgA, imgB),
-      h('div', { class:'saver-blur', 'aria-hidden':'true' }),
+      h('div', { class:'saver-bg' }, imgA.el, imgB.el),
       h('div', { class:'saver-overlay' }),
       clockWrap,
       h('div', { class:'saver-hint' }, 'Taste oder Bewegung zum Fortfahren'));
@@ -2372,11 +2383,18 @@ const ScreenSaver = (() => {
     if (!root || !visible) return;
     index = (index + 1) % TV_SAVER_IMAGES.length;
     const next = index % 2 ? imgB : imgA, old = index % 2 ? imgA : imgB;
-    next.src = TV_SAVER_IMAGES[index];
-    old.classList.remove('on');
-    next.classList.remove('on');
-    void next.offsetWidth; /* Animation neu starten */
-    next.classList.add('on');
+    const start = () => {
+      if (!visible) return;
+      next.el.style.zIndex = 2; old.el.style.zIndex = 1;
+      next.el.classList.remove('on', 'ken'); void next.el.offsetWidth;
+      next.el.classList.add('on', 'ken');
+      clearTimeout(old.kt);
+      old.kt = setTimeout(() => {
+        if (old.el.style.zIndex !== '1') return;
+        old.el.style.transition = 'none'; old.el.classList.remove('on', 'ken'); void old.el.offsetWidth; old.el.style.transition = '';
+      }, 2500);
+    };
+    setSlide(next, TV_SAVER_IMAGES[index]).then(start);
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
 
@@ -2406,11 +2424,10 @@ const ScreenSaver = (() => {
     digits.forEach(d => { d.val = -1; d.pos = MID; });
     if (!already) {
       index = 0;
-      imgA.src = TV_SAVER_IMAGES[0]; imgB.src = TV_SAVER_IMAGES[1];
-      imgB.classList.remove('on');
-      imgA.classList.remove('on');
-      void imgA.offsetWidth;
-      imgA.classList.add('on');
+      root.style.setProperty('--kd', (interval() / 1000 + 6) + 's');
+      [imgA, imgB].forEach(x => { clearTimeout(x.kt); x.el.style.zIndex = ''; x.el.classList.remove('on', 'ken'); });
+      setSlide(imgB, TV_SAVER_IMAGES[1]);
+      setSlide(imgA, TV_SAVER_IMAGES[0]).then(() => { if (!visible) return; void imgA.el.offsetWidth; imgA.el.classList.add('on', 'ken'); });
     }
     root.classList.toggle('hide-clock', !store.get('saverClock', true));
     root.classList.remove('leaving');
@@ -2893,7 +2910,7 @@ const PLUS = (() => {
     const s = document.createElement('script'); s.src = PEER_SRC; s.onload = res;
     s.onerror = () => { peerP = null; rej(new Error('peerjs')); }; document.head.append(s); })));
   const PID = t => 'mplus-' + t;
-  let phPeer = null, phConn = null, phP = null, p2pDown = 0;
+  let phPeer = null, phConn = null, phP = null, p2pDown = 0, p2pLast = 'noch nicht verbunden';
   function phoneConn() {
     const t = store.get('tvTopic'); if (!t) return Promise.reject(new Error('no-tv'));
     if (phConn && phConn.peer !== PID(t)) { try { phConn.close(); } catch {} phConn = null; }
@@ -2920,17 +2937,18 @@ const PLUS = (() => {
         c.on('close', () => { if (phConn === c) phConn = null; });
         c.on('error', fail);
       });
-    })().finally(() => { phP = null; });
+    })().then(c => { p2pLast = 'Direkt verbunden (P2P)'; return c; }, e => { p2pLast = 'P2P-Fehler: ' + (e && (e.type || e.message) || e); throw e; }).finally(() => { phP = null; });
     return phP;
   }
   async function sendMsg(d) {
     const t = store.get('tvTopic'); if (!t) throw new Error('no-tv');
     if (Date.now() > p2pDown) {
-      try { const c = await phoneConn(); c.send(d); return 'p2p'; }
+      try { const c = await phoneConn(); c.send(d); p2pLast = 'Direkt verbunden (P2P)'; return 'p2p'; }
       catch (e) { p2pDown = Date.now() + 15000; setTimeout(() => phoneConn().catch(() => {}), 15000); }
     }
     const r = await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) });
     if (!r.ok) throw new Error(r.status);
+    p2pLast = 'Nur ntfy (' + p2pLast + ')';
     return 'ntfy';
   }
 
@@ -3002,7 +3020,8 @@ const PLUS = (() => {
     p.on('connection', c => c.on('data', d => { try { handleMsg(typeof d === 'string' ? JSON.parse(d) : d); } catch {} }));
     p.on('disconnected', () => setTimeout(() => { if (tvPeer === p && !p.destroyed) { try { p.reconnect(); } catch {} } }, 2000));
     p.on('close', () => { if (tvPeer === p) { tvPeer = null; setTimeout(tvServe, 3000); } });
-    p.on('error', err => { if (tvPeer === p && err && err.type === 'unavailable-id') { try { p.destroy(); } catch {} } });
+    p.on('open', () => toast('Fernbedienung bereit'));
+    p.on('error', err => { if (tvPeer !== p) return; toast('P2P-Fehler: ' + (err && err.type)); if (err && err.type === 'unavailable-id') { try { p.destroy(); } catch {} } });
   }
   function listen() {
     const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
