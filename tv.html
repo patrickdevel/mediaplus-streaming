@@ -2940,9 +2940,10 @@ const PLUS = (() => {
           const id = decodeURIComponent(location.hash.split('/')[2] || ''); const en = cache.get(id) || loadSaved(id); sendTv({ t:'w', v:id, n:document.title.replace(/ – Media \+$/, ''), e:en ? { ...slim(en), description:(en.description || '').slice(0, 300) } : undefined }); } }, icon('tv'), 'Auf TV'));
       });
     }).observe(main, { childList:true, subtree:true });
+    /* Bildschirm während der gesamten TV-App wach halten – auch bei Pause und Screensaver. */
+    lock();
     document.addEventListener('play', lock, true);
-    ['pause', 'ended'].forEach(t => document.addEventListener(t, () => { if (wl) wl.release().catch(() => {}); }, true));
-    document.addEventListener('visibilitychange', () => { const v = document.querySelector('video'); if (!document.hidden && v && !v.paused) lock(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) lock(); });
     document.addEventListener('keydown', ev => {
       if (/input|textarea|select/i.test(ev.target.tagName) || ev.ctrlKey || ev.metaKey || ev.altKey) return;
       const k = ev.key, c = ev.keyCode, up = k === 'ChannelUp' || c === 427, dn = k === 'ChannelDown' || c === 428;
