@@ -512,7 +512,7 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 .sbg{position:absolute;inset:0;overflow:hidden;background:#111}
 .sbg-b{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(36px) brightness(.55) saturate(1.4)}
 .sbg-c{position:absolute;inset:0;display:grid;place-items:center}
-.sbg-c img{height:68%;aspect-ratio:1;object-fit:cover;border-radius:50%;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
+.sbg-c img{width:min(42%,260px);height:auto;max-height:48%;aspect-ratio:1;object-fit:cover;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
 </style>
 </head>
 <body>
@@ -1207,10 +1207,18 @@ const SC = (() => {
       duration:t.duration, artworkUrl:t.artworkUrl || t.artwork_url || u.avatar_url || '', streamUrl:t.streamUrl,
       artist: (u.username || t.artistName) ? { username:u.username || t.artistName } : null };
   };
+  const listFrom = d => {
+    if (Array.isArray(d)) return d;
+    if (!d || typeof d !== 'object') return [];
+    for (const k of ['collection', 'tracks', 'items', 'results', 'data']) {
+      const l = listFrom(d[k]); if (l.length) return l;
+    }
+    return [];
+  };
   /* Songsuche: erwartet am Server /api/search?q=… (Liste von Tracks wie bei /api/explore) */
   async function search(q) {
     const d = await api('search', { q, query:q, type:'tracks', kind:'tracks' });
-    const l = Array.isArray(d) ? d : (d.tracks || d.collection || d.items || d.results || []);
+    const l = listFrom(d);
     return l.map(norm).filter(t => t.id && t.permalinkUrl).map(t => {
       if (!cache.has(t.permalinkUrl)) cache.set(t.permalinkUrl, Object.assign({}, t));
       return t;
@@ -1219,7 +1227,7 @@ const SC = (() => {
   async function feed(n) {
     const g = GEN[Math.floor(Math.random() * GEN.length)];
     const d = await api('explore', { type:'trending', genre:g, kind:'trending' });
-    const raw = Array.isArray(d) ? d : ([d.collection, d.tracks, d.items, d.results].find(Array.isArray) || []);
+    const raw = listFrom(d);
     const l = raw.map(norm).filter(t => t && t.id && t.permalinkUrl && !seen.has(t.id))
       .sort(() => Math.random() - .5).slice(0, n);
     return l.map(t => { seen.add(t.id); cache.set(t.permalinkUrl, t); return { sc:t, id:'sc' + t.id, title:t.title, topic:'' }; });
