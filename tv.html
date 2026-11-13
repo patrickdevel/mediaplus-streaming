@@ -1020,6 +1020,16 @@ body:not(.home) .hclock{display:none}
 .hglass .hl{margin-right:0}
 .hglass .hrow{padding-right:1rem;margin-right:0}
 .hinfo{padding-left:2.4rem}
+
+/* ===== v8: Lauftext im Karussell ===== */
+.hin .mq{display:block;overflow:hidden;white-space:nowrap;-webkit-line-clamp:unset;max-width:100%;text-wrap:nowrap}
+.hin p.mq{max-width:100%}
+.hin .mq-in{display:inline-block;white-space:nowrap}
+.hin .mq.mq-on{margin-left:calc(-1*var(--mq-p));margin-right:calc(-1*var(--mq-p));padding:0 var(--mq-p);max-width:none;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--mq-p),#000 calc(100% - var(--mq-p)),transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 var(--mq-p),#000 calc(100% - var(--mq-p)),transparent 100%)}
+.hin .mq.mq-on .mq-in{animation:mqScroll var(--mq-d,12s) ease-in-out infinite alternate}
+@keyframes mqScroll{0%,14%{transform:translateX(0)}86%,100%{transform:translateX(var(--mq-x))}}
 </style>
 </head>
 <body>
@@ -1651,6 +1661,24 @@ function loadHls() {
   }));
 }
 
+/* Einzeiliger Lauftext mit Fade links/rechts – nur wenn der Text nicht in die Zeile passt */
+function mq(el) {
+  if (!el || el._mq || !el.textContent.trim()) return;
+  el._mq = 1; el.classList.add('mq');
+  el.replaceChildren(h('span', { class:'mq-in' }, el.textContent));
+}
+function mqFit(el) {
+  if (!el || !el._mq) return;
+  el.classList.remove('mq-on');
+  const sp = el.firstChild, over = sp.offsetWidth - el.clientWidth;
+  if (over > 2) {
+    const pad = 3 * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 10);
+    el.style.setProperty('--mq-p', pad + 'px');
+    el.style.setProperty('--mq-x', -(over + pad) + 'px');
+    el.style.setProperty('--mq-d', Math.max(8, over / 40 + 5).toFixed(1) + 's');
+    el.classList.add('mq-on');
+  }
+}
 function Hero() {
   const tok = routeToken, shell = h('section', { class:'hero' });
   document.body.insertBefore(shell, main);
@@ -1681,6 +1709,12 @@ function Hero() {
     });
     slides.forEach(s => track.append(s.el));
     shell.append(track, dots);
+    const mqEls = slides.flatMap(sl => [sl.el.querySelector('h2'), sl.el.querySelector('p')]);
+    mqEls.forEach(mq);
+    const mqAll = () => mqEls.forEach(mqFit);
+    requestAnimationFrame(mqAll);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(mqAll);
+    window.addEventListener('resize', mqAll); cleanups.push(() => window.removeEventListener('resize', mqAll));
     const n = slides.length;
     if (store.get('thumbs', true)) { slides.slice().reverse().forEach(s => { if (s.bg._e) thumbQueue.push(s.bg); }); pump(); }
     let idx = 0, timer = 0, x0 = 0, y0 = 0;
