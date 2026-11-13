@@ -1975,9 +1975,58 @@ const PLUS = (() => {
   }
 
   /* ---------- Kopplung Handy -> TV (über ntfy.sh) ---------- */
+  
+  /* ---------- Direktverbindung Handy <-> TV (WebRTC über PeerJS, Fallback ntfy) ---------- */
+  const PEER_SRC = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+  let peerP = null;
+  const loadPeer = () => window.Peer ? Promise.resolve() : (peerP || (peerP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = PEER_SRC; s.onload = res;
+    s.onerror = () => { peerP = null; rej(new Error('peerjs')); }; document.head.append(s); })));
+  const PID = t => 'mplus-' + t;
+  let phPeer = null, phConn = null, phP = null, p2pDown = 0;
+  function phoneConn() {
+    const t = store.get('tvTopic'); if (!t) return Promise.reject(new Error('no-tv'));
+    if (phConn && phConn.peer !== PID(t)) { try { phConn.close(); } catch {} phConn = null; }
+    if (phConn && phConn.open) return Promise.resolve(phConn);
+    if (phP) return phP;
+    phP = (async () => {
+      await loadPeer();
+      if (!phPeer || phPeer.destroyed) {
+        const p = phPeer = new Peer();
+        try {
+          await new Promise((res, rej) => { p.once('open', res); p.once('error', rej); setTimeout(() => rej(new Error('peer-timeout')), 8000); });
+        } catch (e) { try { p.destroy(); } catch {} if (phPeer === p) phPeer = null; throw e; }
+        p.on('disconnected', () => { try { p.reconnect(); } catch {} });
+        p.on('close', () => { if (phPeer === p) { phPeer = null; phConn = null; } });
+      }
+      const p = phPeer;
+      return await new Promise((res, rej) => {
+        const c = p.connect(PID(t), { reliable:true, serialization:'json' });
+        const onErr = e => { if (e && e.type === 'peer-unavailable') fail(e); };
+        const fail = e => { clearTimeout(to); p.off('error', onErr); if (phConn === c) phConn = null; try { c.close(); } catch {} rej(e); };
+        const to = setTimeout(() => fail(new Error('conn-timeout')), 5000);
+        p.on('error', onErr);
+        c.on('open', () => { clearTimeout(to); p.off('error', onErr); phConn = c; res(c); });
+        c.on('close', () => { if (phConn === c) phConn = null; });
+        c.on('error', fail);
+      });
+    })().finally(() => { phP = null; });
+    return phP;
+  }
+  async function sendMsg(d) {
+    const t = store.get('tvTopic'); if (!t) throw new Error('no-tv');
+    if (Date.now() > p2pDown) {
+      try { const c = await phoneConn(); c.send(d); return 'p2p'; }
+      catch (e) { p2pDown = Date.now() + 15000; setTimeout(() => phoneConn().catch(() => {}), 15000); }
+    }
+    const r = await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) });
+    if (!r.ok) throw new Error(r.status);
+    return 'ntfy';
+  }
+
   const sendTv = async d => {
-    const t = store.get('tvTopic'); if (!t) return toast('Erst mit dem TV koppeln');
-    try { const r = await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) }); if (!r.ok) throw new Error(r.status); toast('An TV gesendet'); } catch (e) { toast(String(e && e.message) === '429' ? 'ntfy-Limit erreicht – kurz warten' : 'Senden fehlgeschlagen'); }
+    if (!store.get('tvTopic')) return toast('Erst mit dem TV koppeln');
+    try { await sendMsg(d); toast('An TV gesendet'); } catch (e) { toast(String(e && e.message) === '429' ? 'ntfy-Limit erreicht – kurz warten' : 'Senden fehlgeschlagen'); }
   };
   function listen() {
     const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
@@ -2031,7 +2080,7 @@ const PLUS = (() => {
       '.rb.ok{background:var(--fg);color:var(--bg);border-radius:50%;height:auto;aspect-ratio:1}.rb.ok:active{opacity:.7;background:var(--fg);color:var(--bg)}' +
       '.rb.wide{height:52px;font-size:15px;gap:10px;display:flex;justify-content:center;align-items:center}' +
       '.rs{display:flex;gap:8px}.rs input{flex:1;min-width:0;height:48px;border-radius:14px;border:1px solid var(--border-2);background:var(--bg);padding:0 14px;font-size:16px;outline:0}'));
-    const send = d => { if (navigator.vibrate) navigator.vibrate(10); fetch('https://ntfy.sh/' + store.get('tvTopic'), { method:'POST', body:JSON.stringify(d) }).then(r => { if (!r.ok) throw new Error(r.status); return d.t === 'q' && toast('Suche am TV gestartet'); }).catch(e => toast(String(e && e.message) === '429' ? 'ntfy-Limit erreicht – kurz warten' : 'Senden fehlgeschlagen')); };
+    const send = d => { if (navigator.vibrate) navigator.vibrate(10); sendMsg(d).then(() => d.t === 'q' && toast('Suche am TV gestartet')).catch(e => toast(String(e && e.message) === '429' ? 'ntfy-Limit erreicht – kurz warten' : 'Senden fehlgeschlagen')); };
     const key = k => send({ t:'k', v:k });
     const b = (ic, k, o = {}) => h('button', { class:'rb' + (o.cls ? ' ' + o.cls : ''), type:'button', 'aria-label':o.label || k, onclick:() => key(k) },
       icon(ic, o.fill ? 'fill' : ''), o.small ? h('small', {}, o.small) : null);
@@ -2252,7 +2301,7 @@ const PLUS = (() => {
     }, true);
     /* Kopplung */
     if (IS_TV) { if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); }
-    else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); }
+    else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); if (store.get('tvTopic')) setTimeout(() => phoneConn().catch(() => {}), 500); document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) phoneConn().catch(() => {}); }); }
     setTimeout(refreshBadge, 3000); setInterval(refreshBadge, 600000);
   }
 
