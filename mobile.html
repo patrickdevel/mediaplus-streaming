@@ -887,12 +887,41 @@ function Continue() {
   main.append(h('h2', { class:'rowh' }, 'Weiterschauen'), h('div', { class:'hrow' }, items.map(e => Card(e))));
 }
 
+function Rows() {
+  const tok = routeToken, used = new Set();
+  const saved = store.get('saved', []);
+  if (saved.length) main.append(h('h2', { class:'rowh' }, 'Gemerkt'), h('div', { class:'hrow' }, saved.slice(0, 14).map(e => Card(e))));
+  const defs = [
+    { t:'Neu in der Mediathek', q:'', min:600 }, { t:'Tatort', q:'Tatort', min:1800 }, { t:'Dokumentationen', q:'Dokumentation', min:900 },
+    { t:'Nachrichten & Magazine', q:'Tagesschau', min:0 }, { t:'Krimi', q:'Krimi', min:900 }, { t:'Serien', q:'Serie', min:600 },
+    { t:'Comedy & Kabarett', q:'Comedy', min:300 }, { t:'Wissen', q:'Wissen', min:300 }, { t:'Filme', q:'Spielfilm', min:3600 },
+    { t:'Sport', q:'Sportschau', min:0 }, { t:'Kinder', q:'Kinder', min:300 }, { t:'Reportagen', q:'Reportage', min:600 }, { t:'Musik & Konzerte', q:'Konzert', min:600 }
+  ];
+  defs.forEach(d => {
+    const row = h('div', { class:'hrow' }, skeletons(6)), wrap = h('section', { class:'hsec' }, h('h2', { class:'rowh' }, d.t), row);
+    main.append(wrap);
+    const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); load(); } }, { rootMargin:'900px' });
+    io.observe(wrap); cleanups.push(() => io.disconnect());
+    async function load() {
+      try {
+        const r = await search({ text:d.q, min:d.min, size:40 });
+        if (tok !== routeToken) return;
+        const items = r.items.filter(e => !used.has(e.id)).slice(0, 14);
+        if (!items.length) return wrap.remove();
+        items.forEach(e => used.add(e.id));
+        row.replaceChildren(...items.map(e => Card(e)));
+      } catch { wrap.remove(); }
+    }
+  });
+  main.append(h('h2', { class:'rowh' }, 'Alle neuen Videos'));
+}
+
 function Browse(label) {
   const idx = Math.max(0, CHIPS.findIndex(c => c.label === label)), chip = CHIPS[idx];
   document.title = 'Media + – ARD-Videos';
   const row = h('div', { class:'chips' }, CHIPS.map(c => h('a', { class:'chip' + (c === chip ? ' active' : ''), href:c.label === 'Neu' ? '#/' : '#/browse/' + encodeURIComponent(c.label) }, c.label)));
   main.append(row);
-  if (chip.label === 'Neu') { Hero(); Continue(); }
+  if (chip.label === 'Neu') { Hero(); Continue(); Rows(); }
   Feed(main, off => search({ text:chip.q, min:chip.min, offset:off }), { emptyText:'Dazu gibt es gerade nichts.' });
 }
 
