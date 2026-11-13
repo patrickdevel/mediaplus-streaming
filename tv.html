@@ -949,7 +949,7 @@ body:has(#side:hover) main,body:has(#side:focus-within) main{margin-left:var(--s
 .saver-clock{gap:.02em;letter-spacing:0}
 
 #side{transition-property:width,box-shadow,top,bottom,left,border-radius,background,border-color,transform;transition-duration:.3s;transition-timing-function:cubic-bezier(.2,.8,.2,1)}
-#side:hover,#side:focus-within{--sbg:rgba(16,16,20,.94);background:rgba(16,16,20,.9);-webkit-backdrop-filter:blur(3.6rem) saturate(1.6);backdrop-filter:blur(3.6rem) saturate(1.6);border-color:rgba(255,255,255,.2)}
+#side:hover,#side:focus-within{--sbg:rgba(16,16,20,.94);background:rgba(16,16,20,.9);-webkit-backdrop-filter:blur(3.6rem) saturate(1.6)!important;backdrop-filter:blur(3.6rem) saturate(1.6)!important;border-color:rgba(255,255,255,.2)}
 :root:not([data-theme="dark"]) #side:hover,:root:not([data-theme="dark"]) #side:focus-within{--sbg:rgba(250,250,252,.95);background:rgba(250,250,252,.92)}
 #side:hover>.side-logo::after,#side:focus-within>.side-logo::after{display:none}
 
@@ -969,7 +969,7 @@ body.home .hero .hdots i.on{width:.7rem;height:2.2rem}
 .hglass{position:absolute;left:var(--pad);right:auto;max-width:calc(100% - 2*var(--pad));bottom:3rem;pointer-events:auto;padding:1.2rem 1.6rem 1.4rem;border-radius:2.4rem;color:#fff;
   --fg:#fff;--fg-2:rgba(255,255,255,.85);--fg-3:rgba(255,255,255,.68);--fg-4:rgba(255,255,255,.5);--border:rgba(255,255,255,.18);
   background:rgba(10,10,14,.22);
-  -webkit-backdrop-filter:blur(2.4rem) saturate(1.5);backdrop-filter:blur(2.4rem) saturate(1.5);
+  -webkit-backdrop-filter:blur(3rem) saturate(1.5)!important;backdrop-filter:blur(3rem) saturate(1.5)!important;
   border:1px solid rgba(255,255,255,.38);
   box-shadow:0 0 1.8rem rgba(255,255,255,.28),0 0 5rem rgba(255,255,255,.1),inset 0 0 1.6rem rgba(255,255,255,.1)}
 .hglass .rowh{margin:0 0 1rem .2rem;font-size:1.3rem;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.85)}
