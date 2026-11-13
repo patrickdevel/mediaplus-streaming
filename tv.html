@@ -818,7 +818,7 @@ body[data-route="shorts"] .mini,body[data-route="shorts"] .sticky-player{display
 /* ===== Songs (SoundCloud) ===== */
 .sh-song .sh-bg{position:absolute;inset:-8%;background-size:cover;background-position:center;filter:blur(40px) brightness(.5) saturate(1.4)}
 .sh-song .sh-cover{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;padding-bottom:16%}
-.sh-song .sh-cover img{width:min(72%,44vh);aspect-ratio:1;object-fit:cover;border-radius:7%;box-shadow:0 14px 44px rgba(0,0,0,.6);background:#222}
+.sh-song .sh-cover img{width:min(72%,44vh);aspect-ratio:1;object-fit:cover;border-radius:50%;box-shadow:0 14px 44px rgba(0,0,0,.6);background:#222}
 .sh-tag{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3)}
 .sh-song .sh-prog{height:6px;cursor:pointer;z-index:2}
 .sh-song .sh-prog::before{content:"";position:absolute;left:0;right:0;top:-16px;bottom:-4px}
@@ -879,7 +879,7 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 .sbg{position:absolute;inset:0;overflow:hidden;background:#111}
 .sbg-b{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(36px) brightness(.55) saturate(1.4)}
 .sbg-c{position:absolute;inset:0;display:grid;place-items:center}
-.sbg-c img{height:68%;aspect-ratio:1;object-fit:cover;border-radius:7%;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
+.sbg-c img{height:68%;aspect-ratio:1;object-fit:cover;border-radius:50%;box-shadow:0 12px 40px rgba(0,0,0,.55);background:#222}
 </style>
 </head>
 <body>
@@ -1663,8 +1663,10 @@ const SC = (() => {
   }
   async function feed(n) {
     const g = GEN[Math.floor(Math.random() * GEN.length)];
-    let l = await api('explore', { type:'trending', genre:g, kind:'trending' });
-    l = (Array.isArray(l) ? l : []).filter(t => t && t.id && t.permalinkUrl && !seen.has(t.id)).sort(() => Math.random() - .5).slice(0, n);
+    const d = await api('explore', { type:'trending', genre:g, kind:'trending' });
+    const raw = Array.isArray(d) ? d : ([d.collection, d.tracks, d.items, d.results].find(Array.isArray) || []);
+    const l = raw.map(norm).filter(t => t && t.id && t.permalinkUrl && !seen.has(t.id))
+      .sort(() => Math.random() - .5).slice(0, n);
     return l.map(t => { seen.add(t.id); cache.set(t.permalinkUrl, t); return { sc:t, id:'sc' + t.id, title:t.title, topic:'' }; });
   }
   /* mischt Songs zwischen die Video-Shorts (ca. jeder 3. Eintrag) */
@@ -1675,7 +1677,7 @@ const SC = (() => {
     arr.forEach((e, i) => { out.push(e); if (i % 2 === 1 && songs.length) out.push(songs.shift()); });
     return out.concat(songs);
   }
-  return { api, art, stream, feed, mix, search, cache, likes, isLiked, toggleLike };
+  return { api, art, norm, stream, feed, mix, search, cache, likes, isLiked, toggleLike };
 })();
 
 /* Song als "Video": 16:9, unscharfer Cover-Hintergrund + abgerundetes Cover */
@@ -1685,7 +1687,7 @@ async function SongWatch(url) {
   main.append(wrap);
   let t = SC.cache.get(url);
   try {
-    if (!t || !t.streamUrl) { const m = await SC.api('track', { url }); t = Object.assign({}, t || {}, m); t.permalinkUrl = t.permalinkUrl || url; SC.cache.set(url, t); }
+    if (!t || !t.streamUrl) { const m = await SC.api('track', { url }); t = Object.assign({}, t || {}, SC.norm(m)); t.permalinkUrl = t.permalinkUrl || url; SC.cache.set(url, t); }
   } catch (err) { wrap.append(h('div', { class:'perr show' }, icon('alert'), h('p', {}, 'Song konnte nicht geladen werden: ' + (err.message || err)))); return; }
   if (tok !== routeToken) return;
   document.title = `${t.title} – Media +`;
