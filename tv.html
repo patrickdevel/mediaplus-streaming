@@ -906,32 +906,40 @@ html body #toast.show,html body[data-route] #toast.show{transform:none;opacity:1
 #side>.side-logo::after{content:"";position:absolute;left:0;right:0;top:100%;height:2.8rem;background:linear-gradient(var(--sbg),transparent);pointer-events:none}
 body:has(#side:hover) main,body:has(#side:focus-within) main{margin-left:var(--sw-collapsed)}
 
-.srec{position:absolute;right:3.2rem;bottom:3rem;z-index:4;width:29rem;color:#fff;opacity:0;transform:translateY(1rem);pointer-events:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+.srec{position:absolute;right:3.2rem;bottom:3rem;z-index:4;width:19rem;color:#fff;perspective:90rem;opacity:0;transform:translateY(1rem);pointer-events:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
 .srec.on{opacity:1;transform:none}
-/* weich auslaufende Unschärfe im Bild hinter dem Stapel (Pseudo-Element, damit die globale backdrop-filter-Sperre nicht greift) */
-.srec::before{content:"";position:absolute;inset:-5rem -5rem -4rem -5rem;z-index:-1;pointer-events:none;border-radius:50%;-webkit-backdrop-filter:blur(2.2rem);backdrop-filter:blur(2.2rem);-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 0%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 0%,#000 55%,transparent 100%)}
+/* Unschärfe im Bild wie bei der Uhr: eigene, ins Bild eingerechnete Ebene mit weichem Auslauf */
+.saver-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.saver-ov{opacity:0;transition:opacity .9s ease}
+.tv-saver.rec-on .saver-ov{opacity:1}
 /* leere Karten dahinter: schauen oben nur als schmaler Rand heraus */
-.srec-g{position:absolute;inset:0;border-radius:2rem;background:#1b1b22;border:1px solid rgba(255,255,255,.12);transform-origin:50% 0}
-.srec-g.g1{z-index:1;transform:translateY(-1rem) scale(.94)}
-.srec-g.g2{z-index:0;transform:translateY(-1.9rem) scale(.88);background:#15151b}
+.srec-g{position:absolute;inset:0;border-radius:1.6rem;background:#1b1b22;border:1px solid rgba(255,255,255,.12);transform-origin:50% 0}
+.srec-g.g1{z-index:1;transform:translateY(-.8rem) scale(.94)}
+.srec-g.g2{z-index:0;transform:translateY(-1.5rem) scale(.88);background:#15151b}
 /* aktive Karte: deckend, damit man die Karten dahinter nie durchscheinen sieht */
-.srec-card{position:relative;z-index:2;padding:1.1rem;border-radius:2rem;background:#101015;border:1px solid rgba(255,255,255,.16);transform-origin:50% 0;box-shadow:0 1rem 3rem rgba(0,0,0,.4)}
+.srec-card{position:relative;z-index:2;padding:.9rem;border-radius:1.6rem;background:#101015;border:1px solid rgba(255,255,255,.16);transform-origin:50% 0;box-shadow:0 1rem 3rem rgba(0,0,0,.4)}
 .srec-card.fadein{animation:srecFade .7s cubic-bezier(.2,.8,.2,1) both}
-.srec-card.pagein{animation:srecIn .8s cubic-bezier(.2,.8,.2,1) both}
-.srec-card.out{position:absolute;left:0;right:0;bottom:0;z-index:3;animation:srecOut .8s cubic-bezier(.55,0,.8,.45) forwards}
-@keyframes srecFade{from{opacity:0;transform:translateY(1.6rem)}}
-@keyframes srecIn{from{transform:translateY(-1rem) scale(.94)}}
-@keyframes srecOut{to{transform:translateY(calc(100% + 6rem));opacity:0}}
-/* Vorschaubild kommt später: Kachel wächst nach oben, Bild blurt ein */
-.srec-th{position:relative;height:0;margin:0;border-radius:1.2rem;overflow:hidden;background:rgba(255,255,255,.06);transition:height .8s cubic-bezier(.2,.8,.2,1),margin .8s cubic-bezier(.2,.8,.2,1)}
-.srec-th.ready{margin-bottom:1rem}
-.srec-th .frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;filter:blur(2.4rem);transform:scale(1.2);transition:opacity 1s ease .25s,filter 1.1s ease .25s,transform 1.1s cubic-bezier(.2,.8,.2,1) .25s}
+.srec-card.pagein{animation:srecIn .9s cubic-bezier(.2,.8,.2,1) both}
+/* Blatt klappt um den unteren Rand nach vorn und unten weg */
+.srec-card.out{position:absolute;left:0;right:0;bottom:0;z-index:3;transform-origin:50% 100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:srecOut .9s cubic-bezier(.5,.05,.55,1) forwards}
+.srec-card.out::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;animation:srecShade .9s ease-in forwards}
+@keyframes srecFade{from{opacity:0;transform:translateY(1.4rem)}}
+@keyframes srecIn{from{transform:translateY(-.8rem) scale(.94)}}
+@keyframes srecOut{0%{transform:rotateX(0);opacity:1}88%{transform:rotateX(-84deg);opacity:1}100%{transform:rotateX(-92deg);opacity:0}}
+@keyframes srecShade{to{opacity:.55}}
+/* Vorschaubild kommt später: Kachel wächst nach oben, Bild blurt ein. Schon geladen (.pre): sofort da */
+.srec-th{position:relative;height:0;margin:0;border-radius:1rem;overflow:hidden;background:rgba(255,255,255,.06);transition:height .8s cubic-bezier(.2,.8,.2,1),margin .8s cubic-bezier(.2,.8,.2,1)}
+.srec-th.ready{margin-bottom:.8rem}
+.srec-th.pre{height:auto;aspect-ratio:16/9;transition:none}
+.srec-th .frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;filter:blur(2rem);transform:scale(1.2);transition:opacity 1s ease .25s,filter 1.1s ease .25s,transform 1.1s cubic-bezier(.2,.8,.2,1) .25s}
 .srec-th.ready .frame{opacity:1;filter:none;transform:none}
-.srec-tx{display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;padding:.1rem .3rem .2rem}
-.srec-tag{font-size:1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65)}
-.srec-t{font-size:1.45rem;font-weight:700;line-height:1.2;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.srec-p{display:inline-flex;align-items:center;gap:.6rem;margin-top:.3rem;padding:.55rem 1.3rem .55rem 1rem;border-radius:99px;background:#fff;color:#000;font-size:1.2rem;font-weight:700}
-.srec-p .ic{width:1.3rem;height:1.3rem}
+.srec-th.pre .frame{transition:none}
+.srec-tx{display:flex;flex-direction:column;align-items:flex-start;gap:.6rem;padding:.1rem .3rem .2rem}
+.srec-t{font-size:1.25rem;font-weight:700;line-height:1.2;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.srec-row{display:flex;align-items:center;gap:.9rem}
+.srec-p{display:inline-flex;align-items:center;gap:.5rem;padding:.45rem 1.1rem .45rem .8rem;border-radius:99px;background:#fff;color:#000;font-size:1.1rem;font-weight:700}
+.srec-p .ic{width:1.1rem;height:1.1rem}
+.srec-tag{font-size:1.05rem;font-weight:500;color:rgba(255,255,255,.55)}
 .saver-hint{z-index:4;right:auto;left:4rem;text-align:left}
 </style>
 </head>
@@ -2343,14 +2351,22 @@ const ScreenSaver = (() => {
           if (!r.items.length) r = await search({ text:c.q, min:mn, size:30 });
         }
         let ok = r.items.filter(okv); const fresh = ok.filter(e => !seenW[e.id]); if (fresh.length) ok = fresh;
-        if (ok.length) { const e = pick(ok); recSeen.add(e.id); recQ.push(e); }
+        if (ok.length) { const e = pick(ok); recSeen.add(e.id); recQ.push(e); frameOf(e); }
       } catch (err) { console.warn('Empfehlung', err); }
     }
     recBusy = false;
   }
   let recCard = null, recGone = 0;
+  const recFr = new Map();
+  /* Vorschaubild schon im Hintergrund holen, sobald eine Empfehlung in der Warteschlange liegt */
+  function frameOf(e) {
+    let p = recFr.get(e.id);
+    if (!p) { p = grabFrame(e); recFr.set(e.id, p); p.then(cv => { p.cv = cv; }, () => {}); }
+    return p;
+  }
   function hideRec() {
     recCur = null;
+    if (root) root.classList.remove('rec-on');
     if (recEl) {
       recEl.classList.remove('on');
       clearTimeout(recGone);
@@ -2364,11 +2380,11 @@ const ScreenSaver = (() => {
     recCur = e;
     const th = h('div', { class:'srec-th' });
     const card = h('div', { class:'srec-card' }, th, h('div', { class:'srec-tx' },
-      h('div', { class:'srec-tag' }, 'Empfehlung'),
       h('div', { class:'srec-t' }, e.title),
-      h('div', { class:'srec-p' }, icon('play', 'fill'), 'Abspielen')));
-    /* Bild kommt erst später: dann wächst die Kachel nach oben und das Bild blurt ein */
-    grabFrame(e).then(cv => {
+      h('div', { class:'srec-row' }, h('div', { class:'srec-p' }, icon('play', 'fill'), 'Abspielen'), h('span', { class:'srec-tag' }, 'Empfehlung'))));
+    const fp = frameOf(e); recFr.delete(e.id);
+    if (fp.cv) { th.append(fp.cv); th.classList.add('pre', 'ready'); }
+    else fp.then(cv => {
       if (recCur !== e || !card.isConnected) return;
       th.append(cv);
       requestAnimationFrame(() => { th.style.height = Math.round(th.clientWidth * 9 / 16) + 'px'; th.classList.add('ready'); });
@@ -2376,12 +2392,13 @@ const ScreenSaver = (() => {
     const old = recCard, wasOn = recEl.classList.contains('on');
     recCard = card;
     if (old) {
-      if (wasOn) { old.classList.add('out'); old.addEventListener('animationend', () => old.remove(), { once:true }); setTimeout(() => old.remove(), 1300); }
+      if (wasOn) { old.classList.add('out'); old.addEventListener('animationend', ev => { if (ev.animationName === 'srecOut') old.remove(); }); setTimeout(() => old.remove(), 1400); }
       else old.remove();
     }
     card.classList.add(old && wasOn ? 'pagein' : 'fadein');
     recEl.append(card);
     recEl.classList.add('on');
+    if (root) root.classList.add('rec-on');
     if (hintEl) hintEl.textContent = 'Play zum Starten · andere Taste zum Beenden';
   }
   function playRec() {
@@ -2486,13 +2503,13 @@ const ScreenSaver = (() => {
     dateEl.textContent = now.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
   }
 
-  const mkSlide = () => ({ el:h('canvas', { class:'saver-slide' }), kt:0 });
+  const mkSlide = () => { const cv = h('canvas', { class:'saver-cv' }), ov = h('canvas', { class:'saver-cv saver-ov' }); return { el:h('div', { class:'saver-slide' }, cv, ov), cv, ov, kt:0 }; };
   const setSlide = (s, src) => new Promise(res => {
     const im = new Image();
     im.onload = async () => {
       try { if (im.decode) await im.decode(); } catch {}
       try {
-        const W = Math.min(1920, innerWidth), H = Math.round(W * innerHeight / innerWidth), cv = s.el;
+        const W = Math.min(1920, innerWidth), H = Math.round(W * innerHeight / innerWidth), cv = s.cv;
         cv.width = W; cv.height = H;
         const c = cv.getContext('2d'), k = Math.max(W / im.naturalWidth, H / im.naturalHeight), dw = im.naturalWidth * k, dh = im.naturalHeight * k, dx = (W - dw) / 2, dy = (H - dh) / 2;
         c.drawImage(im, dx, dy, dw, dh);
@@ -2506,6 +2523,12 @@ const ScreenSaver = (() => {
         const g = tc.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(.24, 'rgba(0,0,0,1)'); g.addColorStop(.64, 'rgba(0,0,0,0)');
         tc.fillStyle = g; tc.fillRect(-1, -1, 4, 4); tc.restore();
         c.drawImage(t, 0, 0);
+        /* zweite Ebene: weich verblurrter Bereich unten rechts für die Empfehlungskarte (wie bei der Uhr, nur eingeblendet wenn eine Karte da ist) */
+        const ov = s.ov; ov.width = W; ov.height = H;
+        const oc = ov.getContext('2d'); oc.drawImage(sm, 0, 0, W, H);
+        oc.globalCompositeOperation = 'destination-in'; oc.save(); oc.translate(.854 * W, .74 * H); oc.scale(.24 * W, .38 * H);
+        const g2 = oc.createRadialGradient(0, 0, 0, 0, 0, 1); g2.addColorStop(0, 'rgba(0,0,0,1)'); g2.addColorStop(.55, 'rgba(0,0,0,1)'); g2.addColorStop(1, 'rgba(0,0,0,0)');
+        oc.fillStyle = g2; oc.fillRect(-1, -1, 2, 2); oc.restore();
       } catch {}
       res();
     };
