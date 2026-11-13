@@ -8,6 +8,9 @@
 <meta name="theme-color" content="#000000">
 <title>Media + TV – ARD-Videos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M14 7h4v7h7v4h-7v7h-4v-7H7v-4h7z' fill='white'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#fff;--bg-2:#fafafa;--bg-3:#f2f2f2;
@@ -853,24 +856,27 @@ body[data-route="songs"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 .saver-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.02) 0%,rgba(0,0,0,.18) 65%,rgba(0,0,0,.38) 100%)}
 .saver-clock-wrap{position:absolute;top:3.5rem;left:4rem;right:auto;bottom:auto;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;pointer-events:none;text-align:left;animation:saverRise .9s cubic-bezier(.2,.8,.2,1) both}
 @keyframes saverRise{from{opacity:0;transform:translateY(1.5rem)}}
-.saver-clock{font-family:"SF Pro Display","Segoe UI","Inter",system-ui,sans-serif;font-size:clamp(5.5rem,12vw,14rem);font-weight:200;letter-spacing:-.045em;line-height:.9;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.06em;text-shadow:0 .04em .5em rgba(0,0,0,.55);font-feature-settings:"tnum"}
-.saver-colon{opacity:.85;font-weight:200;animation:none}
-.saver-date{margin-top:1.2rem;font-size:clamp(1.3rem,2.2vw,2.4rem);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.78);font-weight:400;text-shadow:0 .1em .4em rgba(0,0,0,.5)}
+.saver-clock{font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-size:clamp(4.2rem,8.5vw,10.5rem);font-weight:400;letter-spacing:.02em;line-height:.95;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.04em;text-shadow:0 .04em .5em rgba(0,0,0,.55)}
+.saver-colon{opacity:.9;font-weight:400;animation:none}
+.saver-date{margin-top:1rem;font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;font-size:clamp(1.25rem,2vw,2.2rem);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.78);font-weight:400;text-shadow:0 .1em .4em rgba(0,0,0,.5)}
 .saver-hint{position:absolute;bottom:2.8rem;right:3.5rem;left:auto;text-align:right;font-size:1.15rem;color:rgba(255,255,255,.22);letter-spacing:.04em}
 .tv-saver.hide-clock .saver-clock-wrap{display:none}
 
-/* ===== Mehr-Menü (klare Karten, keine Überschneidungen) ===== */
-.mwrap{display:flex;flex-direction:column;gap:3.2rem;max-width:min(1400px,100%);padding-top:.8rem;width:100%}
-.msec{background:var(--bg-2);border:2px solid var(--border-2);border-radius:1.8rem;padding:2.4rem 2.8rem 2.8rem;box-shadow:0 2px 4px rgba(0,0,0,.06);position:relative}
+/* ===== Mehr-Menü (TV: klare volle Zeilen, kein Quetschen) ===== */
+.mwrap{display:flex;flex-direction:column;gap:2.4rem;max-width:min(1100px,100%);padding-top:.4rem;width:100%;box-sizing:border-box}
+.msec{background:var(--bg-2);border:2px solid var(--border-2);border-radius:1.6rem;padding:2rem 2.2rem 2.2rem;box-shadow:0 2px 4px rgba(0,0,0,.06);position:relative;overflow:visible}
 :root[data-theme="dark"] .msec{background:#0e0e0e;border-color:#2c2c2c;box-shadow:0 2px 8px rgba(0,0,0,.4)}
-.msec-h{font-size:1.25rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-3);margin:0 0 2rem;padding-bottom:1.4rem;border-bottom:2px solid var(--border)}
-.mgrid{display:flex;flex-wrap:wrap;gap:1.4rem 1.6rem;align-items:center}
-.mbtn{display:inline-flex;align-items:center;gap:1.2rem;min-height:5.2rem;padding:0 2.2rem;background:var(--bg);border:2px solid var(--border-2);border-radius:1.2rem;color:var(--fg);font-size:1.45rem;font-weight:600;transition:transform .14s,background .14s,border-color .14s,box-shadow .14s;white-space:nowrap;text-align:left}
+.msec-h{font-size:1.15rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-3);margin:0 0 1.4rem;padding-bottom:1rem;border-bottom:2px solid var(--border)}
+.mgrid{display:flex;flex-direction:column;gap:1rem;align-items:stretch}
+.mbtn{display:flex;align-items:center;gap:1.4rem;width:100%;min-height:5.6rem;height:auto;padding:1.2rem 2rem;background:var(--bg);border:2px solid var(--border-2);border-radius:1.2rem;color:var(--fg);font-size:1.55rem;font-weight:600;transition:transform .14s,background .14s,border-color .14s,box-shadow .14s;white-space:nowrap;text-align:left;box-sizing:border-box;overflow:hidden}
 .mbtn:hover{background:var(--bg-3);border-color:var(--fg-4)}
-.mbtn:focus{background:var(--fg);color:var(--bg);border-color:transparent;transform:scale(1.04);box-shadow:var(--fr);position:relative;z-index:4}
+.mbtn:focus{background:var(--fg);color:var(--bg);border-color:transparent;transform:scale(1.02);box-shadow:var(--fr);position:relative;z-index:4}
 .mbtn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.mbtn .ic{flex:none}
-.swatch{width:3.6rem;height:3.6rem;border-radius:50%;border:2px solid var(--border-2);flex:none}
+.mbtn .ic{flex:none;width:2.4rem;height:2.4rem}
+.mbtn span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.mgrid .swatch{width:3.6rem;height:3.6rem;border-radius:50%;border:2px solid var(--border-2);flex:none;align-self:center}
+.mgrid:has(.swatch){flex-direction:row;flex-wrap:wrap;gap:1.2rem;align-items:center}
+.mgrid:has(.swatch) .mbtn{width:auto;min-width:12rem}
 </style>
 </head>
 <body>
@@ -2386,16 +2392,39 @@ function move(dir) {
     const t = (TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : null) || initialTarget() || all.find(canFocus);
     return focusEl(t);
   }
-  /* Suche: von Tastatur rechts → Tabs (Videos/Songs) oder Treffer */
-  if (dir === 'right' && cur.closest('.sleft')) {
-    const tab = document.querySelector('.sres-tabs .chip.active, .sres-tabs .chip');
-    const first = tab || document.querySelector('.sres .card, .sres .srow-a, .sres .btn, .sres a');
-    if (first && canFocus(first)) { TV.colFor = first; return focusEl(first); }
+  /* Suche: erst am rechten Rand der Tastatur → Treffer/Pills */
+  if (dir === 'right' && cur.closest('.sleft') && cur.classList.contains('key')) {
+    const keys = Array.from(document.querySelectorAll('.sleft .key')).filter(canFocus);
+    if (keys.length) {
+      const maxR = Math.max(...keys.map(k => k.getBoundingClientRect().right));
+      if (cur.getBoundingClientRect().right >= maxR - 12) {
+        const result = document.querySelector('.sres .card, .sres .srow-a, .sres a.card, .sres .slist .srow-a');
+        const tab = document.querySelector('.sres-tabs .chip.active, .sres-tabs .chip');
+        const target = (result && canFocus(result)) ? result : (tab && canFocus(tab) ? tab : null);
+        if (target) { TV.colFor = target; return focusEl(target); }
+      }
+    }
   }
-  /* Suche: von Treffern links zurück zur Tastatur */
+  /* Suche: von Treffern nach oben → Pills (Videos/Songs) */
+  if (dir === 'up' && cur.closest('.sres') && !cur.closest('.sres-tabs')) {
+    const tab = document.querySelector('.sres-tabs .chip.active, .sres-tabs .chip');
+    if (tab && canFocus(tab)) {
+      const c0 = cur.getBoundingClientRect(), t0 = tab.getBoundingClientRect();
+      if (t0.bottom <= c0.top + 4) { TV.colFor = tab; return focusEl(tab); }
+    }
+  }
+  /* Suche: von Treffern/Pills links zurück zur Tastatur */
   if (dir === 'left' && cur.closest('.sres') && !cur.closest('.sleft')) {
-    const key = document.querySelector('.sleft .key, .sleft .hitem');
-    if (key && canFocus(key)) { TV.colFor = key; return focusEl(key); }
+    const keys = Array.from(document.querySelectorAll('.sleft .key')).filter(canFocus);
+    if (keys.length) {
+      const c0 = cur.getBoundingClientRect(), cy0 = c0.top + c0.height / 2;
+      keys.sort((a, b) => {
+        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+        return Math.abs((ra.top + ra.height / 2) - cy0) - Math.abs((rb.top + rb.height / 2) - cy0) || rb.right - ra.right;
+      });
+      const key = keys[0];
+      if (key) { TV.colFor = key; return focusEl(key); }
+    }
   }
   const c = cur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, horiz = dir === 'left' || dir === 'right';
   if (horiz || TV.colFor !== cur) TV.col = null;
@@ -2405,14 +2434,16 @@ function move(dir) {
   for (const el of all) {
     const r = el.getBoundingClientRect();
     if (r.width < 4 || r.height < 4 || r.right <= 0 || r.left >= innerWidth) continue;
+    /* Auf der Tastatur: keine Sprünge zu Treffern während normaler Navigation */
+    if (cur && cur.closest('.sleft') && el.closest('.sres')) continue;
+    if (cur && cur.closest('.sres') && el.closest('.sleft') && dir !== 'left') continue;
     const ex = r.left + r.width / 2, ey = r.top + r.height / 2;
     let prim, gap, off;
     if (horiz) {
       if (dir === 'right' ? ex <= cx + 1 : ex >= cx - 1) continue;
       prim = dir === 'right' ? r.left - c.right : c.left - r.right;
       gap = Math.max(0, r.top - c.bottom, c.top - r.bottom);
-      const crossSearch = (cur.closest('.sleft') && el.closest('.sres')) || (cur.closest('.sres') && el.closest('.sleft'));
-      if (gap > (crossSearch ? 400 : 8)) continue;
+      if (gap > 8) continue;
       off = Math.abs(ey - cy);
     } else {
       if (dir === 'down' ? ey <= cy + 1 : ey >= cy - 1) continue;
