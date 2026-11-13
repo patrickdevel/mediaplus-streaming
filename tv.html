@@ -905,6 +905,18 @@ html body #toast.show,html body[data-route] #toast.show{transform:none;opacity:1
 #side>.side-logo{position:sticky;top:0;z-index:5;background:var(--sbg);padding-top:2rem!important;transition:background .28s}
 #side>.side-logo::after{content:"";position:absolute;left:0;right:0;top:100%;height:2.8rem;background:linear-gradient(var(--sbg),transparent);pointer-events:none}
 body:has(#side:hover) main,body:has(#side:focus-within) main{margin-left:var(--sw-collapsed)}
+
+.srec{position:absolute;left:4rem;bottom:3.4rem;z-index:4;display:flex;gap:2.2rem;align-items:flex-end;max-width:min(88rem,calc(100% - 8rem));padding:1.8rem;border-radius:1.8rem;background:rgba(10,10,12,.62);border:1px solid rgba(255,255,255,.14);box-shadow:0 1.6rem 5rem rgba(0,0,0,.5);color:#fff;opacity:0;transform:translateY(2rem);pointer-events:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+.srec.on{opacity:1;transform:none}
+.srec-th{flex:none;width:30rem;aspect-ratio:16/9;border-radius:1.1rem;overflow:hidden;background:#1a1a1a}
+.srec-th .frame{width:100%;height:100%;object-fit:cover;display:block}
+.srec-tx{min-width:0;display:flex;flex-direction:column;gap:.7rem}
+.srec-tag{font-size:1.15rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.srec-t{font-size:2.6rem;font-weight:700;line-height:1.15;letter-spacing:-.02em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.srec-m{font-size:1.35rem;color:rgba(255,255,255,.75)}
+.srec-d{font-size:1.3rem;line-height:1.5;color:rgba(255,255,255,.65);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.srec-p{align-self:flex-start;margin-top:.4rem;padding:.7rem 1.6rem;border-radius:99px;background:#fff;color:#000;font-size:1.35rem;font-weight:700}
+.saver-hint{z-index:4}
 </style>
 </head>
 <body>
@@ -2294,6 +2306,48 @@ const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-s
 const ScreenSaver = (() => {
   let root = null, imgA = null, imgB = null, clockEl = null, dateEl = null, timer = 0, slideTimer = 0, index = 0, visible = false;
   let digits = [], lastHM = '', digitTimers = [];
+  let recQ = [], recCur = null, recBusy = false, recEl = null, hintEl = null;
+  const recSeen = new Set();
+  const HINT = 'Taste oder Bewegung zum Fortfahren';
+  async function fillRecs() {
+    if (recBusy || recQ.length >= 3) return;
+    recBusy = true;
+    try {
+      const topics = [...store.get('subs', []).map(x => x.topic), ...store.get('saved', []).map(x => x.topic), ...store.get('hist', []).slice(0, 30).map(x => x.topic)].filter(Boolean);
+      const seenW = store.get('seen', {});
+      for (let i = 0; i < 4 && recQ.length < 3; i++) {
+        let r;
+        if (topics.length && Math.random() < .7) r = await search({ topic:topics[Math.floor(Math.random() * topics.length)], min:600, offset:Math.floor(Math.random() * 6), size:25 });
+        else { const c = CHIPS[1 + Math.floor(Math.random() * (CHIPS.length - 1))]; r = await search({ text:c.q, min:Math.max(c.min, 600), offset:Math.floor(Math.random() * 30), size:25 }); }
+        const ok = r.items.filter(e => !recSeen.has(e.id) && !seenW[e.id] && (e.url_video || e.url_video_hd || e.url_video_low));
+        if (ok.length) { const e = ok[Math.floor(Math.random() * ok.length)]; recSeen.add(e.id); recQ.push(e); }
+      }
+    } catch {}
+    recBusy = false;
+  }
+  function hideRec() { recCur = null; if (recEl) recEl.classList.remove('on'); if (hintEl) hintEl.textContent = HINT; }
+  function showRec(e) {
+    if (!recEl) return;
+    recCur = e; const ch = chanOf(e.channel), th = h('div', { class:'srec-th' });
+    grabFrame(e).then(cv => { if (recCur === e) th.prepend(cv); }).catch(() => {});
+    recEl.replaceChildren(th, h('div', { class:'srec-tx' },
+      h('div', { class:'srec-tag' }, 'Empfehlung · ' + ch.name),
+      h('div', { class:'srec-t' }, e.title),
+      h('div', { class:'srec-m' }, [e.topic && e.topic !== e.title ? e.topic : '', e.duration ? fmtDur(e.duration) : '', rel(e.timestamp)].filter(Boolean).join(' · ')),
+      (e.description || '').trim() ? h('div', { class:'srec-d' }, e.description.trim().slice(0, 220)) : null,
+      h('div', { class:'srec-p' }, '▶ Play drücken zum Starten')));
+    recEl.classList.remove('on'); void recEl.offsetWidth; recEl.classList.add('on');
+    if (hintEl) hintEl.textContent = 'Play zum Starten · andere Taste zum Beenden';
+  }
+  function playRec() {
+    if (!visible || !recCur) return false;
+    const e = recCur; cache.set(e.id, e); hide(); location.hash = '#/watch/' + encodeURIComponent(e.id); return true;
+  }
+  const isPlayKey = ev => ev.key === 'MediaPlayPause' || ev.key === 'MediaPlay' || ev.key === 'Enter' || ev.key === ' ' || [179, 415, 10252, 13].includes(ev.keyCode);
+  const onKey = ev => {
+    if (visible && recCur && isPlayKey(ev)) { ev.preventDefault(); ev.stopImmediatePropagation(); playRec(); return; }
+    activity();
+  };
   const playing = () => [...document.querySelectorAll('video')].some(v => !v.paused && !v.ended);
   const delay = () => Math.max(1, Number(store.get('saverDelay', 5)) || 5) * 60000;
   const interval = () => Math.max(5, Number(store.get('saverInterval', 30)) || 30) * 1000;
@@ -2422,8 +2476,8 @@ const ScreenSaver = (() => {
     root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
       h('div', { class:'saver-bg' }, imgA.el, imgB.el),
       h('div', { class:'saver-overlay' }),
-      clockWrap,
-      h('div', { class:'saver-hint' }, 'Taste oder Bewegung zum Fortfahren'));
+      clockWrap, recEl = h('div', { class:'srec' }),
+      hintEl = h('div', { class:'saver-hint' }, HINT));
     document.body.append(root);
     buildClock();
     TV_SAVER_IMAGES.forEach(src => { const i = new Image(); i.src = src; });
@@ -2443,6 +2497,8 @@ const ScreenSaver = (() => {
       next.el.style.zIndex = 2; old.el.style.zIndex = 1;
       next.el.classList.remove('on', 'ken'); void next.el.offsetWidth;
       next.el.classList.add('on', 'ken');
+      if (recQ.length && index % 3 === 1) showRec(recQ.shift()); else hideRec();
+      fillRecs();
       clearTimeout(old.kt);
       old.kt = setTimeout(() => {
         if (old.el.style.zIndex !== '1') return;
@@ -2455,7 +2511,7 @@ const ScreenSaver = (() => {
 
   function hide() {
     if (!visible) return;
-    visible = false;
+    visible = false; hideRec();
     clearTimeout(slideTimer);
     clearDigitTimers();
     /* Ziffern-Animationen sofort stoppen – kein Scroll beim Beenden */
@@ -2492,18 +2548,21 @@ const ScreenSaver = (() => {
       setTimeout(() => rollTime(true, true), already ? 40 : 180);
     });
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
+    fillRecs(); setTimeout(() => { if (visible && !recCur && recQ.length) showRec(recQ.shift()); }, 7000);
   }
 
   function schedule() { clearTimeout(timer); if (store.get('saverOn', true)) timer = setTimeout(show, delay()); }
   function activity() { if (visible) hide(); else schedule(); }
   function start() {
     ensure();
-    ['pointerdown', 'keydown', 'click', 'mousemove'].forEach(t => document.addEventListener(t, activity, true));
+    ['pointerdown', 'click', 'mousemove'].forEach(t => document.addEventListener(t, activity, true));
+    document.addEventListener('keydown', onKey, true);
+    setTimeout(fillRecs, 20000);
     document.addEventListener('play', hide, true);
     setInterval(() => { if (visible) tickClock(); }, 1000);
     schedule();
   }
-  return { start, show, hide, schedule };
+  return { start, show, hide, schedule, playRec };
 })();
 
 let tvFullscreenTried = false;
@@ -3018,6 +3077,7 @@ const PLUS = (() => {
     osdEl.classList.add('show'); clearTimeout(osdT); osdT = setTimeout(() => osdEl.classList.remove('show'), 1700);
   }
   function remoteKey(k) {
+    if ((k === 'ok' || k === 'pp') && ScreenSaver.playRec()) return;
     document.dispatchEvent(new KeyboardEvent('keydown', { key:'Shift', bubbles:true }));
     const P = TV.player || (cur && cur.player), V = P && P.querySelector('video');
     const a = document.activeElement && document.activeElement !== document.body ? document.activeElement : document.body;
