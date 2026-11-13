@@ -3068,6 +3068,8 @@ function move(dir) {
   for (const el of all) {
     const r = el.getBoundingClientRect();
     if (r.width < 4 || r.height < 4 || r.right <= 0 || r.left >= innerWidth) continue;
+    /* Startseite: der feste, weggeblurrte Hero-Button liegt am Bildschirm unten – nach dem Scrollen nie als Ziel von Runter/Seitwärts */
+    if (dir !== 'up' && window.scrollY > 4 && el.closest('.hero')) continue;
     /* Auf der Tastatur: keine Sprünge zu Treffern während normaler Navigation */
     if (cur && cur.closest('.sleft') && el.closest('.sres')) continue;
     if (cur && cur.closest('.sres') && el.closest('.sleft') && dir !== 'left') continue;
