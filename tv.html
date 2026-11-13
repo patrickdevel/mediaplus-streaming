@@ -2929,6 +2929,7 @@ const PLUS = (() => {
   function listen() {
     const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
     if (es) es.close(); es = new EventSource('https://ntfy.sh/' + t + '/sse');
+    es.onerror = () => { if (es && es.readyState === 2) setTimeout(listen, 3000); };
     es.onmessage = ev => { try {
       const m = JSON.parse(ev.data); if (m.event !== 'message') return;
       const d = JSON.parse(m.message);
@@ -3069,7 +3070,7 @@ const PLUS = (() => {
         if ((k === 'ArrowUp' || k === 'ArrowDown') && (ev.target === cur.player || ev.target === document.body)) return eat(() => cur.tune(cur.i + (k === 'ArrowUp' ? 1 : -1)));
       } else if (up || dn) eat(() => scrollBy({ top:(up ? -1 : 1) * innerHeight * .8, behavior:'smooth' }));
     }, true);
-    if (IS_TV) { if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); }
+    if (IS_TV) { setInterval(() => { if (store.get('pairTopic') && (!es || es.readyState === 2)) listen(); }, 20000); document.addEventListener('visibilitychange', () => { if (!document.hidden && (!es || es.readyState === 2)) listen(); }); if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); }
     else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); }
     setTimeout(refreshBadge, 3000); setInterval(refreshBadge, 600000);
   }
