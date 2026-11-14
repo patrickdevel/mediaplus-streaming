@@ -1071,6 +1071,10 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
   .chips{background:rgba(250,250,252,.97)}
   :root[data-theme="dark"] .chips{background:rgba(16,16,20,.97)}
 }
+
+/* ===== Weiterschauen: Ruhezustand = so viele Karten wie auf den Bildschirm passen; mit Infos (Hover/Fokus) = 2 Karten + Infofeld ===== */
+.hglass .hrow{--hn:var(--hfull,2);width:calc(var(--hn)*15rem + (var(--hn) - 1)*1.2rem + 2rem);transition:width .3s ease}
+.hglass.sel .hrow{--hn:2}
 </style>
 </head>
 <body>
@@ -1453,6 +1457,7 @@ function Continue(target) {
       if (hero) hero.classList.toggle('prev', i >= 0);
       document.body.classList.toggle('home-prev', i >= 0);
       glass.classList.toggle('sel', i >= 0);
+      if (i < 0) row.scrollTo({ left:0, behavior:'smooth' });
       if (i >= 0) {
         fill(items[i]);
         info.classList.remove('in'); void info.offsetWidth; info.classList.add('in');
@@ -1476,6 +1481,16 @@ function Continue(target) {
     glass.addEventListener('focusout', ev => { if (!ev.relatedTarget || !glass.contains(ev.relatedTarget)) show(-1); });
     glass.addEventListener('mouseleave', () => { if (!glass.contains(document.activeElement)) show(-1); });
     target.append(glass);
+    /* Ruhezustand: so viele Karten, wie in die Leiste passen */
+    const fit = () => {
+      if (!glass.isConnected) { window.removeEventListener('resize', fit); return; }
+      const cb = glass.offsetParent; if (!cb) return;
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 10;
+      const left = parseFloat(getComputedStyle(glass).left) || 0;
+      const G = (cb.clientWidth - 2 * left) / rem;
+      glass.style.setProperty('--hfull', Math.max(2, Math.min(cards.length, Math.floor((G - 3) / 16.2))));
+    };
+    fit(); requestAnimationFrame(fit); setTimeout(fit, 400); window.addEventListener('resize', fit);
     return;
   }
   main.append(h('h2', { class:'rowh' }, 'Weiterschauen'), h('div', { class:'hrow' }, items.map(e => Card(e))));
