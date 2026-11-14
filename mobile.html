@@ -2134,9 +2134,11 @@ const PLUS = (() => {
   }
 
   const sendTv = async d => {
-    if (!store.get('tvTopic')) return toast('Erst mit dem TV koppeln');
-    try { await sendMsg(d); toast('An TV gesendet'); } catch (e) { toast(String(e && e.message) === '429' ? 'ntfy-Limit erreicht – kurz warten' : 'Senden fehlgeschlagen'); }
+    if (!store.get('tvTopic')) { toast('Erst mit dem TV koppeln'); return false; }
+    try { await sendMsg(d); toast('An TV gesendet'); return true; } catch (e) { toast(String(e && e.message) === '429' ? 'ntfy-Limit erreicht – kurz warten' : 'Senden fehlgeschlagen'); return false; }
   };
+  /* Video/Suche an den TV schicken und danach gleich die Fernbedienung öffnen */
+  const sendAndRemote = async d => { if (await sendTv(d)) location.hash = '#/remote'; };
   function listen() {
     const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
     if (es) es.close(); es = new EventSource('https://ntfy.sh/' + t + '/sse');
@@ -2337,13 +2339,13 @@ const PLUS = (() => {
     const t = store.get('tvTopic'); main.append(hd('An TV senden'));
     if (!t) return main.append(emptyBox('share', 'Noch nicht mit einem TV gekoppelt.', h('a', { class:'btn primary', href:'#/connect' }, 'Jetzt koppeln')));
     const inp = h('input', { class:'pick', type:'search', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'send', style:'width:100%;max-width:40em' });
-    const go = () => { const v = inp.value.trim(); if (v) { sendTv({ t:'q', v }); inp.value = ''; } };
+    const go = () => { const v = inp.value.trim(); if (v) { sendAndRemote({ t:'q', v }); inp.value = ''; } };
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
     main.append(h('div', { style:'display:flex;gap:8px;flex-wrap:wrap' }, inp, h('button', { class:'btn primary', type:'button', onclick:go }, 'Senden')),
       h('div', { class:'side-h', style:'padding:20px 0 6px' }, 'Zuletzt angesehen'),
       ...store.get('hist', []).slice(0, 12).map(x => h('div', { style:'display:flex;gap:8px;align-items:center;padding:6px 0' },
         h('span', { style:'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, x.title),
-        h('button', { class:'btn', type:'button', onclick:() => sendTv({ t:'w', v:x.id, n:x.title, e:{ ...slim(x), description:(x.description || '').slice(0, 300) } }) }, icon('tv'), 'Auf TV'))));
+        h('button', { class:'btn', type:'button', onclick:() => sendAndRemote({ t:'w', v:x.id, n:x.title, e:{ ...slim(x), description:(x.description || '').slice(0, 300) } }) }, icon('tv'), 'Auf TV'))));
   }
 
   /* ---------- Player-Extras ---------- */
@@ -2414,7 +2416,7 @@ const PLUS = (() => {
       main.querySelectorAll('.acts:not([data-plus])').forEach(a => {
         a.dataset.plus = 1;
         if (!IS_TV && store.get('tvTopic')) a.append(h('button', { class:'btn', type:'button', onclick:() => {
-          const id = decodeURIComponent(location.hash.split('/')[2] || ''); const en = cache.get(id) || loadSaved(id); sendTv({ t:'w', v:id, n:document.title.replace(/ – Media \+$/, ''), e:en ? { ...slim(en), description:(en.description || '').slice(0, 300) } : undefined }); } }, icon('tv'), 'Auf TV'));
+          const id = decodeURIComponent(location.hash.split('/')[2] || ''); const en = cache.get(id) || loadSaved(id); sendAndRemote({ t:'w', v:id, n:document.title.replace(/ – Media \+$/, ''), e:en ? { ...slim(en), description:(en.description || '').slice(0, 300) } : undefined }); } }, icon('tv'), 'Auf TV'));
       });
     }).observe(main, { childList:true, subtree:true });
     /* Wake Lock */
