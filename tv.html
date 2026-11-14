@@ -3533,6 +3533,9 @@ const PLUS = (() => {
   }
   function remoteKey(k) {
     if ((k === 'ok' || k === 'pp') && ScreenSaver.playRec()) return;
+    if (k === 'home') { location.hash = '#/'; return; }
+    if (k === 'menu') { openSide(); return; }
+    if (k === 'settings') { location.hash = '#/plus'; return; }
     document.dispatchEvent(new KeyboardEvent('keydown', { key:'Shift', bubbles:true }));
     const P = TV.player || (cur && cur.player), V = P && P.querySelector('video');
     const a = document.activeElement && document.activeElement !== document.body ? document.activeElement : document.body;
