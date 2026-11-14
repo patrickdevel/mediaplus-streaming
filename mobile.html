@@ -2172,85 +2172,72 @@ const PLUS = (() => {
   }
   function remotePage() {
     document.title = 'Fernbedienung – Media +';
-    if (!document.getElementById('rcCss2')) document.head.append(h('style', { id:'rcCss2' },
-      'body[data-route="remote"]{overflow:hidden}' +
-      'body[data-route="remote"] main{padding:calc(var(--hf) + 6px) 20px 12px;min-height:0}' +
-      '.rh{display:flex;align-items:center;gap:10px;height:52px}.rh h1{margin:0;font-size:22px}' +
-      '.rc{max-width:380px;margin:0 auto;height:calc(100vh - var(--hf) - 70px);height:calc(100dvh - var(--hf) - 70px);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px}' +
-      '.rc button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;font-family:inherit}' +
-      '.rs{width:100%;flex:none;display:flex;align-items:center;height:48px;border-radius:999px;border:1px solid var(--border-2);background:var(--bg-2);padding:0 5px 0 18px}' +
-      '.rs input{flex:1;min-width:0;height:100%;border:0;background:transparent;font-size:16px;outline:0;color:var(--fg)}' +
-      '.rs button{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);display:grid;place-items:center}' +
-      '.mid{display:flex;align-items:stretch;justify-content:center;gap:10px;width:100%}' +
-      '.dp{position:relative;flex:none;width:min(232px,calc(100vw - 188px),33dvh);aspect-ratio:1;border-radius:50%;background:var(--bg-3);border:1px solid var(--border);box-shadow:inset 0 2px 10px rgba(0,0,0,.08),0 10px 30px rgba(0,0,0,.12)}' +
-      '.dp .ar{position:absolute;display:grid;place-items:center;border:0;background:transparent;color:var(--fg);transition:background .1s}' +
-      '.dp .ar .ic{width:26px;height:26px;stroke-width:2.4}.dp .ar:active{background:rgba(127,127,127,.28)}' +
-      '.dp .u{top:3%;left:28%;width:44%;height:27%;border-radius:999px 999px 22px 22px}' +
-      '.dp .d{bottom:3%;left:28%;width:44%;height:27%;border-radius:22px 22px 999px 999px}' +
-      '.dp .l{left:3%;top:28%;width:27%;height:44%;border-radius:999px 22px 22px 999px}' +
-      '.dp .r{right:3%;top:28%;width:27%;height:44%;border-radius:22px 999px 999px 22px}' +
-      '.dp .ok{position:absolute;left:32%;top:32%;width:36%;height:36%;border-radius:50%;border:0;background:var(--fg);color:var(--bg);font-weight:800;font-size:18px;letter-spacing:.02em;box-shadow:0 6px 18px rgba(0,0,0,.28);transition:transform .08s}' +
-      '.dp .ok:active{transform:scale(.92)}' +
-      '.rk{flex:none;width:60px;display:grid;grid-template-rows:1fr auto 1fr;border-radius:999px;background:var(--bg-3);border:1px solid var(--border);overflow:hidden}' +
-      '.rk button{display:grid;place-items:center;border:0;background:transparent;color:var(--fg);transition:background .08s,color .08s}' +
-      '.rk button:active{background:var(--fg);color:var(--bg)}.rk .ic{width:24px;height:24px;stroke-width:2.4}' +
-      '.rk .m{height:46px;border-block:1px solid var(--border)}' +
-      '.rk .lb{display:grid;place-items:center;height:46px;border-block:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--fg-4)}' +
-      '.rr{display:flex;justify-content:center;align-items:center;gap:22px;flex:none}' +
-      '.rd{width:clamp(48px,8dvh,60px);height:clamp(48px,8dvh,60px);border-radius:50%;background:var(--bg-3);border:1px solid var(--border);display:grid;place-items:center;color:var(--fg);transition:transform .08s,background .08s}' +
-      '.rd .ic{width:24px;height:24px;stroke-width:2.2}.rd:active{transform:scale(.92)}' +
-      '.rd.big{width:clamp(60px,10.5dvh,76px);height:clamp(60px,10.5dvh,76px);background:var(--fg);color:var(--bg);border-color:var(--fg)}.rd.big .ic{width:32px;height:32px}' +
-      '.cap{flex:none;width:100%;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;height:clamp(46px,7dvh,56px);border-radius:999px;background:var(--bg-3);border:1px solid var(--border);overflow:hidden}' +
-      '.cap button{display:flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;color:var(--fg);font-weight:700;font-size:14px;transition:background .08s,color .08s}' +
-      '.cap button+button{border-left:1px solid var(--border)}.cap button:active{background:var(--fg);color:var(--bg)}' +
-      '.cap .ic{width:22px;height:22px;stroke-width:2.2}' +
-      '.rst{flex:none;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3);padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:var(--bg-2)}' +
-      '.rst .dt{width:8px;height:8px;border-radius:50%;background:#30a46c}'));
+    if (!document.getElementById('rcCss3')) document.head.append(h('style', { id:'rcCss3' }, "body[data-route=\"remote\"]{overflow:hidden}\nbody[data-route=\"remote\"] main{padding:calc(var(--hf) + 6px) 20px 12px;min-height:0}\n.rh{display:flex;align-items:center;gap:10px;height:52px}.rh h1{margin:0;font-size:22px;white-space:nowrap}\n.rst{display:flex;align-items:center;gap:6px;min-width:0;max-width:46%;font-size:11px;color:var(--fg-3);padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-2)}\n.rst .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.rst .dt{flex:none;width:7px;height:7px;border-radius:50%;background:#30a46c}\n.rc{max-width:380px;margin:0 auto;height:calc(100vh - var(--hf) - 70px);height:calc(100dvh - var(--hf) - 70px);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px}\n.rc button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;font-family:inherit}\n.tr{width:100%;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px}\n.rcb{flex:none;display:grid;place-items:center;width:clamp(46px,7.4dvh,58px);height:clamp(46px,7.4dvh,58px);border-radius:50%;border:1px solid var(--border);background:var(--bg-3);color:var(--fg);transition:transform .08s,background .08s,color .08s}\n.rcb .ic{width:46%;height:46%;stroke-width:2.2}.rcb:active{transform:scale(.92);background:var(--fg);color:var(--bg)}\n.rs{flex:1;min-width:0;display:flex;align-items:center;height:48px;border-radius:999px;border:1px solid var(--border-2);background:var(--bg-2);padding:0 5px 0 16px}\n.rs[hidden]{display:none}\n.rs input{flex:1;min-width:0;height:100%;border:0;background:transparent;font-size:16px;outline:0;color:var(--fg)}\n.rs button{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);display:grid;place-items:center}\n.dpw{position:relative;flex:none;width:clamp(190px,calc(100dvh - 355px),min(380px,calc(100vw - 40px)));aspect-ratio:1}\n.dpw svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 4px 10px rgba(0,0,0,.14))}\n.dpw .wg{fill:var(--bg-3);stroke:var(--bg-3);stroke-width:4;stroke-linejoin:round;cursor:pointer;transition:fill .1s,stroke .1s;touch-action:manipulation}\n.dpw .wg.on{fill:var(--border-2);stroke:var(--border-2)}\n.dpw .ch{fill:none;stroke:var(--fg-2);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}\n.dpw .okc{fill:var(--fg);cursor:pointer;transition:opacity .1s;touch-action:manipulation}.dpw .okc.on{opacity:.7}\n.dpw .okt{fill:var(--bg);font-size:10px;font-weight:800;letter-spacing:.02em;pointer-events:none}\n.cb{position:absolute;display:grid;place-items:center;border-radius:50%;border:1px solid var(--border);background:var(--bg-3);color:var(--fg);transition:transform .08s,background .08s,color .08s}\n.cb .ic{width:48%;height:48%;stroke-width:2.2}.cb:active{transform:scale(.92);background:var(--fg);color:var(--bg)}\n.cb.s{width:14%;height:14%}.cb.b{width:17.5%;height:17.5%}\n.cb.kb{left:0;top:5%}.cb.mc{right:0;top:5%}.cb.bk{left:0;bottom:0}\n.cb.hm{right:0;bottom:0;background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}.cb.hm:active{background:var(--accent);color:var(--accent-fg);opacity:.8}\n.rsheet{width:100%;flex:none;border-radius:26px;background:var(--bg-3);border:1px solid var(--border);overflow:hidden}\n.rtabs{display:grid;grid-template-columns:repeat(3,1fr);background:rgba(127,127,127,.16)}\n.rtabs button{height:42px;border:0;background:transparent;color:var(--fg-3);font-size:15px;font-weight:600}\n.rtabs button.on{background:var(--bg-3);color:var(--fg);border-radius:20px 20px 0 0}\n.rpan{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;padding:10px}.rpan[hidden]{display:none}\n.rpan button{height:clamp(46px,7dvh,58px);border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:5px;font-weight:700;font-size:14px;transition:background .08s,color .08s}\n.rpan button:active{background:var(--fg);color:var(--bg)}.rpan .ic{width:24px;height:24px;stroke-width:2.2}"));
+    const paired = !!store.get('tvTopic');
     const goBack = () => { if (history.length > 1) history.back(); else location.hash = '#/plus'; };
-    main.append(h('div', { class:'rh' }, h('button', { class:'icon-btn', type:'button', 'aria-label':'Zurück', onclick:goBack }, icon('left')), h('h1', {}, 'Fernbedienung')));
-    if (!store.get('tvTopic')) return main.append(emptyBox('share', 'Noch nicht mit einem TV gekoppelt.', h('a', { class:'btn primary', href:'#/connect' }, 'Jetzt koppeln')));
-    if (!document.getElementById('i-arr-up')) document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend',
-      '<symbol id="i-arr-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>' +
-      '<symbol id="i-arr-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>' +
-      '<symbol id="i-arr-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>' +
-      '<symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8zM19 5v14"/></symbol>' +
-      '<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>' +
-      '<symbol id="i-plus2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>');
+    const stEl = paired ? h('span', { class:'rst' }, h('span', { class:'dt' }), h('span', { class:'tx' })) : null;
+    main.append(h('div', { class:'rh' }, h('button', { class:'icon-btn', type:'button', 'aria-label':'Zurück', onclick:goBack }, icon('left')), h('h1', {}, 'Fernbedienung'), h('span', { style:'flex:1' }), stEl));
+    if (!paired) return main.append(emptyBox('share', 'Noch nicht mit einem TV gekoppelt.', h('a', { class:'btn primary', href:'#/connect' }, 'Jetzt koppeln')));
+    const sym = {
+      'arr-up':'<path d="M12 19V5M5 12l7-7 7 7"/>', 'arr-down':'<path d="M12 5v14M19 12l-7 7-7-7"/>', 'arr-right':'<path d="M5 12h14M12 5l7 7-7 7"/>',
+      'skip':'<path d="M5 4l10 8-10 8zM19 5v14"/>', 'minus':'<path d="M5 12h14"/>', 'plus2':'<path d="M12 5v14M5 12h14"/>',
+      'return':'<path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+      'keyboard':'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 16h6"/>',
+      'mic':'<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/>' };
+    const host = document.querySelector('svg symbol').parentNode;
+    for (const k in sym) if (!document.getElementById('i-' + k)) host.insertAdjacentHTML('beforeend', '<symbol id="i-' + k + '" viewBox="0 0 24 24">' + sym[k] + '</symbol>');
+
     const send = d => { if (navigator.vibrate) navigator.vibrate(10); sendMsg(d).then(() => d.t === 'q' && toast('Suche am TV gestartet')).catch(e => toast(String(e && e.message) === '429' ? 'ntfy-Limit erreicht – kurz warten' : 'Senden fehlgeschlagen')); };
     const key = k => send({ t:'k', v:k });
     const btn = (cls, k, label, ...kids) => h('button', { class:cls, type:'button', 'aria-label':label, onclick:() => key(k) }, ...kids);
 
-    /* Suche */
+    /* Suche (über die Tastatur-Taste ein-/ausblendbar) */
     const inp = h('input', { type:'search', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'search', autocomplete:'off' });
-    const go = () => { const v = inp.value.trim(); if (v) { send({ t:'q', v }); inp.value = ''; inp.blur(); } };
+    const go = () => { const v = inp.value.trim(); if (v) { send({ t:'q', v }); inp.value = ''; inp.blur(); srow.hidden = true; } };
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
-    const srow = h('div', { class:'rs' }, inp, h('button', { type:'button', onclick:go, 'aria-label':'Senden' }, icon('search')));
+    const srow = h('div', { class:'rs', hidden:true }, inp, h('button', { type:'button', onclick:go, 'aria-label':'Senden' }, icon('search')));
+    const toggleSearch = () => { srow.hidden = !srow.hidden; if (!srow.hidden) inp.focus(); else inp.blur(); };
 
-    const rocker = (top, mid, bot) => h('div', { class:'rk' }, top, mid, bot);
+    /* Sprachsuche */
+    const SRc = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const voice = () => {
+      if (!SRc) return toast('Sprachsuche wird hier nicht unterstützt');
+      try { const r = new SRc(); r.lang = 'de-DE'; r.onresult = ev => { const v = ev.results[0][0].transcript; if (v) send({ t:'q', v }); }; r.onerror = () => toast('Sprachsuche nicht möglich'); r.start(); toast('Sprich jetzt …'); } catch { toast('Sprachsuche nicht möglich'); }
+    };
+
+    /* Steuerkreuz (SVG) mit Eck-Tasten */
+    const dpw = h('div', { class:'dpw' },
+      h('button', { class:'cb s kb', type:'button', 'aria-label':'Tastatur', onclick:toggleSearch }, icon('keyboard')),
+      h('button', { class:'cb s mc', type:'button', 'aria-label':'Sprachsuche', onclick:voice }, icon('mic')),
+      btn('cb b bk', 'back', 'Zurück', icon('return')),
+      btn('cb b hm', 'home', 'Startseite', icon('home')));
+    dpw.insertAdjacentHTML('afterbegin', "<svg viewBox=\"0 0 100 100\" aria-hidden=\"false\"><path class=\"wg\" data-k=\"up\" role=\"button\" aria-label=\"Hoch\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"right\" role=\"button\" aria-label=\"Rechts\" transform=\"rotate(90 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"down\" role=\"button\" aria-label=\"Runter\" transform=\"rotate(180 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"left\" role=\"button\" aria-label=\"Links\" transform=\"rotate(270 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><polyline class=\"ch\" points=\"43.5,16.5 50,10 56.5,16.5\"/><polyline class=\"ch\" points=\"43.5,83.5 50,90 56.5,83.5\"/><polyline class=\"ch\" points=\"16.5,43.5 10,50 16.5,56.5\"/><polyline class=\"ch\" points=\"83.5,43.5 90,50 83.5,56.5\"/><circle class=\"okc\" data-k=\"ok\" role=\"button\" aria-label=\"OK\" cx=\"50\" cy=\"50\" r=\"20\"/><text class=\"okt\" x=\"50\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\">OK</text></svg>");
+    const hit = ev => ev.target.closest && ev.target.closest('[data-k]');
+    dpw.addEventListener('pointerdown', ev => { const t = hit(ev); if (t) t.classList.add('on'); });
+    ['pointerup', 'pointercancel', 'pointerout'].forEach(n => dpw.addEventListener(n, ev => { const t = hit(ev); if (t) t.classList.remove('on'); }, true));
+    dpw.addEventListener('click', ev => { const t = hit(ev); if (t) key(t.dataset.k); });
+    dpw.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { const t = hit(ev); if (t) { ev.preventDefault(); key(t.dataset.k); } } });
+    dpw.querySelectorAll('[data-k]').forEach(n => n.setAttribute('tabindex', '0'));
+
+    /* Tab-Fläche unten: Medien / Ton / Sender */
+    const TABS = [
+      ['Medien', [['rew', '10 s zurück', [icon('back'), '10']], ['pp', 'Play/Pause', [icon('play', 'fill')]], ['ff', '10 s vor', ['10', icon('fwd')]], ['next', 'Nächstes', [icon('skip')]]]],
+      ['Ton', [['vdn', 'Leiser', [icon('minus')]], ['mute', 'Ton aus', [icon('mute')]], ['vup', 'Lauter', [icon('plus2')]]]],
+      ['Sender', [['chdn', 'Sender zurück', [icon('arr-down')]], ['cc', 'Untertitel', [icon('captions')]], ['chup', 'Sender vor', [icon('arr-up')]]]] ];
+    let tab = Math.min(TABS.length - 1, Math.max(0, store.get('rcTab', 0) | 0));
+    const tabBtns = TABS.map(([n], i) => h('button', { type:'button', onclick:() => { tab = i; store.set('rcTab', i); paintTabs(); } }, n));
+    const pans = TABS.map(([, keys]) => h('div', { class:'rpan', hidden:true }, ...keys.map(([k, l, kids]) => btn('', k, l, ...kids))));
+    const paintTabs = () => { tabBtns.forEach((b, i) => b.classList.toggle('on', i === tab)); pans.forEach((p, i) => { p.hidden = i !== tab; }); };
+    paintTabs();
+
     main.append(h('div', { class:'rc' },
-      srow,
-      h('div', { class:'mid' },
-        rocker(btn('', 'vup', 'Lauter', icon('plus2')), btn('m', 'mute', 'Ton aus', icon('mute')), btn('', 'vdn', 'Leiser', icon('minus'))),
-        h('div', { class:'dp' },
-          btn('ar u', 'up', 'Hoch', icon('arr-up')),
-          btn('ar l', 'left', 'Links', icon('left')),
-          btn('ar r', 'right', 'Rechts', icon('arr-right')),
-          btn('ar d', 'down', 'Runter', icon('arr-down')),
-          btn('ok', 'ok', 'OK', 'OK')),
-        rocker(btn('', 'chup', 'Sender vor', icon('arr-up')), h('div', { class:'lb' }, 'CH'), btn('', 'chdn', 'Sender zurück', icon('arr-down')))),
-      h('div', { class:'rr' },
-        btn('rd', 'back', 'Zurück', icon('left')),
-        btn('rd big', 'pp', 'Play/Pause', icon('play', 'fill')),
-        btn('rd', 'next', 'Nächstes', icon('skip'))),
-      h('div', { class:'cap' },
-        btn('', 'rew', '10 s zurück', icon('back'), '10 s'),
-        btn('', 'cc', 'Untertitel', icon('captions')),
-        btn('', 'ff', '10 s vor', '10 s', icon('fwd'))),
-      h('div', { class:'rst' }, h('span', { class:'dt' }), h('span', { class:'tx' }))));
-    const st = main.querySelector('.rst');
-    const upd = () => { st.lastChild.textContent = 'Verbindung: ' + p2pLast; };
+      h('div', { class:'tr' }, h('button', { class:'rcb', type:'button', 'aria-label':'Menü am TV', onclick:() => key('menu') }, icon('menu')), srow, h('button', { class:'rcb', type:'button', 'aria-label':'Einstellungen am TV', onclick:() => key('settings') }, icon('settings'))),
+      dpw,
+      h('div', { class:'rsheet' }, h('div', { class:'rtabs' }, ...tabBtns), ...pans)));
+
+    const upd = () => { stEl.lastChild.textContent = 'Verbindung: ' + p2pLast; };
     upd(); phoneConn().catch(() => {});
-    const iv = setInterval(() => { if (!st.isConnected) clearInterval(iv); else upd(); }, 1000);
+    const iv = setInterval(() => { if (!stEl.isConnected) clearInterval(iv); else upd(); }, 1000);
   }
   /* ---------- Koppeln: scannen, QR anzeigen, Code eingeben ---------- */
   const fmtCode = t => String(t || '').slice(2).toUpperCase().replace(/(.{5})(?=.)/g, '$1 ');
