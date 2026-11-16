@@ -9,3 +9,9 @@ Updated: 16.11.2026
 Description: An easy clock app
 Installslite: https://mediaplus-streaming.vercel.app/apps/uhr.html
 Logo: https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/clock.png?raw=true
+---
+Name: News
+Updated: 16.11.2026
+Description: An easy news app
+Installslite: https://mediaplus-streaming.vercel.app/apps/news.html
+Logo: https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/news.png?raw=true
