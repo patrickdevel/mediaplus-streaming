@@ -181,8 +181,8 @@ button.sfield:focus .ic{color:#000}
 (() => {
 'use strict';
 
-/* Leer = gleiche Domain wie die Seite; sonst z. B. 'https://dein-server.de' */
-const SC_BASE = '';
+/* Backend (/api) liegt im Root des Repos/der Domain, nicht im Ordner /apps – daher immer absolut vom Root aus */
+const SC_BASE = 'https://mediaplus-streaming.vercel.app';
 
 const NS = 'http://www.w3.org/2000/svg';
 const $ = (s, r = document) => r.querySelector(s);
