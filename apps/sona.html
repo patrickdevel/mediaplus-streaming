@@ -607,6 +607,7 @@ function tvKey(ev) {
   S.moved = true;
   const k = ev.key, c = ev.keyCode, a = document.activeElement;
   const typing = S.tab === 'search' && S.mode === 'type';
+  if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458) { try { parent.postMessage({ type:'mp-home' }, '*'); } catch {} return; }
 
   if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !typing)) { if (goBack()) ev.preventDefault(); return; }
   if (k === 'Backspace' && typing) { ev.preventDefault(); return delChar(); }
@@ -625,7 +626,7 @@ function tvKey(ev) {
     if (a && a.id === 'seek' && (dir === 'left' || dir === 'right')) return skip(dir === 'left' ? -10 : 10);
     return move(dir);
   }
-  if (k === 'Enter' || c === 13) { if (a && a.id === 'seek') { ev.preventDefault(); toggle(); } return; }
+  if (k === 'Enter' || c === 13 || k === 'Select') { if (a && a.id === 'seek') { ev.preventDefault(); toggle(); } else if (ev._fwd && a && a.click) a.click(); return; }
 
   /* Tastatur am Fernseher/Handy-Tastatur: direkt tippen */
   if (S.tab === 'search' && k.length === 1 && /[\p{L}\p{N}]/u.test(k)) {
@@ -636,7 +637,7 @@ function tvKey(ev) {
 }
 document.addEventListener('keydown', tvKey);
 /* Tasten, die der Host (Media+ TV) weiterreicht */
-window.addEventListener('message', ev => { const d = ev.data; if (d && d.type === 'mp-key') tvKey({ key:d.key, keyCode:d.keyCode, preventDefault(){} }); });
+window.addEventListener('message', ev => { const d = ev.data; if (d && d.type === 'mp-key') tvKey({ key:d.key, keyCode:d.keyCode, _fwd:true, preventDefault(){} }); });
 try { window.focus(); } catch {}
 document.addEventListener('focusin', ev => { if (ev.target.matches && ev.target.matches(FOC)) S.last = ev.target; });
 
