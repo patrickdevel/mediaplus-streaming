@@ -1,7 +1,7 @@
-Name: sona. (SoundCloud Edition)
+Name: Spotify
 Updated: 16.11.2026
 Description: Stream your favorite music from everywhere!
-Installslite: https://mediaplus-streaming.vercel.app/apps/sona.html/
+Installslite: https://open.spotify.com/
 Logo: https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/sona.png?raw=true
 ---
 Name:...
