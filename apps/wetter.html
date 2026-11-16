@@ -212,6 +212,7 @@ $$('#tabs .chip').forEach(c => c.addEventListener('click', () => setTab(c.datase
 /* Tasten vom TV-Fenster (Eltern-Seite) entgegennehmen */
 window.addEventListener('message', ev => {
   const d = ev.data; if (!d || d.type !== 'mp-key') return;
+  if (d.key === 'Enter' || d.keyCode === 13 || d.key === ' ') { const a = document.activeElement; if (a && a !== document.body && a.click) { a.click(); return; } }
   document.dispatchEvent(new KeyboardEvent('keydown', { key:d.key, keyCode:d.keyCode, which:d.keyCode, bubbles:true, cancelable:true }));
 });
 /* Fernbedienung */
