@@ -247,7 +247,7 @@ const SC = (() => {
     const u = t.artist || t.user || {};
     return { id:t.id, title:t.title || 'Unbekannt', permalinkUrl:t.permalinkUrl || t.permalink_url || t.url || '',
       duration:t.duration, artworkUrl:t.artworkUrl || t.artwork_url || u.avatar_url || '', streamUrl:t.streamUrl,
-      artist:(u.username || t.artistName) ? { username:u.username || t.artistName } : null };
+      artist:(u.username || t.artistName) ? { username:u.username || t.artistName, avatar:u.avatar_url || u.avatarUrl || '' } : null };
   };
   const listFrom = d => {
     if (Array.isArray(d)) return d;
@@ -265,18 +265,25 @@ const SC = (() => {
   const GEN = ['all-music', 'hiphoprap', 'electronic', 'pop', 'danceedm', 'house', 'techno', 'trap', 'rbsoul', 'ambient'];
   async function feed(n, genre) {
     const g = genre || GEN[Math.floor(Math.random() * GEN.length)];
-    const d = await api('explore', { type:'trending', genre:g, kind:'trending' });
+    let d;
+    try { d = await api('explore', { type:'trending', genre:g, kind:'trending' }); }
+    catch (e) { d = await api('search', { q:(g === 'all-music' ? 'trending' : g + ' trending'), query:(g === 'all-music' ? 'trending' : g + ' trending'), type:'tracks', kind:'tracks' }); }
     let l = listFrom(d).map(norm).filter(t => t && t.id && t.permalinkUrl);
     const fresh = l.filter(t => !seen.has(t.id));
     l = (fresh.length ? fresh : l).sort(() => Math.random() - .5).slice(0, n);
     return l.map(t => { seen.add(t.id); if (!cache.has(t.permalinkUrl)) cache.set(t.permalinkUrl, t); return cache.get(t.permalinkUrl); });
+  }
+  async function artistTracks(name) {
+    const all = await search(name);
+    const own = all.filter(t => t.artist && t.artist.username.toLowerCase() === name.toLowerCase());
+    return own.length ? own : all;
   }
   async function byUrl(url) {
     let t = cache.get(url);
     if (!t || !t.streamUrl) { const m = await api('track', { url }); t = Object.assign({}, t || {}, norm(m)); t.permalinkUrl = t.permalinkUrl || url; cache.set(url, t); }
     return t;
   }
-  return { api, art, stream, likes, isLiked, toggleLike, search, feed, byUrl };
+  return { api, art, stream, likes, isLiked, toggleLike, search, artistTracks, feed, byUrl };
 })();
 
 let hlsP = null;
@@ -295,6 +302,7 @@ const GENRES = [['Alle', null], ['Hip-Hop', 'hiphoprap'], ['Elektronik', 'electr
 const S = { tab:'discover', typed:'', q:'', mode:'type', queue:[], qi:-1, cur:null, fails:0, moved:false, last:null, col:null, colFor:null, confirmClear:false };
 const D = { list:[], genre:null, loading:false, err:null };
 const R = { list:[], loading:false, err:null };
+const A = { name:'', avatar:'', list:[], loading:false, err:null };
 
 const content = $('#content'), sub = $('#sub');
 $('[data-tab="discover"]').append(icon('compass'), 'Entdecken');
@@ -494,6 +502,17 @@ function renderSearch() {
     paintField();
     return;
   }
+  if (S.mode === 'artist') {
+    let body;
+    if (A.loading) body = h('div', { class:'grid', style:'margin-top:2rem' }, skeletons(6));
+    else if (A.err) body = msgBox('alert', 'Künstler konnte nicht geladen werden.', A.err, h('button', { class:'btn', type:'button', 'data-f':true, onclick:() => openArtist(A.name, A.avatar) }, icon('refresh'), 'Erneut versuchen'));
+    else if (!A.list.length) body = msgBox('search', `Keine Songs von ${A.name} gefunden.`);
+    else body = h('div', { class:'grid', style:'margin-top:2rem' }, A.list.map((t, i) => Tile(t, A.list, i)));
+    const av = A.avatar ? h('img', { src:A.avatar, alt:'', style:'width:4.5rem;height:4.5rem;border-radius:50%;object-fit:cover' }) : icon('music');
+    content.replaceChildren(h('button', { class:'sfield', id:'sbtn', type:'button', 'data-f':true, onclick:() => { S.mode = 'results'; renderSearch(); focusEl($('#sbtn')); } },
+      av, h('div', { class:'st' }, A.name), h('span', { class:'ph', style:'font-size:1.15rem' }, 'Zurück')), body);
+    return;
+  }
   const field = h('button', { class:'sfield', id:'sbtn', type:'button', 'data-f':true, onclick:() => { S.mode = 'type'; renderSearch(); focusEl($('.key', content)); } },
     icon('search'), h('div', { class:'st' }, S.q), h('span', { class:'ph', style:'font-size:1.15rem' }, 'Ändern'));
   let body;
@@ -501,7 +520,20 @@ function renderSearch() {
   else if (R.err) body = msgBox('alert', 'Die Songsuche ist gerade nicht möglich.', R.err, h('button', { class:'btn', type:'button', 'data-f':true, onclick:runSearch }, icon('refresh'), 'Erneut versuchen'));
   else if (!R.list.length) body = msgBox('search', `Keine Songs für „${S.q}“ gefunden.`);
   else body = h('div', { class:'grid', style:'margin-top:2rem' }, R.list.map((t, i) => Tile(t, R.list, i)));
-  content.replaceChildren(field, body);
+  const seenA = new Set(), arts = [];
+  R.list.forEach(t => { const a = t.artist; if (a && !seenA.has(a.username.toLowerCase())) { seenA.add(a.username.toLowerCase()); arts.push(a); } });
+  const row = (!R.loading && !R.err && arts.length) ? h('div', { style:'display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem' },
+    arts.slice(0, 8).map(a => h('button', { class:'btn', type:'button', 'data-f':true, onclick:() => openArtist(a.username, a.avatar) },
+      a.avatar ? h('img', { src:a.avatar, alt:'', style:'width:2rem;height:2rem;border-radius:50%;object-fit:cover' }) : icon('music'), a.username))) : null;
+  content.replaceChildren(...[field, row, body].filter(Boolean));
+}
+async function openArtist(name, avatar) {
+  A.name = name; A.avatar = avatar || ''; A.loading = true; A.err = null; A.list = []; S.mode = 'artist';
+  renderSearch(); content.scrollTop = 0; focusEl($('#sbtn'));
+  try { A.list = await SC.artistTracks(name); } catch (e) { A.err = (e && e.message) || String(e); }
+  A.loading = false;
+  if (S.tab !== 'search' || S.mode !== 'artist') return;
+  renderSearch(); const f = $('.tile[data-id]', content); focusEl(f || $('#sbtn'));
 }
 function doSearch() {
   const v = S.typed.trim(); if (!v) return toast('Bitte zuerst etwas eingeben');
@@ -597,6 +629,7 @@ function move(dir) {
 }
 function goBack() {
   const a = document.activeElement;
+  if (S.tab === 'search' && S.mode === 'artist') { S.mode = 'results'; renderSearch(); focusEl($('#sbtn')); return true; }
   if (S.tab === 'search' && S.mode === 'results') { S.mode = 'type'; renderSearch(); focusEl($('.key', content)); return true; }
   if (a && a.matches && a.matches(FOC) && !a.matches('.tabs .chip')) { focusEl(initial()); return true; }
   try { parent.postMessage({ type:'mp-app-exit' }, '*'); } catch {}
