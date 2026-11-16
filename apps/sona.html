@@ -599,6 +599,7 @@ function goBack() {
   const a = document.activeElement;
   if (S.tab === 'search' && S.mode === 'results') { S.mode = 'type'; renderSearch(); focusEl($('.key', content)); return true; }
   if (a && a.matches && a.matches(FOC) && !a.matches('.tabs .chip')) { focusEl(initial()); return true; }
+  try { parent.postMessage({ type:'mp-app-exit' }, '*'); } catch {}
   return false; /* schon oben: Zurück-Taste an den Fernseher/die App weitergeben */
 }
 function tvKey(ev) {
@@ -634,6 +635,9 @@ function tvKey(ev) {
   } else if (typing && k === ' ') { ev.preventDefault(); typeChar(' '); }
 }
 document.addEventListener('keydown', tvKey);
+/* Tasten, die der Host (Media+ TV) weiterreicht */
+window.addEventListener('message', ev => { const d = ev.data; if (d && d.type === 'mp-key') tvKey({ key:d.key, keyCode:d.keyCode, preventDefault(){} }); });
+try { window.focus(); } catch {}
 document.addEventListener('focusin', ev => { if (ev.target.matches && ev.target.matches(FOC)) S.last = ev.target; });
 
 /* Maus/Touch ignorieren – nur Fernbedienung */
