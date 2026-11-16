@@ -209,6 +209,11 @@ function paint() { paintBg(); paintNow(); if (S.tab !== 'places' || !$('#sf')) p
 function setTab(t) { S.tab = t; $$('#tabs .chip').forEach(c => c.classList.toggle('active', c.dataset.tab === t)); $('#content').scrollTop = 0; paintContent(); }
 $$('#tabs .chip').forEach(c => c.addEventListener('click', () => setTab(c.dataset.tab)));
 
+/* Tasten vom TV-Fenster (Eltern-Seite) entgegennehmen */
+window.addEventListener('message', ev => {
+  const d = ev.data; if (!d || d.type !== 'mp-key') return;
+  document.dispatchEvent(new KeyboardEvent('keydown', { key:d.key, keyCode:d.keyCode, which:d.keyCode, bubbles:true, cancelable:true }));
+});
 /* Fernbedienung */
 function vis(el) { if (el.disabled || el.hidden) return false; const r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4 || r.right <= 0 || r.left >= innerWidth) return false; const sc = el.closest('#content'); if (sc) { const b = sc.getBoundingClientRect(); if (r.bottom <= b.top || r.top >= b.bottom) return false; } return true; }
 function focusEl(el) { if (!el) return; el.focus({ preventScroll:true }); if (el.closest('#content')) el.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' }); }
@@ -235,7 +240,7 @@ function goBack() { const a = document.activeElement; if (a && a.matches && a.ma
 document.addEventListener('keydown', ev => {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const k = ev.key, c = ev.keyCode, typing = S.tab === 'places' && !!$('#sf');
-  if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !typing)) { if (goBack()) ev.preventDefault(); return; }
+  if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !typing)) { if (goBack()) ev.preventDefault(); else { try { parent.postMessage({ type:'mp-app-exit' }, '*'); } catch {} } return; }
   if (k === 'Backspace' && typing) { ev.preventDefault(); S.typed = S.typed.slice(0, -1); return paintField(); }
   const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
   if (dir) { ev.preventDefault(); return move(dir); }
