@@ -1102,8 +1102,7 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
 .hfirst .arow{width:auto;max-width:none;overflow-x:auto;scrollbar-width:none}
 .hfirst .arow::-webkit-scrollbar{display:none}
 /* Weiterschauen: Karussell läuft links bis zum Trennstrich (Rand der Seitenleiste) */
-.hspacer .hglass .hrow{--ext:calc(var(--pad) + 1.6rem + 1px);margin-left:calc(-1rem - var(--ext));padding-left:calc(1rem + var(--ext));scroll-padding-left:calc(1rem + var(--ext))}
-.hspacer .hglass{overflow:visible}
+.hspacer .hglass .hrow{margin-right:0;padding-right:0;scroll-padding-inline:1rem}
 /* unten angekommen: Apps-Leiste ausgeblendet, bleibt aber per Fernbedienung erreichbar */
 body.home-down .happs{opacity:0}
 /* ===== Appstore – Glas-Design wie Weiterschauen / Apps-Leiste ===== */
@@ -1667,12 +1666,14 @@ const rawGh = u => u || '';
 const APPS_FALLBACK = [{ name:'sona. (SoundCloud Edition)', updated:'16.11.2026', description:'Stream your favorite music from everywhere!', installslite:'https://mediaplus-streaming.vercel.app/apps/sona.html/', logo:APPS_LOGO }];
 let appWin = null, layerEl = null;
 const appKey = a => a.installslite || a.name;
-const installedApps = () => { const cat = store.get('appcat', []); return store.get('apps', []).map(a => { const c = cat.find(x => appKey(x) === appKey(a)); return c ? { ...a, ...c } : a; }); };
+const LOGO_V = Date.now();
+const bust = u => u ? u + (u.includes('?') ? '&' : '?') + 'v=' + LOGO_V : u;
+const installedApps = () => { const cat = store.get('appcat', []); return store.get('apps', []).map(a => { const c = cat.find(x => appKey(x) === appKey(a)); return c ? { name:a.name, installslite:a.installslite, ...c } : { name:a.name, installslite:a.installslite }; }); };
 async function fetchApps() {
   try {
     let t = null;
     for (const u of [APPS_SRC, 'https://github.com/patrickdevel/mediaplus-streaming/raw/main/apps.html', 'https://mediaplus-streaming.vercel.app/apps.html']) {
-      try { const r = await fetch(u, { cache:'no-cache' }); if (r.ok) { t = await r.text(); break; } } catch {}
+      try { const r = await fetch(u + (u.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache:'no-store' }); if (r.ok) { t = await r.text(); break; } } catch {}
     }
     if (!t) throw 0;
     if (/<\w+[^>]*>/.test(t)) { t = t.replace(/<br\s*\/?>|<\/(p|div|li|pre|tr|h\d)>/gi, '\n'); const ta = document.createElement('textarea'); ta.innerHTML = t.replace(/<[^>]+>/g, ''); t = ta.value; }
@@ -1682,7 +1683,7 @@ async function fetchApps() {
   } catch { return store.get('appcat', APPS_FALLBACK); }
 }
 function Logo(a) {
-  const u = a.logo || APPS_LOGO, w = h('div', { class:'alg' });
+  const u = bust(a.logo || APPS_LOGO), w = h('div', { class:'alg' });
   const bg = h('img', { class:'lgb', src:u, alt:'' }), im = h('img', { class:'lgf', src:u, alt:'' });
   im.onload = () => { if (im.naturalWidth / im.naturalHeight > 1.6) w.classList.add('wide'); };
   im.onerror = () => { w.classList.add('ph'); if (a.name === 'Apps') w.innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>'; else w.replaceChildren(h('b', {}, (a.name || '?')[0].toUpperCase())); };
@@ -1815,7 +1816,7 @@ function closeApp() {
 window.addEventListener('popstate', () => {
   if (appWin && !(history.state && history.state.mpApp)) { history.pushState({ mpApp:1 }, ''); askCloseApp(); }
 });
-window.addEventListener('message', ev => { if (appWin && ev.data && ev.data.type === 'mp-app-exit') askCloseApp(); });
+window.addEventListener('message', ev => { if (ev.data && ev.data.type === 'mp-home') return goHomeNow(); if (appWin && ev.data && ev.data.type === 'mp-app-exit') askCloseApp(); });
 
 function Rows() {
   const tok = routeToken, used = new Set();
@@ -3486,6 +3487,12 @@ function goBack() {
   return false;
 }
 
+function goHomeNow() {
+  if (appWin) { if (appWin._asking) return; closeApp(); }
+  document.querySelectorAll('.astore').forEach(e => e._close && e._close());
+  if (location.hash && location.hash !== '#/') location.hash = '#/'; else window.scrollTo({ top:0, behavior:'smooth' });
+  setTimeout(() => { const f = initialTarget(); if (f) focusEl(f); }, 350);
+}
 function tvKey(ev) {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   TV.pending = false;
@@ -3496,6 +3503,7 @@ function tvKey(ev) {
     return;
   }
 
+  if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { ev.preventDefault(); goHomeNow(); return; }
   if (appWin && !dlgEl) {
     try { appWin._frame.focus(); appWin._frame.contentWindow.focus(); } catch {}
     if (t === document.body || t === document.documentElement || t === appWin._frame) { ev.preventDefault(); try { appWin._frame.contentWindow.postMessage({ type:'mp-key', key:k, keyCode:c }, '*'); } catch {} }
