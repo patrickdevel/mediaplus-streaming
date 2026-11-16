@@ -1075,6 +1075,41 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
 /* ===== Weiterschauen: Ruhezustand = so viele Karten wie auf den Bildschirm passen; mit Infos (Hover/Fokus) = 2 Karten + Infofeld ===== */
 .hglass .hrow{--hn:var(--hfull,2);width:calc(var(--hn)*15rem + (var(--hn) - 1)*1.2rem + 2rem);transition:width .3s ease}
 .hglass.sel .hrow{--hn:2}
+
+/* ===== Apps ===== */
+.happs{position:absolute;right:var(--pad);bottom:3rem;pointer-events:auto;padding:1.2rem 1.6rem 1.4rem;border-radius:2.4rem;color:#fff;width:27rem;background:rgba(10,10,14,.22);
+  -webkit-backdrop-filter:blur(3rem) saturate(1.5)!important;backdrop-filter:blur(3rem) saturate(1.5)!important;border:1px solid rgba(255,255,255,.38);box-shadow:0 0 1.8rem rgba(255,255,255,.28);transition:opacity .25s}
+.hglass.sel ~ .happs{opacity:0}
+.happs .rowh{margin:0 0 1rem .2rem;font-size:1.3rem;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.85)}
+.arow{display:flex;gap:1.2rem;overflow:hidden;margin:-1rem;padding:1rem}
+.atile{flex:0 0 10.5rem;display:flex;flex-direction:column;align-items:center;gap:.6rem;background:none;border:0;color:#fff;font:inherit;font-size:1.2rem;cursor:pointer;border-radius:1.6rem;padding:0}
+.atile img{width:10.5rem;height:10.5rem;border-radius:2.2rem;object-fit:cover;background:#222;transition:transform .15s}
+.atile:focus,.atile:hover{outline:0}.atile:focus img,.atile:hover img{transform:scale(1.08);box-shadow:0 0 0 .35rem #fff,0 1rem 3rem rgba(0,0,0,.5)}
+.atile span{max-width:10.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.astore{position:fixed;inset:0;z-index:150;background:#0c0c10;color:#fff;display:flex;gap:3rem;padding:4rem 5rem;opacity:0;transition:opacity .25s;font-size:inherit}
+.astore.show{opacity:1}
+.astore .al{flex:none;width:52rem;display:flex;flex-direction:column;gap:1.4rem}
+.astore h2{margin:0;font-size:3.2rem}
+.astore .asq{font-size:2.4rem;min-height:4.6rem;padding:.6rem 1.4rem;border-radius:1.2rem;background:#1c1c24;border:2px solid #333;color:#fff}
+.astore .akeys{display:grid;grid-template-columns:repeat(7,1fr);gap:.7rem}
+.astore .akeys button,.astore .abtn{font:inherit;font-size:2rem;padding:1rem .4rem;border-radius:1rem;border:0;background:#262630;color:#fff;cursor:pointer}
+.astore button:focus,.astore .asq:focus{outline:0;background:#fff;color:#000;box-shadow:0 0 0 .3rem #fff}
+.astore .ar{flex:1;overflow:auto;display:flex;flex-direction:column;gap:1.2rem;padding:.6rem}
+.aitem{display:flex;gap:2rem;align-items:center;padding:1.4rem;border-radius:1.8rem;background:#16161d}
+.aitem img{width:9rem;height:9rem;border-radius:2rem;object-fit:cover;background:#222}
+.aitem .ai{flex:1;min-width:0}.aitem b{font-size:2.4rem}.aitem small{display:block;color:#aaa;font-size:1.5rem;margin:.2rem 0}.aitem p{margin:0;font-size:1.7rem;color:#ccc}
+.aitem .abtn{font-size:2rem;padding:1.2rem 2.4rem;min-width:15rem;position:relative;overflow:hidden}
+.aitem .abtn i{position:absolute;left:0;top:0;bottom:0;width:0;background:#3b82f6;z-index:0;transition:width .2s}
+.aitem .abtn em{position:relative;z-index:1;font-style:normal}
+.aitem .abtn:focus em{color:#000}
+.awin{position:fixed;inset:0;z-index:160;background:#000;clip-path:inset(var(--t) var(--r) var(--b) var(--l) round 2.2rem);transition:clip-path .45s cubic-bezier(.2,.8,.2,1)}
+.awin.full{clip-path:inset(0 0 0 0 round 0)}
+.awin iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.asplash{position:absolute;inset:0;z-index:2;background:#111;display:grid;place-items:center;transition:opacity .4s}
+.asplash.out{opacity:0;pointer-events:none}
+.asplash img{width:16rem;height:16rem;border-radius:3.6rem;transform:scale(.55);opacity:0;animation:alogo .5s .15s cubic-bezier(.2,.8,.2,1) forwards}
+.asplash .asp{position:absolute;bottom:22%;width:5rem;height:5rem;border:.5rem solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:aspin .8s linear infinite}
+@keyframes alogo{to{transform:scale(1);opacity:1}}@keyframes aspin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -1487,7 +1522,7 @@ function Continue(target) {
       const cb = glass.offsetParent; if (!cb) return;
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 10;
       const left = parseFloat(getComputedStyle(glass).left) || 0;
-      const G = (cb.clientWidth - 2 * left) / rem;
+      const G = (cb.clientWidth - 2 * left) / rem - 29;
       glass.style.setProperty('--hfull', Math.max(2, Math.min(cards.length, Math.floor((G - 3) / 16.2))));
     };
     fit(); requestAnimationFrame(fit); setTimeout(fit, 400); window.addEventListener('resize', fit);
@@ -1495,6 +1530,114 @@ function Continue(target) {
   }
   main.append(h('h2', { class:'rowh' }, 'Weiterschauen'), h('div', { class:'hrow' }, items.map(e => Card(e))));
 }
+
+
+/* ===== Apps (Store, Installation, Start) ===== */
+const APPS_LOGO = 'https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/apps.png?raw=true';
+const APPS_SRC = 'https://raw.githubusercontent.com/patrickdevel/mediaplus-streaming/main/apps.html';
+const rawGh = u => (u || '').replace(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/blob\/(.+?)(\?raw=true)?$/, 'https://raw.githubusercontent.com/$1/$2');
+const APPS_FALLBACK = [{ name:'sona. (SoundCloud Edition)', updated:'16.11.2026', description:'Stream your favorite music from everywhere!', installslite:'https://mediaplus-streaming.vercel.app/apps/sona.html/', logo:APPS_LOGO }];
+let appWin = null, layerEl = null;
+const appKey = a => a.installslite || a.name;
+const installedApps = () => store.get('apps', []);
+async function fetchApps() {
+  try {
+    const r = await fetch(APPS_SRC, { cache:'no-cache' }); if (!r.ok) throw 0;
+    let t = await r.text();
+    if (/<\w+[^>]*>/.test(t)) { t = t.replace(/<br\s*\/?>|<\/(p|div|li|pre|tr|h\d)>/gi, '\n'); const ta = document.createElement('textarea'); ta.innerHTML = t.replace(/<[^>]+>/g, ''); t = ta.value; }
+    const list = t.split(/^\s*-{3,}\s*$/m).map(b => { const o = {}; b.split('\n').forEach(l => { const m = l.match(/^\s*([A-Za-z]+)\s*:\s*(.+?)\s*$/); if (m) o[m[1].toLowerCase()] = m[2]; }); return o; }).filter(o => o.name && o.installslite);
+    if (!list.length) throw 0;
+    store.set('appcat', list); return list;
+  } catch { return store.get('appcat', APPS_FALLBACK); }
+}
+function appTile(a, onOpen) {
+  const b = h('button', { class:'atile', type:'button', 'aria-label':a.name }, h('img', { src:rawGh(a.logo) || APPS_LOGO, alt:'' }), h('span', {}, a.name));
+  b.onclick = () => onOpen(a, b); return b;
+}
+function AppsBar(target) {
+  const row = h('div', { class:'arow' });
+  const wrap = h('section', { class:'happs' }, h('h2', { class:'rowh' }, 'Apps'), row);
+  const paint = () => row.replaceChildren(appTile({ name:'Apps', logo:APPS_LOGO }, (a, b) => openStore(b)), ...installedApps().map(a => appTile(a, (x, b) => launchApp(x, b))));
+  paint(); wrap._paint = paint; window._appsPaint = paint;
+  target.append(wrap);
+}
+function openStore(opener) {
+  if (layerEl) return;
+  let q = ''; const inst = () => installedApps().some.bind(installedApps());
+  const sq = h('div', { class:'asq', tabindex:'0', role:'textbox', 'aria-label':'Suche' });
+  const res = h('div', { class:'ar' }, h('p', {}, 'Lade Apps …'));
+  let cat = [];
+  const press = k => { q = k === '⌫' ? q.slice(0, -1) : k === '␣' ? q + ' ' : q + k; draw(); };
+  const keys = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', '␣', '⌫'].map(k => h('button', { type:'button', onclick:() => press(k) }, k));
+  const el = h('div', { class:'astore', role:'dialog', 'aria-label':'Apps' },
+    h('div', { class:'al' }, h('h2', {}, 'Apps'), sq, h('div', { class:'akeys' }, keys)), res);
+  sq.addEventListener('keydown', ev => { if (/^[a-z0-9 ]$/i.test(ev.key)) { q += ev.key; draw(); ev.stopPropagation(); } else if (ev.key === 'Backspace') { q = q.slice(0, -1); draw(); ev.stopPropagation(); } });
+  const draw = () => {
+    sq.textContent = q || 'Suchen …'; sq.style.color = q ? '#fff' : '#777';
+    const l = cat.filter(a => !q || a.name.toLowerCase().includes(q.toLowerCase()));
+    res.replaceChildren(...(l.length ? l.map(appItem) : [h('p', {}, 'Keine Apps gefunden.')]));
+  };
+  const appItem = a => {
+    const logo = h('img', { src:rawGh(a.logo) || APPS_LOGO, alt:'' });
+    const lbl = h('em', {}), bar = h('i'), btn = h('button', { class:'abtn', type:'button' }, bar, lbl);
+    const done = () => store.get('apps', []).some(x => appKey(x) === appKey(a));
+    const upd = () => { bar.style.width = '0'; lbl.textContent = done() ? 'Öffnen' : 'Installieren'; };
+    let busy = false;
+    btn.onclick = () => {
+      if (busy) return;
+      if (done()) { closeStore(); return launchApp(a, null); }
+      busy = true; let p = 0;
+      const t = setInterval(() => {
+        p = Math.min(100, p + 3 + Math.random() * 9); bar.style.width = p + '%'; lbl.textContent = Math.floor(p) + ' %';
+        if (p >= 100) { clearInterval(t); store.set('apps', [...store.get('apps', []), a]); busy = false; upd(); window._appsPaint && window._appsPaint(); toast(a.name + ' installiert'); }
+      }, 120);
+    };
+    const del = h('button', { class:'abtn', type:'button', style:'min-width:0' }, h('em', {}, '✕'));
+    del.setAttribute('aria-label', 'Deinstallieren');
+    del.onclick = async () => { if (!done()) return; if (await askConfirm(a.name + ' deinstallieren?', 'Deinstallieren')) { store.set('apps', store.get('apps', []).filter(x => appKey(x) !== appKey(a))); upd(); window._appsPaint && window._appsPaint(); } };
+    upd();
+    return h('div', { class:'aitem' }, logo, h('div', { class:'ai' }, h('b', {}, a.name), h('small', {}, [a.updated && 'Aktualisiert: ' + a.updated].filter(Boolean).join('')), h('p', {}, a.description || '')), btn, del);
+  };
+  const closeStore = () => { el.classList.remove('show'); layerEl = null; setTimeout(() => el.remove(), 250); if (opener && opener.isConnected) opener.focus({ preventScroll:true }); };
+  el._close = closeStore; el._cancel = closeStore;
+  document.body.append(el); layerEl = el; draw();
+  requestAnimationFrame(() => { el.classList.add('show'); keys[0].focus({ preventScroll:true }); });
+  fetchApps().then(l => { cat = l; draw(); });
+}
+function launchApp(a, from) {
+  if (appWin) return;
+  const r = from ? from.getBoundingClientRect() : { top:innerHeight * .4, left:innerWidth * .4, right:innerWidth * .6, bottom:innerHeight * .6 };
+  const win = h('div', { class:'awin' });
+  win.style.setProperty('--t', r.top + 'px'); win.style.setProperty('--l', r.left + 'px');
+  win.style.setProperty('--r', (innerWidth - r.right) + 'px'); win.style.setProperty('--b', (innerHeight - r.bottom) + 'px');
+  const sp = h('div', { class:'asplash' }, h('img', { src:rawGh(a.logo) || APPS_LOGO, alt:'' }), h('div', { class:'asp' }));
+  const fr = h('iframe', { title:a.name, allow:'autoplay; fullscreen; encrypted-media', tabindex:'0' });
+  win.append(fr, sp); document.body.append(win);
+  appWin = win; win._frame = fr; win._from = from;
+  history.pushState({ mpApp:1 }, '');
+  void win.offsetWidth; win.classList.add('full');
+  const t0 = Date.now();
+  fr.onload = () => setTimeout(() => { sp.classList.add('out'); fr.focus(); }, Math.max(0, 1400 - (Date.now() - t0)));
+  setTimeout(() => { fr.src = a.installslite; }, 350);
+  setTimeout(() => sp.classList.add('out'), 12000);
+}
+async function askCloseApp() {
+  if (!appWin || appWin._asking) return; appWin._asking = true;
+  const ok = await askConfirm('App wirklich schließen?', 'Schließen');
+  if (!appWin) return; appWin._asking = false;
+  if (ok) closeApp(); else { try { appWin._frame.focus(); } catch {} }
+}
+function closeApp() {
+  const w = appWin; if (!w) return; appWin = null;
+  w.classList.remove('full'); w.style.opacity = '0'; w.style.transition = 'clip-path .35s, opacity .35s';
+  setTimeout(() => w.remove(), 380);
+  if (history.state && history.state.mpApp) history.back();
+  if (w._from && w._from.isConnected) w._from.focus({ preventScroll:true });
+}
+window.addEventListener('popstate', () => {
+  if (appWin && !(history.state && history.state.mpApp)) { history.pushState({ mpApp:1 }, ''); askCloseApp(); }
+});
+window.addEventListener('message', ev => { if (appWin && ev.data && ev.data.type === 'mp-app-exit') askCloseApp(); });
 
 function Rows() {
   const tok = routeToken, used = new Set();
@@ -1535,6 +1678,7 @@ function Browse(label) {
     Hero();
     const spacer = h('div', { class:'hspacer' }); main.append(spacer);
     Continue(spacer);
+    AppsBar(spacer);
     main.append(row);
     const onScroll = () => {
       const y = window.scrollY, H = window.innerHeight, p = Math.min(1, Math.max(0, y / (H * .7)));
@@ -3002,6 +3146,7 @@ function focusEl(el) {
     if (row) { const a = el.getBoundingClientRect(), b = row.getBoundingClientRect(); row.scrollBy({ left:(a.left + a.width / 2) - (b.left + b.width / 2), behavior:'smooth' }); }
     return;
   }
+  if (el.closest('.happs')) { if (window.scrollY > 2) window.scrollTo({ top:0, behavior:'smooth' }); const r = el.parentElement; r.scrollTo({ left:el.offsetLeft - r.offsetLeft - 10, behavior:'smooth' }); return; }
   if (document.body.classList.contains('home') && el.closest('.hero,.hglass')) {
     if (window.scrollY > 2) window.scrollTo({ top:0, behavior:'smooth' });
     const row = el.closest('.hglass .hrow');
@@ -3059,7 +3204,7 @@ function move(dir) {
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
   const all = Array.from(document.querySelectorAll(FOCUSABLE)).filter(el =>
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
-    (!dlgEl || dlgEl.contains(el)) &&
+    (!(dlgEl || layerEl) || (dlgEl || layerEl).contains(el)) &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))) &&
     !(cur && cur.closest('.sleft') && (dir === 'up' || dir === 'down') && !el.closest('.sleft')) &&
     !(cur && cur.closest('#side') && (dir === 'up' || dir === 'down') && !el.closest('#side')));
@@ -3140,6 +3285,8 @@ function move(dir) {
 /* FIX: goBack verlässt NIE das Vollbild */
 function goBack() {
   if (dlgEl) { (dlgEl._cancel || closeDlg)(); closeDlg(); return true; }
+  if (layerEl) { (layerEl._close)(); return true; }
+  if (appWin) { askCloseApp(); return true; }
   if (TV.player && TV.player.classList.contains('panel')) { TV.player.closePanels(); focusEl(TV.player); return true; }
   const pm = document.querySelector('.pmenu:not([hidden])');
   if (pm) { pm.hidden = true; focusEl(TV.player && TV.player.querySelector('[aria-label="Einstellungen"]')); return true; }
@@ -3166,6 +3313,7 @@ function tvKey(ev) {
     return;
   }
 
+  if (appWin && !dlgEl) { try { appWin._frame.focus(); } catch {} return; }
   const p = TV.player, v = TV.video;
   if (p && v && document.body.dataset.route === 'watch') {
     const eat = f => { ev.preventDefault(); f(); };
