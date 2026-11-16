@@ -375,6 +375,25 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 html.cw .grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--cw)),1fr))}
 video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(--cb,rgba(0,0,0,.6))}
 .player video{filter:brightness(var(--bright,1))}
+.lvnow{display:flex;align-items:center;gap:12px;padding:14px 2px 6px}
+.lvnow-t{font-weight:700;font-size:1.15em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lvnow-s{color:var(--fg-3);font-size:.85em}
+.lvlogo{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;color:#fff;font-weight:800;font-size:.8em;letter-spacing:.02em;flex:none}
+.lvbadge{font-size:.7em;font-weight:800;letter-spacing:.08em;padding:5px 9px;border-radius:99px;background:#e5484d;color:#fff}
+.lvbadge.load{background:#f5a623}.lvbadge.err{background:#6b7280}
+.lvsearch{width:100%;box-sizing:border-box;margin:10px 0 4px;padding:11px 14px;border-radius:12px;border:1px solid var(--line,rgba(128,128,128,.25));background:transparent;color:inherit;font:inherit}
+.lvtabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0;scrollbar-width:none}.lvtabs::-webkit-scrollbar{display:none}
+.lvtab{flex:none;border:1px solid rgba(128,128,128,.3);background:transparent;color:inherit;border-radius:99px;padding:7px 14px;font:inherit;font-size:.9em;cursor:pointer}
+.lvtab.active{background:var(--fg,#fff);color:var(--bg,#000);border-color:transparent}
+.lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding-top:6px}
+.lvcard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:12px;border-radius:16px;border:1px solid rgba(128,128,128,.22);background:rgba(128,128,128,.08);color:inherit;font:inherit;cursor:pointer}
+.lvcard.active{border-color:#e5484d;box-shadow:0 0 0 2px rgba(229,72,77,.35)}
+.lvcn{font-weight:600;margin-top:6px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lvcg{font-size:.75em;color:var(--fg-3)}
+.lvspin{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-size:.85em;background:rgba(0,0,0,.35);pointer-events:none;z-index:7}
+.lvspin.show{display:flex}
+.lvspin i{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:lvr .8s linear infinite}
+@keyframes lvr{to{transform:rotate(360deg)}}
 .lvchips{display:flex;flex-wrap:wrap;gap:.6em;padding:1em 0}
 .swatch{width:2.4em;height:2.4em;border-radius:50%;border:2px solid var(--border-2)}
 .swatch.on,.swatch:focus{outline:3px solid var(--fg);outline-offset:2px}
@@ -2013,14 +2032,43 @@ function showSugg() {
    ========================================================= */
 const IS_TV = typeof TV !== 'undefined';
 const PLUS = (() => {
-  const LIVE = [  /* Streams hier anpassbar */
-    { id:'ard',          name:'Das Erste',    url:'https://mcdn.daserste.de/daserste/de/master.m3u8' },
-    { id:'tagesschau24', name:'tagesschau24', url:'https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8' },
-    { id:'one',          name:'ONE',          url:'https://mcdn.one.ard.de/ardone/hls/master.m3u8' },
-    { id:'ard-alpha',    name:'ARD alpha',    url:'https://mcdn.br.de/br/fs/ard_alpha/hls/de/master.m3u8' },
-    { id:'wdr',          name:'WDR',          url:'https://wdrfs247.akamaized.net/hls/live/681509/wdrfs247/index.m3u8' },
-    { id:'ndr',          name:'NDR',          url:'https://mcdn.ndr.de/ndr/hls/ndr_fs/ndr_hh/master.m3u8' },
+  const LIVE = [  /* Streams hier anpassbar; u = Liste von Fallback-URLs, g = Gruppe */
+    { id:'ard',          name:'Das Erste',    g:'Vollprogramm', c:'#0a5bd6', u:['https://mcdn.daserste.de/daserste/de/master.m3u8','https://mcdn.daserste.de/daserste/de/index.m3u8'] },
+    { id:'zdf',          name:'ZDF',          g:'Vollprogramm', c:'#e8590c', u:['https://zdf-hls-15.akamaized.net/hls/live/2016498/de/high/master.m3u8'] },
+    { id:'tagesschau24', name:'tagesschau24', g:'Info',         c:'#0b3d91', u:['https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8'] },
+    { id:'phoenix',      name:'phoenix',      g:'Info',         c:'#c2255c', u:['https://zdf-hls-19.akamaized.net/hls/live/2016502/de/high/master.m3u8'] },
+    { id:'zdfinfo',      name:'ZDFinfo',      g:'Info',         c:'#d9480f', u:['https://zdf-hls-17.akamaized.net/hls/live/2016500/de/high/master.m3u8'] },
+    { id:'dw',           name:'DW',           g:'Info',         c:'#1c7ed6', u:['https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/index.m3u8'] },
+    { id:'one',          name:'ONE',          g:'Vollprogramm', c:'#5f3dc4', u:['https://mcdn.one.ard.de/ardone/hls/master.m3u8'] },
+    { id:'zdfneo',       name:'ZDFneo',       g:'Vollprogramm', c:'#7048e8', u:['https://zdf-hls-16.akamaized.net/hls/live/2016499/de/high/master.m3u8'] },
+    { id:'ard-alpha',    name:'ARD alpha',    g:'Kultur',       c:'#2b8a3e', u:['https://mcdn.br.de/br/fs/ard_alpha/hls/de/master.m3u8'] },
+    { id:'3sat',         name:'3sat',         g:'Kultur',       c:'#e03131', u:['https://zdf-hls-18.akamaized.net/hls/live/2016501/dach/high/master.m3u8'] },
+    { id:'arte',         name:'ARTE',         g:'Kultur',       c:'#f08c00', u:['https://artesimulcast.akamaized.net/hls/live/2031003/artelive_de/master.m3u8'] },
+    { id:'kika',         name:'KiKA',         g:'Kinder',       c:'#37b24d', u:['https://kikageohls.akamaized.net/hls/live/2022693/livetvkika_de/master.m3u8'] },
+    { id:'wdr',          name:'WDR',          g:'Regional',     c:'#1971c2', u:['https://wdrfs247.akamaized.net/hls/live/681509/wdrfs247/index.m3u8'] },
+    { id:'ndr',          name:'NDR',          g:'Regional',     c:'#1864ab', u:['https://mcdn.ndr.de/ndr/hls/ndr_fs/ndr_hh/master.m3u8'] },
+    { id:'br',           name:'BR',           g:'Regional',     c:'#0c8599', u:['https://mcdn.br.de/br/fs/bfs_nord/hls/de/master.m3u8'] },
+    { id:'hr',           name:'hr',           g:'Regional',     c:'#e64980', u:['https://hrhls.akamaized.net/hls/live/2024525/hrhls/index.m3u8'] },
+    { id:'mdr',          name:'MDR',          g:'Regional',     c:'#099268', u:['https://mdrtvsnhls.akamaized.net/hls/live/2016928/mdrtvsn/master.m3u8'] },
+    { id:'rbb',          name:'rbb',          g:'Regional',     c:'#c92a2a', u:['https://rbb-hls-berlin.akamaized.net/hls/live/2017826/rbb_berlin/master.m3u8'] },
   ];
+  /* Zusätzliche Sender zur Laufzeit aus der iptv-org-Liste (Deutschland); ergänzt Fallbacks bzw. neue Sender */
+  const M3U = 'https://iptv-org.github.io/iptv/countries/de.m3u';
+  const norm = n => n.toLowerCase().replace(/\(.*?\)|\[.*?\]|\bhd\b|\bde\b|[^a-z0-9]/g, '');
+  let m3uP = null;
+  function loadM3u() {
+    return m3uP || (m3uP = fetch(M3U).then(r => r.ok ? r.text() : Promise.reject()).then(t => {
+      const L = t.split(/\r?\n/); let added = 0;
+      for (let k = 0; k < L.length; k++) {
+        if (!L[k].startsWith('#EXTINF')) continue;
+        const name = (L[k].split(',').pop() || '').trim(), url = (L[k + 1] || '').trim();
+        if (!name || !/^https?:/.test(url)) continue;
+        const key = norm(name), ex = LIVE.find(c => norm(c.name) === key);
+        if (ex) { if (!ex.u.includes(url)) ex.u.push(url); }
+        else { LIVE.push({ id:'x' + (++added), name:name.replace(/\s*[\(\[].*?[\)\]]/g, ''), g:'Weitere', c:COLORS[added % COLORS.length], u:[url] }); }
+      }
+    }).catch(() => {}));
+  }
   const COLORS = ['#0070f3', '#e5484d', '#30a46c', '#f5a623', '#8e4ec6'];
   const now = () => Math.floor(Date.now() / 1000);
   const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -2030,30 +2078,80 @@ const PLUS = (() => {
   /* ---------- Live-TV ---------- */
   function live(arg) {
     document.title = 'Live-TV – Media +';
-    let i = Math.max(0, LIVE.findIndex(c => c.id === arg)), hls = null;
+    let i = Math.max(0, LIVE.findIndex(c => c.id === arg)), hls = null, ui = 0, tries = 0, gen = 0, grp = 'Alle', q = '', stallT = 0;
     const video = h('video', { playsinline:true, autoplay:true });
-    const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieser Livestream lässt sich hier nicht abspielen.'),
-      h('a', { class:'btn primary', href:'https://www.ardmediathek.de/live', target:'_blank', rel:'noopener noreferrer' }, icon('external'), 'Bei der ARD ansehen'));
-    const player = buildPlayer(video, perr), fail = () => perr.classList.add('show');
-    video.addEventListener('error', fail);
-    const btns = LIVE.map((c, k) => h('button', { class:'chip', type:'button', onclick:() => tune(k) }, (k + 1) + ' · ' + c.name));
-    function tune(k) {
-      i = (k + LIVE.length) % LIVE.length; const u = LIVE[i].url;
-      player.setTitle('LIVE · ' + LIVE[i].name); btns.forEach((b, j) => b.classList.toggle('active', j === i));
-      perr.classList.remove('show'); if (hls) { hls.destroy(); hls = null; }
-      if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = u; video.play().catch(() => {}); return; }
+    const perr = h('div', { class:'perr' }, icon('alert'), h('p', { class:'pmsg' }, ''),
+      h('div', { style:'display:flex;gap:10px;flex-wrap:wrap;justify-content:center' },
+        h('button', { class:'btn primary', type:'button', onclick:() => tune(i) }, 'Erneut versuchen'),
+        h('button', { class:'btn', type:'button', onclick:() => tune(i + 1) }, 'Nächster Sender'),
+        h('a', { class:'btn', href:'https://www.ardmediathek.de/live', target:'_blank', rel:'noopener noreferrer' }, icon('external'), 'Bei der ARD')));
+    const spin = h('div', { class:'lvspin' }, h('i'), h('span', {}, 'Verbinde …'));
+    const player = buildPlayer(video, perr);
+    const fail = msg => { clearTimeout(stallT); spin.classList.remove('show'); perr.querySelector('.pmsg').textContent = msg || 'Dieser Livestream lässt sich gerade nicht abspielen.'; perr.classList.add('show'); setBadge('err'); };
+    const nowT = h('div', { class:'lvnow-t' }), nowS = h('div', { class:'lvnow-s' }), nowL = h('div', { class:'lvlogo' });
+    const badge = h('span', { class:'lvbadge' }, 'LIVE');
+    function setBadge(st) { badge.className = 'lvbadge ' + st; badge.textContent = st === 'err' ? 'OFFLINE' : st === 'load' ? 'LÄDT' : 'LIVE'; }
+    const tabs = h('div', { class:'lvtabs' }), grid = h('div', { class:'lvgrid' });
+    const search = h('input', { class:'lvsearch', type:'search', placeholder:'Sender suchen …', oninput:e => { q = e.target.value.trim().toLowerCase(); paint(); } });
+    const ini = n => n.replace(/[^A-Za-z0-9+]/g, '').slice(0, 4).toUpperCase();
+    function paint() {
+      const gs = ['Alle', ...new Set(LIVE.map(c => c.g))];
+      tabs.replaceChildren(...gs.map(g => h('button', { type:'button', class:'lvtab' + (g === grp ? ' active' : ''), onclick:() => { grp = g; paint(); } }, g)));
+      grid.replaceChildren(...LIVE.map((c, k) => [c, k]).filter(([c]) => (grp === 'Alle' || c.g === grp) && (!q || c.name.toLowerCase().includes(q)))
+        .map(([c, k]) => h('button', { type:'button', class:'lvcard' + (k === i ? ' active' : ''), onclick:() => { tune(k); window.scrollTo({ top:0, behavior:'smooth' }); } },
+          h('span', { class:'lvlogo', style:'background:' + c.c }, ini(c.name)), h('span', { class:'lvcn' }, c.name), h('span', { class:'lvcg' }, c.g))));
+    }
+    function paintNow() {
+      const c = LIVE[i]; nowT.textContent = c.name; nowS.textContent = c.g + ' · Kanal ' + (i + 1);
+      nowL.style.background = c.c; nowL.textContent = ini(c.name);
+    }
+    function attempt() {
+      const my = ++gen, c = LIVE[i], u = c.u[ui];
+      clearTimeout(stallT); if (hls) { hls.destroy(); hls = null; }
+      perr.classList.remove('show'); spin.classList.add('show'); setBadge('load');
+      const next = why => {            /* nächste URL, danach Wiederholung mit Pause, danach Fehler */
+        if (my !== gen) return;
+        if (ui + 1 < c.u.length) { ui++; return attempt(); }
+        if (tries++ < 2) { ui = 0; return setTimeout(() => my === gen && attempt(), 1500 * tries); }
+        fail(why);
+      };
+      const ok = () => { if (my !== gen) return; clearTimeout(stallT); spin.classList.remove('show'); setBadge('ok'); tries = 0; };
+      video.onplaying = ok;
+      stallT = setTimeout(() => next('Zeitüberschreitung beim Laden des Streams.'), 15000);
+      if (video.canPlayType('application/vnd.apple.mpegurl') && !window.Hls) {
+        video.onerror = () => next(); video.src = u; video.play().catch(() => {}); return;
+      }
       loadHls().then(() => {
-        if (!window.Hls || !Hls.isSupported()) return fail();
-        hls = new Hls(); hls.loadSource(u); hls.attachMedia(video);
-        hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) fail(); });
-        video.play().catch(() => {});
-      }).catch(fail);
+        if (my !== gen) return;
+        if (!window.Hls || !Hls.isSupported()) { if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = u; video.play().catch(() => {}); return; } return fail('Dieser Browser unterstützt HLS nicht.'); }
+        const H = hls = new Hls({ lowLatencyMode:false, maxBufferLength:30, manifestLoadingMaxRetry:2, levelLoadingMaxRetry:3, fragLoadingMaxRetry:4, enableWorker:true });
+        let mr = 0, nr = 0;
+        H.on(Hls.Events.ERROR, (_, d) => {
+          if (my !== gen || !d.fatal) return;
+          if (d.type === Hls.ErrorTypes.MEDIA_ERROR && mr++ < 3) { if (mr === 2) H.swapAudioCodec(); return H.recoverMediaError(); }
+          if (d.type === Hls.ErrorTypes.NETWORK_ERROR && d.details !== 'manifestLoadError' && nr++ < 3) return H.startLoad();
+          next('Der Sender antwortet nicht (' + (d.details || 'Fehler') + ').');
+        });
+        H.loadSource(u); H.attachMedia(video); video.play().catch(() => {});
+      }).catch(() => next('Player konnte nicht geladen werden.'));
+    }
+    function tune(k) {
+      i = (k + LIVE.length) % LIVE.length; ui = 0; tries = 0;
+      player.setTitle('LIVE · ' + LIVE[i].name); paintNow(); paint(); attempt();
+      try { history.replaceState(null, '', '#/live/' + LIVE[i].id); } catch (e) {}
     }
     cur = { player, tune, get i() { return i; } };
-    cleanups.push(() => { cur = null; if (hls) hls.destroy(); video.pause(); video.removeAttribute('src'); video.load(); });
-    main.append(h('div', { style:'max-width:1200px;margin:0 auto' }, player, h('div', { class:'lvchips' }, ...btns),
-      h('p', { style:'color:var(--fg-3);font-size:.9em' }, 'Zahlentasten 1–' + LIVE.length + ' oder ↑/↓ und CH+/CH− wechseln den Sender.')));
-    tune(i);
+    const onVis = () => { if (!document.hidden && !perr.classList.contains('show') && video.paused && hls) { hls.startLoad(); video.play().catch(() => {}); } };
+    const onNet = () => { if (perr.classList.contains('show')) tune(i); };
+    document.addEventListener('visibilitychange', onVis); window.addEventListener('online', onNet);
+    cleanups.push(() => { gen++; clearTimeout(stallT); cur = null; document.removeEventListener('visibilitychange', onVis); window.removeEventListener('online', onNet); if (hls) hls.destroy(); video.pause(); video.removeAttribute('src'); video.load(); });
+    player.append(spin);
+    main.append(h('div', { style:'max-width:1200px;margin:0 auto' }, player,
+      h('div', { class:'lvnow' }, nowL, h('div', { style:'min-width:0;flex:1' }, nowT, nowS), badge),
+      search, tabs, grid,
+      h('p', { style:'color:var(--fg-3);font-size:.85em;margin-top:1.2em' }, 'Zahlentasten 1–9 oder ↑/↓ und CH+/CH− wechseln den Sender.')));
+    paint(); tune(i);
+    loadM3u().then(() => { if (cur && cur.tune === tune) paint(); });
     if (IS_TV) { TV.pending = false; setTimeout(() => player.focus(), 50); }
   }
 
