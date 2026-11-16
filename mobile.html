@@ -394,12 +394,12 @@ video::cue{font-size:calc(var(--cs,1)*100%);color:var(--cf,#fff);background:var(
 
 /* ===== Shorts ===== */
 :root{--bn:calc(80px + env(safe-area-inset-bottom,0px))}
-#bnav{display:none;position:fixed;left:14px;right:14px;max-width:480px;margin:0 auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:70;height:56px;padding:6px;gap:4px;background:rgba(250,250,252,.72);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1px solid rgba(127,127,127,.28);border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.28);grid-template-columns:1fr 1fr 1fr}
+#bnav{display:none;position:fixed;left:14px;right:14px;max-width:480px;margin:0 auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:70;height:56px;padding:6px;gap:4px;background:rgba(250,250,252,.72);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1px solid rgba(127,127,127,.28);border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.28);grid-template-columns:repeat(4,1fr)}
 :root[data-theme="dark"] #bnav{background:rgba(16,16,20,.68);border-color:rgba(255,255,255,.16)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){#bnav{background:rgba(250,250,252,.97)}:root[data-theme="dark"] #bnav{background:rgba(16,16,20,.97)}}
 body[data-route="home"] #bnav,body[data-route="shorts"] #bnav{display:grid}
-#bnav a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:500;letter-spacing:.01em;color:var(--fg-3);border-radius:22px;transition:color .12s,background .12s}
-#bnav a.on{color:var(--fg);background:rgba(127,127,127,.22);font-weight:600}
+#bnav a,#bnav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:500;letter-spacing:.01em;color:var(--fg-3);border-radius:22px;transition:color .12s,background .12s}
+#bnav a.on,#bnav button.on{color:var(--fg);background:rgba(127,127,127,.22);font-weight:600}
 @media(min-width:1000px){#bnav{display:none!important}}
 body[data-route="home"] main{padding-bottom:calc(var(--bn) + 24px)}
 body[data-route="home"] #toast,body[data-route="shorts"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
@@ -593,6 +593,24 @@ body.home.hdr-clear .search{background:rgba(255,255,255,.14);border-color:rgba(2
 body.home.hdr-clear .search input{color:#fff}
 body.home.hdr-clear .search input::placeholder{color:rgba(255,255,255,.72)}
 body.home.hdr-clear .search button{color:#fff;border-left-color:rgba(255,255,255,.3);background:transparent}
+
+/* ===== Menü in der unteren Navbar: Panel wächst nach oben, Navbar bleibt ===== */
+body.overlay #bnav{z-index:80}
+@media(max-width:999px){
+  body[data-route="home"] #menu,body[data-route="shorts"] #menu,body[data-route="songs"] #menu{display:none}
+  body[data-route="home"] #side,body[data-route="shorts"] #side,body[data-route="songs"] #side{
+    left:14px;right:14px;width:auto;max-width:480px;margin:0 auto;height:auto;
+    top:calc(env(safe-area-inset-top,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 76px);
+    padding:12px 10px;border:1px solid rgba(127,127,127,.28);border-radius:28px;z-index:75;transform-origin:50% 100%;
+    background:rgba(250,250,252,.72);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);
+    box-shadow:0 18px 50px rgba(0,0,0,.35);
+    transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .22s}
+  :root[data-theme="dark"] body[data-route="home"] #side,:root[data-theme="dark"] body[data-route="shorts"] #side,:root[data-theme="dark"] body[data-route="songs"] #side{background:rgba(16,16,20,.68);border-color:rgba(255,255,255,.16)}
+  body.overlay[data-route="home"] #side,body.overlay[data-route="shorts"] #side,body.overlay[data-route="songs"] #side{transform:none;opacity:1;visibility:visible;pointer-events:auto}
+  body:not(.overlay)[data-route="home"] #side,body:not(.overlay)[data-route="shorts"] #side,body:not(.overlay)[data-route="songs"] #side{
+    transform:translateY(28px) scale(.9);opacity:0;visibility:hidden;pointer-events:none;box-shadow:none;
+    transition:transform .28s cubic-bezier(.4,0,1,1),opacity .2s,visibility 0s .28s}
+}
 </style>
 </head>
 <body>
@@ -2459,7 +2477,11 @@ const PLUS = (() => {
     document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend', '<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></symbol><symbol id="i-shorts" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>');
     if (!IS_TV) {
       const bn = h('nav', { id:'bnav', 'aria-label':'Hauptnavigation' }, h('a', { href:'#/', 'data-r':'home' }, icon('home'), 'Start'), h('a', { href:'#/shorts', 'data-r':'shorts' }, icon('shorts'), 'Shorts'), h('a', { href:'#/songs', 'data-r':'songs' }, icon('music'), 'Songs'));
+      const mb = h('button', { type:'button', 'aria-label':'Menü', 'aria-expanded':'false', onclick:() => document.body.classList.toggle('overlay') }, icon('menu'), h('span', {}, 'Menü'));
+      bn.append(mb);
       document.body.append(bn);
+      const paintM = () => { const o = document.body.classList.contains('overlay'); mb.classList.toggle('on', o); mb.setAttribute('aria-expanded', String(o)); mb.replaceChildren(icon(o ? 'x' : 'menu'), h('span', {}, o ? 'Schließen' : 'Menü')); };
+      new MutationObserver(paintM).observe(document.body, { attributes:true, attributeFilter:['class'] }); paintM();
       const paintB = () => bn.querySelectorAll('a').forEach(a => a.classList.toggle('on', a.dataset.r === document.body.dataset.route));
       window.addEventListener('hashchange', paintB); paintB();
     }
