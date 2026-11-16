@@ -3,88 +3,117 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<meta name="theme-color" content="#003c8f">
+<meta name="theme-color" content="#000000">
 <title>News</title>
 <style>
 :root{
-  --blue:#003c8f;
-  --blue-l:#0b6fd0;
-  --glass:rgba(255,255,255,.07);
-  --glass-2:rgba(255,255,255,.13);
-  --fg-2:#dfe8f5;
-  --fg-3:#a7bcdb;
-  --fg-4:#7f95b4;
-  --border-2:rgba(255,255,255,.22);
-  --fr:0 0 0 .22rem #000,0 0 0 .5rem #fff;
-  color-scheme:dark
+  --bg:#000;
+  --bg-subtle:#0a0a0a;
+  --bg-hover:#111;
+  --border:#333;
+  --border-hover:#555;
+  --fg:#ededed;
+  --fg-muted:#888;
+  color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html{font-size:clamp(10px,min(1.15vw,2.04vh),48px);background:#000b17;scrollbar-width:none}
+html{font-size:clamp(10px,min(1.15vw,2.04vh),48px);background:var(--bg);scrollbar-width:none}
 html,html *{cursor:none!important}
 ::-webkit-scrollbar{display:none}
-body{height:100vh;overflow:hidden;background:radial-gradient(ellipse at 50% -10%,#0a4a8f 0%,#00294f 38%,#000b17 100%);color:#fff;font:500 1rem/1.45 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;user-select:none;touch-action:none;overscroll-behavior:none}
+body{
+  height:100vh;overflow:hidden;background:var(--bg);color:var(--fg);
+  font:400 1rem/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;user-select:none;touch-action:none;overscroll-behavior:none
+}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:inherit}
 :focus{outline:none}
-#app{display:flex;flex-direction:column;height:100vh;padding:2.2rem 3rem 0}
 
-/* ---------- Kopf ---------- */
-header{display:flex;align-items:center;gap:2rem;flex:none;padding-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:2rem}
-.brand{display:flex;align-items:center;gap:1.4rem}
-.logo{background:linear-gradient(180deg,#0050b8,#003c8f);border-radius:.7rem;padding:.5rem 1.4rem .62rem;font-size:1.9rem;font-weight:800;letter-spacing:-.03em;line-height:1;box-shadow:0 .3rem 1.6rem rgba(0,90,200,.5),inset 0 0 0 1px rgba(255,255,255,.18)}
-.appname{font-size:1.05rem;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:var(--fg-3)}
-.hclock{margin-left:auto;font-size:1.25rem;font-weight:600;color:var(--fg-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+#app{display:flex;flex-direction:column;height:100vh;padding:2rem 3rem 0}
+
+/* ---------- Kopf (Vercel Style) ---------- */
+header{
+  display:flex;align-items:center;gap:2rem;flex:none;
+  padding-bottom:1.5rem;border-bottom:1px solid var(--border);margin-bottom:2rem
+}
+.brand{display:flex;align-items:center;gap:1.2rem}
+.logo{
+  background:#fff;color:#000;border-radius:6px;
+  padding:.4rem 1rem .5rem;font-size:1.6rem;font-weight:700;letter-spacing:-.04em;line-height:1;
+}
+.appname{font-size:1rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted)}
+.hclock{margin-left:auto;font-size:1.1rem;font-weight:400;color:var(--fg-muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* ---------- Layout ---------- */
-main{flex:1;min-height:0;display:flex;gap:2.2rem}
-#side{width:21rem;flex:none;display:flex;flex-direction:column;gap:.7rem;overflow-y:auto;padding:0 .3rem 3rem 0}
-#content{flex:1;min-width:0;overflow-y:auto;padding:0 .5rem 4rem .2rem;scroll-behavior:smooth}
+main{flex:1;min-height:0;display:flex;gap:2rem}
+#side{width:20rem;flex:none;display:flex;flex-direction:column;gap:.4rem;overflow-y:auto;padding:0 .5rem 3rem 0}
+#content{flex:1;min-width:0;overflow-y:auto;padding:0 1rem 4rem 1rem;scroll-behavior:smooth}
+
+/* ---------- Fokus (Vercel Outline) ---------- */
+.res:focus, .card:focus, .btn:focus, [data-f]:focus {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+  border-radius: 8px;
+  z-index: 10;
+  position: relative;
+}
 
 /* ---------- Seitenleiste ---------- */
-.side-head{font-size:.95rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--fg-4);padding:.2rem 1.6rem .6rem}
-.res{display:flex;align-items:center;gap:1rem;height:4.1rem;padding:0 1.6rem;border-radius:1rem;background:var(--glass);border:2px solid transparent;font-size:1.25rem;font-weight:600;color:var(--fg-2);flex:none;transition:transform .14s,background .14s,color .14s,box-shadow .14s}
-.res .dot{width:.75rem;height:.75rem;border-radius:50%;background:var(--blue-l);opacity:.5;flex:none}
-.res.act{background:linear-gradient(90deg,#0050b8,#003c8f);border-color:rgba(255,255,255,.5);color:#fff}
-.res.act .dot{opacity:1;background:#7fc4ff}
+.side-head{font-size:.85rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--fg-muted);padding:.5rem 1.2rem}
+.res{
+  display:flex;align-items:center;gap:1rem;height:3.5rem;padding:0 1.2rem;
+  border-radius:8px;background:transparent;border:1px solid transparent;
+  font-size:1.1rem;font-weight:500;color:var(--fg-muted);flex:none;
+  transition:background .15s, color .15s, border-color .15s;
+}
+.res:hover{background:var(--bg-subtle)}
+.res.act{background:var(--bg-hover);color:var(--fg);border-color:var(--border)}
 .side-gap{flex:1;min-height:1rem}
 
-/* ---------- Fokus (aus der Vorlage) ---------- */
-.res:focus,.card:focus,.btn:focus{background:#fff;color:#000;border-color:#fff;transform:scale(1.05);box-shadow:var(--fr);position:relative;z-index:4}
-.card:focus .kicker{color:#003c8f}
-.card:focus h3{color:#000}
-.card:focus p{color:#3a3a3a}
-.res:focus .dot{background:#003c8f;opacity:1}
-
 /* ---------- Liste ---------- */
-.list-head{display:flex;align-items:baseline;gap:1.4rem;margin:.2rem 0 1.5rem;flex-wrap:wrap}
-.list-head h2{font-size:1.9rem;font-weight:800;letter-spacing:-.01em}
-.list-head .hint{font-size:1.05rem;color:var(--fg-4)}
-.list{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;align-items:stretch}
-.card{display:flex;flex-direction:column;background:var(--glass);border:2px solid rgba(255,255,255,.1);border-radius:1.2rem;overflow:hidden;transition:transform .14s,background .14s,color .14s,box-shadow .14s;color:inherit}
-.card .thumb{height:10.5rem;flex:none;overflow:hidden;background:#00182e}
-.card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.card-body{padding:1.2rem 1.4rem 1.5rem;display:flex;flex-direction:column;gap:.55rem;flex:1}
-.kicker{font-size:.92rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7fc4ff}
-.card h3{font-size:1.28rem;line-height:1.32;font-weight:700}
-.card p{font-size:1.02rem;line-height:1.45;color:var(--fg-3)}
+.list-head{display:flex;align-items:baseline;gap:1.2rem;margin:.2rem 0 1.5rem;flex-wrap:wrap}
+.list-head h2{font-size:1.6rem;font-weight:600;letter-spacing:-.02em}
+.list-head .hint{font-size:.95rem;color:var(--fg-muted)}
+.list{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:stretch}
+.card{
+  display:flex;flex-direction:column;background:var(--bg-subtle);
+  border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  transition:background .15s, border-color .15s;
+}
+.card:hover{background:var(--bg-hover);border-color:var(--border-hover)}
+.card:focus{background:var(--bg-hover);border-color:var(--border-hover)}
+.card .thumb{height:9rem;flex:none;overflow:hidden;background:#000;border-bottom:1px solid var(--border)}
+.card .thumb img{width:100%;height:100%;object-fit:cover;display:block;opacity:.9}
+.card-body{padding:1.2rem;display:flex;flex-direction:column;gap:.6rem;flex:1}
+.kicker{font-size:.8rem;font-weight:400;color:var(--fg-muted);text-transform:lowercase;letter-spacing:0}
+.card h3{font-size:1.15rem;line-height:1.35;font-weight:500;color:var(--fg);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card p{font-size:.95rem;line-height:1.5;color:var(--fg-muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
 /* ---------- Artikel ---------- */
-.abar{display:flex;gap:1.2rem;align-items:center;margin-bottom:1.6rem;flex-wrap:wrap}
-.btn{height:4rem;padding:0 1.8rem;border-radius:1rem;border:2px solid var(--border-2);background:var(--glass-2);font-size:1.15rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:.7rem;transition:transform .14s,background .14s,color .14s,box-shadow .14s}
-.btn.pri{background:linear-gradient(90deg,#0b6fd0,#0047a3);border-color:transparent}
-.article{max-width:56rem;margin:0 auto;padding-bottom:3rem}
-.article h1{font-size:2.35rem;line-height:1.2;font-weight:800;letter-spacing:-.015em;margin:1rem 0 1rem}
-.article .meta{display:flex;gap:1.4rem;flex-wrap:wrap;font-size:1.02rem;color:var(--fg-4);margin-bottom:1.6rem}
-.article .hero{width:100%;max-height:26rem;object-fit:cover;border-radius:1.2rem;margin-bottom:1.8rem;display:block;background:#00182e}
-.article p{font-size:1.16rem;line-height:1.62;color:#e9f0fa;margin-bottom:1.15rem}
-.article p.lead{font-size:1.34rem;line-height:1.5;color:#fff;font-weight:600}
+.abar{display:flex;gap:1rem;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap}
+.btn{
+  height:3.2rem;padding:0 1.4rem;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg-subtle);font-size:1rem;font-weight:500;
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  transition:background .15s, border-color .15s;
+}
+.btn:hover{background:var(--bg-hover);border-color:var(--border-hover)}
+.btn.pri{background:#fff;color:#000;border-color:#fff}
+.btn.pri:hover{background:#e0e0e0;border-color:#e0e0e0}
+
+.article{max-width:52rem;margin:0 auto;padding-bottom:3rem}
+.article h1{font-size:2rem;line-height:1.2;font-weight:600;letter-spacing:-.02em;margin:1rem 0 1rem}
+.article .meta{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:.9rem;color:var(--fg-muted);margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:1rem}
+.article .hero{width:100%;max-height:24rem;object-fit:cover;border-radius:8px;margin-bottom:1.5rem;display:block;background:#000;border:1px solid var(--border)}
+.article p{font-size:1.1rem;line-height:1.6;color:#ccc;margin-bottom:1rem}
+.article p.lead{font-size:1.25rem;line-height:1.5;color:var(--fg);font-weight:500}
 
 /* ---------- Status ---------- */
-.msg{text-align:center;color:var(--fg-3);font-size:1.2rem;padding:4rem 2rem}
-.msg-sub{font-size:1.02rem;color:var(--fg-4);margin-top:.6rem}
-.spinner{width:3.2rem;height:3.2rem;margin:0 auto 1.6rem;border-radius:50%;border:.35rem solid rgba(255,255,255,.16);border-top-color:#5aa9ff;animation:spin 1s linear infinite}
+.msg{text-align:center;color:var(--fg-muted);font-size:1.1rem;padding:4rem 2rem}
+.msg-sub{font-size:.95rem;color:var(--fg-muted);margin-top:.5rem}
+.spinner{width:2.5rem;height:2.5rem;margin:0 auto 1.5rem;border-radius:50%;border:2px solid var(--border);border-top-color:#fff;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-#toast{position:fixed;left:50%;bottom:3.4rem;transform:translate(-50%,2rem);z-index:60;padding:1.2rem 2.4rem;border-radius:999px;background:#fff;color:#000;font-size:1.2rem;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+#toast{position:fixed;left:50%;bottom:3rem;transform:translate(-50%,2rem);z-index:60;padding:1rem 2rem;border-radius:8px;background:#fff;color:#000;font-size:1rem;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
@@ -92,8 +121,8 @@ main{flex:1;min-height:0;display:flex;gap:2.2rem}
 <div id="app">
   <header>
     <div class="brand">
-      <div class="logo">tagesschau</div>
-      <div class="appname">News</div>
+      <div class="logo">News</div>
+      <div class="appname">tagesschau</div>
     </div>
     <div class="hclock" id="hclock"></div>
   </header>
@@ -139,7 +168,6 @@ const FEEDS = [
   { id:'kultur',       name:'Kultur',      url:'https://www.tagesschau.de/kultur/index~rss2.xml' },
   { id:'sport',        name:'Sport',       url:'https://www.sportschau.de/index~rss2.xml' }
 ];
-const feedName = () => { const f = FEEDS.filter(x => x.id === S.feed)[0]; return f ? f.name : 'tagesschau'; };
 
 const S = { feed:'start', items:{}, status:{}, article:null, lastCard:0, last:null, col:null, colFor:null };
 
@@ -254,7 +282,7 @@ async function loadArticleBody(it) {
   let paras = [];
   try { paras = extractParagraphs(await fetchText(it.link)); } catch (e) {}
   if (!paras.length) { try { paras = mdToParas(await fetchJina(it.link)); } catch (e) {} }
-  if (!S.article || S.article.item !== it) return;   /* inzwischen geschlossen */
+  if (!S.article || S.article.item !== it) return;
   S.article.paras = paras;
   S.article.status = paras.length ? 'ready' : 'empty';
   render();
@@ -272,7 +300,7 @@ function card(it, i) {
     it.img ? h('div', { class:'thumb' },
       h('img', { src:it.img, alt:'', loading:'lazy', onerror:e => { const p = e.target.parentNode; if (p) p.remove(); } })) : null,
     h('div', { class:'card-body' },
-      h('span', { class:'kicker' }, feedName()),
+      h('span', { class:'kicker' }, 'tagesschau'),
       h('h3', {}, it.title),
       it.desc ? h('p', {}, cut(it.desc, 165)) : null));
 }
@@ -280,8 +308,10 @@ function card(it, i) {
 function buildList() {
   const st = S.status[S.feed] || 'idle';
   const items = S.items[S.feed] || [];
+  const fName = FEEDS.filter(x => x.id === S.feed)[0]?.name || 'Startseite';
+  
   const head = h('div', { class:'list-head' },
-    h('h2', {}, feedName()),
+    h('h2', {}, fName),
     h('span', { class:'hint' }, st === 'loading' ? 'Lädt …' : (st === 'error' ? 'Nicht erreichbar' : items.length + ' Meldungen')));
 
   if (!items.length) {
@@ -289,8 +319,8 @@ function buildList() {
     return h('div', {}, head,
       h('div', { class:'msg' },
         h('div', {}, 'Feed konnte nicht geladen werden.'),
-        h('div', { class:'msg-sub' }, 'Bitte Internetverbindung des Fernsehers prüfen.'),
-        h('div', { style:'margin-top:1.8rem' },
+        h('div', { class:'msg-sub' }, 'Bitte Internetverbindung prüfen.'),
+        h('div', { style:'margin-top:1.5rem' },
           h('button', { class:'btn pri', 'data-f':true, type:'button', 'data-key':'retry', onclick:() => loadFeed(S.feed, true) }, 'Erneut versuchen'))));
   }
   return h('div', {}, head, h('div', { class:'list' }, items.map((it, i) => card(it, i))));
@@ -303,9 +333,9 @@ function buildArticle() {
     h('button', { class:'btn', 'data-f':true, type:'button', 'data-key':'reload-art', onclick:() => openArticle(it, S.lastCard) }, '↻ Neu laden'));
 
   const kids = [
-    h('span', { class:'kicker' }, feedName()),
+    h('span', { class:'kicker' }, 'tagesschau'),
     h('h1', {}, it.title),
-    h('div', { class:'meta' }, fmtDate(it.date) || '', h('span', {}, 'tagesschau.de'))
+    h('div', { class:'meta' }, fmtDate(it.date) || '')
   ];
   if (it.img) kids.push(h('img', { class:'hero', src:it.img, alt:'', onerror:e => e.target.remove() }));
 
@@ -333,9 +363,9 @@ function renderSide() {
     ...FEEDS.map(f => h('button', {
       class: 'res' + (f.id === S.feed ? ' act' : ''), 'data-f':true, 'data-key':'res-' + f.id, type:'button',
       onclick: () => setFeed(f.id)
-    }, h('span', { class:'dot' }), f.name)),
+    }, f.name)),
     h('div', { class:'side-gap' }),
-    h('button', { class:'res', 'data-f':true, 'data-key':'reload', type:'button', onclick:() => { toast('Wird aktualisiert …'); loadFeed(S.feed, true); } }, '↻  Aktualisieren')
+    h('button', { class:'res', 'data-f':true, 'data-key':'reload', type:'button', onclick:() => { toast('Wird aktualisiert …'); loadFeed(S.feed, true); } }, '↻ Aktualisieren')
   );
 }
 
@@ -392,7 +422,7 @@ setInterval(tickClock, 1000);
 tickClock();
 
 /* ============================================================
-   TV-Fernbedienung / Navigation  (Logik aus der Vorlage)
+   TV-Fernbedienung / Navigation
    ============================================================ */
 const initial = () => $('#side .res.act') || $('#side .res');
 
@@ -404,6 +434,7 @@ function vis(el) {
   if (sc) { const b = sc.getBoundingClientRect(); if (r.bottom <= b.top || r.top >= b.bottom) return false; }
   return true;
 }
+
 function focusEl(el, scroll) {
   if (!el) return;
   el.focus({ preventScroll:true });
