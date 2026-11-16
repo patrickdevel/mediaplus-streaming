@@ -1092,10 +1092,8 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
 .alg .lgf{object-fit:contain;padding:9%}.alg.wide .lgf{object-fit:cover;padding:0}.alg.wide .lgb{display:none}
 .alg.ph{display:grid;place-items:center;background:linear-gradient(135deg,#3b82f6,#8b5cf6)}.alg.ph b{font-size:4rem;color:#fff}.alg.ph svg{width:36%;height:60%}
 /* ===== Appstore – Glas-Design wie Weiterschauen / Apps-Leiste ===== */
-.astore{position:fixed;inset:0;z-index:150;display:flex;gap:2.4rem;padding:3rem var(--pad) 3rem 3rem;color:#fff;
-  --fg:#fff;--fg-2:rgba(255,255,255,.85);--fg-3:rgba(255,255,255,.68);--fg-4:rgba(255,255,255,.5);--border:rgba(255,255,255,.18);--border-2:rgba(255,255,255,.3);--bg:#0b0708;--bg-3:rgba(255,255,255,.08);--glow:rgba(255,255,255,.35);
-  --gl-bg:rgba(10,10,14,.32);--gl-bd:rgba(255,255,255,.3);
-  background:radial-gradient(60rem 40rem at 8% 0%,rgba(190,24,72,.5),transparent 70%),radial-gradient(70rem 46rem at 100% 100%,rgba(176,124,20,.42),transparent 70%),#0b0708;
+.astore{position:fixed;inset:0;z-index:150;display:flex;gap:2.4rem;padding:3rem var(--pad) 3rem 3rem;color:var(--fg);background:var(--bg);
+  --gl-bg:var(--bg-2);--gl-bd:var(--border-2);
   opacity:0;transform:scale(1.015);transition:opacity .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
 .astore.show{opacity:1;transform:none}
 .astore button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
@@ -1165,6 +1163,43 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
 .akeys{display:grid;grid-template-columns:repeat(13,1fr);gap:.7rem}
 .akeys button{font-size:1.7rem;font-weight:700;padding:1rem 0;border-radius:1.2rem;background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.16)!important;transition:transform .12s,background .12s}
 .akeys button:focus{outline:0;background:#fff!important;color:#111!important;transform:scale(1.14);box-shadow:0 0 2rem rgba(255,255,255,.4)}
+/* ===== Appstore im System-Design (Theme-Variablen, wie Sidebar/Cards) ===== */
+.aglass,.aside{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r-lg);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+.aside{border-radius:0;border-width:0 1px 0 0;margin:-3rem 0 -3rem -3rem;padding:3rem 1.2rem;background:var(--bg);border-right:1px solid var(--border)}
+.aside .xt{border-radius:var(--r-sm);font-size:1.5rem;font-weight:500;padding:0 1rem;height:4.6rem;color:var(--fg-2)}
+.aside .xt.on{background:var(--bg-3);color:var(--fg)}
+.aside .xt:focus{background:var(--fg);color:var(--bg);box-shadow:0 0 2rem .2rem var(--glow)}
+.ahead .alg{border-radius:var(--r)}
+.ahead h2{font-size:2.2rem}
+.ahero{border-radius:var(--r-lg);background:var(--bg-2);border:1px solid var(--border)!important;box-shadow:none}
+.ahero:focus{box-shadow:var(--fr)}
+.ahero::before{background:linear-gradient(90deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.5) 45%,transparent 80%)}
+.ahero .chip,.ahero .ht,.ahero b,.ahero .hd{color:#fff}
+.ahero .cta{background:#fff;color:#000;border-radius:var(--r-sm)}
+.xtile{background:var(--bg-2);border:1px solid var(--border)!important;border-radius:var(--r-lg);-webkit-backdrop-filter:none;backdrop-filter:none}
+.xtile .alg{border-radius:var(--r)}
+.xtile:focus{background:var(--bg-3);box-shadow:var(--fr);border-color:transparent!important}
+.xtile i{background:var(--bg);color:var(--fg);border-color:var(--border-2)}
+.adet{flex-direction:row}
+.adet .alg{border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.adet .meta span{background:var(--bg-3);border:1px solid var(--border);color:var(--fg-2);border-radius:var(--r-sm)}
+.abtn{border-radius:var(--r-sm);border:1px solid var(--border-2)!important;background:var(--bg)!important;color:var(--fg-2)}
+.abtn.pri,.abtn.pri:focus{background:var(--fg)!important;color:var(--bg)!important;border-color:var(--fg)!important}
+.abtn:focus{box-shadow:var(--fr)}
+.abtn:not(.pri):focus{background:var(--fg)!important;color:var(--bg)!important}
+.asq{border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--border-2);-webkit-backdrop-filter:none;backdrop-filter:none}
+.asq:focus{box-shadow:var(--fr)}
+.akeys button{border-radius:var(--r-sm);background:var(--bg-2)!important;border:1px solid var(--border)!important;color:var(--fg)}
+.akeys button:focus{background:var(--fg)!important;color:var(--bg)!important;box-shadow:var(--fr)}
+.aempty{color:var(--fg-3)}
+/* Detailansicht: keine Sidebar, Zurück-Button oben links */
+.aback{display:none;position:absolute;top:2.4rem;left:3rem;z-index:5;align-items:center;gap:.8rem;height:4.6rem;padding:0 2rem 0 1.4rem;border-radius:999px!important;font-size:1.5rem;font-weight:600;background:var(--bg-2)!important;border:1px solid var(--border-2)!important;color:var(--fg);transition:transform .15s,box-shadow .15s}
+.aback .ic{width:2.2rem;height:2.2rem}
+.aback:focus{outline:0;background:var(--fg)!important;color:var(--bg);transform:scale(1.07);box-shadow:var(--fr)}
+.astore.detail .aside{display:none}
+.astore.detail .aback{display:flex}
+.astore.detail{padding-top:9rem;padding-left:var(--pad)}
+.astore.detail .amain{justify-content:center}
 .awin{position:fixed;inset:0;z-index:160;background:#000;clip-path:inset(var(--t) var(--r) var(--b) var(--l) round 2.2rem);transition:clip-path .45s cubic-bezier(.2,.8,.2,1)}
 .awin.full{clip-path:inset(0 0 0 0 round 0)}
 .awin iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
@@ -1657,7 +1692,10 @@ function openStore(opener) {
     h('div', { class:'ahead' }, Logo({ name:'Apps', logo:APPS_LOGO }), h('h2', {}, 'Apps')),
     tabs.map(([k, l, ic]) => { const b = h('button', { class:'xt', type:'button', 'data-t':k }, icon(ic), h('span', {}, l)); b.onclick = () => { det = null; tab = k; render(); }; return b; }),
     h('div', { class:'afoot' }, 'Zurück schließt den Store'));
-  const el = h('div', { class:'astore', role:'dialog', 'aria-label':'Apps' }, side, main);
+  const back = h('button', { class:'aback', type:'button', 'aria-label':'Zurück' });
+  back.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zurück</span>';
+  const el = h('div', { class:'astore', role:'dialog', 'aria-label':'Apps' }, back, side, main);
+  back.onclick = () => el._close();
   const tile = a => { const b = h('button', { class:'xtile', type:'button', 'aria-label':a.name }, Logo(a), h('b', {}, a.name), h('span', {}, a.description || ''), isIn(a) ? h('i', {}, icon('scheck'), 'Installiert') : null); b.onclick = () => { det = a; render(true); }; return b; };
   const grid = l => l.length ? h('div', { class:'agrid' }, l.map(tile)) : h('div', { class:'aempty' }, icon('sbox'), 'Nichts gefunden.');
   const sh = (t, n) => h('div', { class:'ash' }, h('h3', {}, t), n == null ? null : h('span', {}, String(n)));
@@ -1688,6 +1726,7 @@ function openStore(opener) {
     clearInterval(timer);
     side.querySelectorAll('.xt').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
     main.scrollTop = 0;
+    el.classList.toggle('detail', !!det);
     if (det) return main.replaceChildren(detail(det));
     if (tab === 'start') {
       const feat = cat.slice(0, 5); let i = 0;
