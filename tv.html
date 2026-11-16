@@ -1083,51 +1083,56 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
 .happs .rowh{margin:0 0 1rem .2rem;font-size:1.3rem;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.85)}
 .arow{display:flex;gap:1.2rem;overflow:hidden;margin:-1rem;padding:1rem}
 .atile{flex:0 0 18rem;display:flex;flex-direction:column;gap:.6rem;background:none;border:0;color:#fff;font:inherit;font-size:1.2rem;text-align:left;cursor:pointer;padding:0;border-radius:1.6rem}
-.atile .lg{width:18rem;transition:transform .15s}
-.atile:focus,.stile:focus{outline:0}.atile:focus .lg,.atile:hover .lg,.stile:focus .lg,.stile:hover .lg{transform:scale(1.06);box-shadow:0 0 0 .35rem #fff,0 1rem 3rem rgba(0,0,0,.5)}
+.atile .alg{width:18rem;transition:transform .15s}
+.atile:focus,.stile:focus{outline:0}.atile:focus .alg,.atile:hover .alg{transform:scale(1.06);box-shadow:0 0 0 .35rem #fff,0 1rem 3rem rgba(0,0,0,.5)}
 .atile span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:18rem}
-.lg{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:1.6rem;background:#222}
-.lg img{position:absolute;inset:0;width:100%;height:100%}
-.lg .lgb{object-fit:cover;filter:blur(16px) brightness(.55);transform:scale(1.3)}
-.lg .lgf{object-fit:contain;padding:9%}.lg.wide .lgf{object-fit:cover;padding:0}.lg.wide .lgb{display:none}
-.lg.ph{display:grid;place-items:center;background:linear-gradient(135deg,#3b82f6,#8b5cf6)}.lg.ph b{font-size:4rem;color:#fff}
-.astore{position:fixed;inset:0;z-index:150;background:#0c0c10;color:#fff;display:flex;opacity:0;transition:opacity .25s}
+.alg{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:var(--r-lg);background:var(--bg-3)}
+.alg img{position:absolute;inset:0;width:100%;height:100%}
+.alg .lgb{object-fit:cover;filter:blur(16px) brightness(.6);transform:scale(1.3)}
+.alg .lgf{object-fit:contain;padding:9%}.alg.wide .lgf{object-fit:cover;padding:0}.alg.wide .lgb{display:none}
+.alg.ph{display:grid;place-items:center;background:linear-gradient(135deg,#3b82f6,#8b5cf6)}.alg.ph b{font-size:4rem;color:#fff}.alg.ph svg{width:36%;height:60%}
+.astore{position:fixed;inset:0;z-index:150;background:var(--bg);color:var(--fg);display:flex;opacity:0;transition:opacity .25s}
 .astore.show{opacity:1}
-.astore button{font:inherit;color:#fff;border:0;cursor:pointer}
-.aside{flex:none;width:26rem;padding:4rem 2rem;background:#12121a;display:flex;flex-direction:column;gap:.8rem}
-.aside h2{margin:0 0 2rem 1rem;font-size:2.8rem}
-.aside button{text-align:left;font-size:2.1rem;padding:1.3rem 1.6rem;border-radius:1.2rem;background:none}
-.aside button.on{background:#262630}
-.astore button:focus{outline:0;background:#fff;color:#000;box-shadow:0 0 0 .3rem #fff}
-.amain{flex:1;overflow:auto;padding:3.5rem 4rem 5rem;display:flex;flex-direction:column;gap:2.4rem;scroll-behavior:smooth}
-.amain h3{margin:0;font-size:2.4rem}
-.ahero{position:relative;height:30rem;border-radius:2.4rem;overflow:hidden;flex:none;text-align:left;background:#222;padding:0}
-.ahero .lg{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;height:100%;transition:opacity .6s}
-.ahero .lg:not(.on){opacity:0}
-.ahero .ht{position:absolute;left:0;right:0;bottom:0;padding:5rem 3rem 2.4rem;background:linear-gradient(transparent,rgba(0,0,0,.85));z-index:2}
-.ahero b{font-size:3.4rem;display:block}.ahero span{font-size:1.9rem;color:#ddd}
-.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(26rem,1fr));gap:2.4rem 2rem}
-.stile{display:flex;flex-direction:column;gap:.7rem;background:none;text-align:left;padding:0;border-radius:1.6rem;position:relative}
-.stile:focus{background:none!important;box-shadow:none!important;color:#fff!important}
-.stile .lg{transition:transform .15s}.stile b{font-size:1.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stile span{font-size:1.4rem;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stile i{position:absolute;top:.8rem;right:.8rem;background:#22c55e;color:#fff;border-radius:99px;font-style:normal;font-size:1.3rem;padding:.2rem 1rem;z-index:3}
-.adet{display:flex;gap:4rem;align-items:flex-start}.adet .lg{width:56rem;flex:none}
-.adet h2{margin:0;font-size:3.6rem}.adet small{display:block;color:#aaa;font-size:1.7rem;margin:.6rem 0 1.6rem}.adet p{font-size:2rem;line-height:1.5;color:#ddd;margin:0 0 2.4rem}
+.astore button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+.aside{flex:none;width:var(--sw);padding:1.6rem;border-right:2px solid var(--border-2);display:flex;flex-direction:column;gap:.6rem;background:var(--bg)}
+.aside h2{margin:1rem 1rem 2rem;font-size:2.6rem;letter-spacing:-.02em}
+.aside .xt{display:block;text-align:left;font-size:1.7rem;font-weight:600;padding:1.3rem 1.6rem;border-radius:var(--r);color:var(--fg-2);transition:transform .12s,background .12s}
+.aside .xt.on{background:var(--bg-3);color:var(--fg)}
+.aside .xt:focus{background:var(--fg);color:var(--bg);transform:translateX(.5rem);box-shadow:0 0 2rem .2rem var(--glow)}
+.amain{flex:1;overflow:auto;padding:3rem var(--pad) 5rem;display:flex;flex-direction:column;gap:2.4rem;scroll-behavior:smooth}
+.amain h3{margin:0;font-size:2.2rem;letter-spacing:-.02em}
+.ahero{position:relative;height:30rem;border-radius:var(--r-lg);overflow:hidden;flex:none;text-align:left;padding:0;background:var(--bg-3);transition:transform .12s}
+.ahero .alg{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;height:100%;transition:opacity .6s}
+.ahero .alg:not(.on){opacity:0}
+.ahero .ht{position:absolute;left:0;right:0;bottom:0;padding:5rem 3rem 2.4rem;background:linear-gradient(transparent,rgba(0,0,0,.85));z-index:2;color:#fff}
+.ahero b{font-size:3.2rem;display:block}.ahero span{font-size:1.8rem;color:#ddd}
+.ahero:focus{transform:scale(1.015);box-shadow:var(--fr)}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(26rem,1fr));gap:2.4rem 2rem;padding:1rem;margin:-1rem}
+.xtile{display:flex;flex-direction:column;gap:.7rem;text-align:left;padding:0;border-radius:var(--r-lg);position:relative;transition:transform .12s}
+.xtile:focus{transform:scale(1.05);z-index:4}
+.xtile:focus .alg{box-shadow:var(--fr)}
+.xtile b{font-size:1.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xtile span{font-size:1.3rem;color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xtile i{position:absolute;top:.8rem;right:.8rem;background:var(--accent);color:var(--accent-fg);border-radius:99px;font-style:normal;font-size:1.2rem;font-weight:600;padding:.2rem 1rem;z-index:3}
+.adet{display:flex;gap:4rem;align-items:flex-start}.adet .alg{width:56rem;flex:none}
+.adet h2{margin:0;font-size:3.4rem;letter-spacing:-.02em}.adet small{display:block;color:var(--fg-3);font-size:1.5rem;margin:.6rem 0 1.6rem}.adet p{font-size:1.8rem;line-height:1.5;color:var(--fg-2);margin:0 0 2.4rem}
 .adet .acts{display:flex;gap:1.4rem}
-.abtn{font-size:2.1rem;padding:1.3rem 3rem;min-width:18rem;border-radius:1.2rem;background:#262630;position:relative;overflow:hidden}
-.abtn i{position:absolute;left:0;top:0;bottom:0;width:0;background:#3b82f6;z-index:0;transition:width .2s}
+.abtn{font-size:1.8rem;font-weight:600;padding:1.2rem 2.8rem;min-width:18rem;border-radius:999px;border:2px solid var(--border-2)!important;background:var(--bg-3)!important;position:relative;overflow:hidden;transition:transform .12s}
+.abtn i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);opacity:.6;z-index:0;transition:width .2s}
 .abtn em{position:relative;z-index:1;font-style:normal}
-.asq{font-size:2.4rem;padding:.8rem 1.6rem;border-radius:1.2rem;background:#1c1c24;border:2px solid #333}
+.abtn:focus{transform:scale(1.07);background:var(--fg)!important;color:var(--bg)!important;box-shadow:var(--fr);z-index:4}
+.asq{font-size:2.2rem;padding:.9rem 1.8rem;border-radius:var(--r);background:var(--bg-3);border:2px solid var(--border-2)}
+.asq:focus{box-shadow:var(--fr)}
 .akeys{display:grid;grid-template-columns:repeat(13,1fr);gap:.6rem}
-.akeys button{font-size:1.9rem;padding:.9rem 0;border-radius:.9rem;background:#262630}
+.akeys button{font-size:1.7rem;font-weight:600;padding:.9rem 0;border-radius:var(--r-sm);background:var(--bg-3)!important;transition:transform .12s}
+.akeys button:focus{background:var(--fg)!important;color:var(--bg)!important;transform:scale(1.12);box-shadow:var(--fr)}
 .awin{position:fixed;inset:0;z-index:160;background:#000;clip-path:inset(var(--t) var(--r) var(--b) var(--l) round 2.2rem);transition:clip-path .45s cubic-bezier(.2,.8,.2,1)}
 .awin.full{clip-path:inset(0 0 0 0 round 0)}
 .awin iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
 .asplash{position:absolute;inset:0;z-index:2;background:#111;display:grid;place-items:center;transition:opacity .4s}
 .asplash.out{opacity:0;pointer-events:none}
-.asplash .lg{transform:scale(.55);opacity:0;animation:alogo .5s .15s cubic-bezier(.2,.8,.2,1) forwards}
-.asplash .lg{width:34rem;border-radius:2.4rem;transform:scale(.55);opacity:0;animation:alogo .5s .15s cubic-bezier(.2,.8,.2,1) forwards}
+.asplash .alg{transform:scale(.55);opacity:0;animation:alogo .5s .15s cubic-bezier(.2,.8,.2,1) forwards}
+.asplash .alg{width:34rem;border-radius:2.4rem;transform:scale(.55);opacity:0;animation:alogo .5s .15s cubic-bezier(.2,.8,.2,1) forwards}
 .asplash .asp{position:absolute;bottom:22%;width:5rem;height:5rem;border:.5rem solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:aspin .8s linear infinite}
 @keyframes alogo{to{transform:scale(1);opacity:1}}@keyframes aspin{to{transform:rotate(360deg)}}
 </style>
@@ -1453,7 +1458,7 @@ function groupShows(items, q) {
   return l.sort((a, b) => rank(a) - rank(b) || b.n - a.n).slice(0, 14);
 }
 function ShowTile(x) {
-  return h('a', { class:'stile', href:'#/show/' + (x.ch.id || '_') + '/' + encodeURIComponent(x.topic) },
+  return h('a', { class:'xtile', href:'#/show/' + (x.ch.id || '_') + '/' + encodeURIComponent(x.topic) },
     Avatar(x.ch), h('b', {}, x.topic), h('span', { class:'sub' }, x.ch.name + ' · Sendung'));
 }
 function ShowsRow(slot, load, q) {
@@ -1574,14 +1579,14 @@ async function fetchApps() {
   } catch { return store.get('appcat', APPS_FALLBACK); }
 }
 function Logo(a) {
-  const u = a.logo || APPS_LOGO, w = h('div', { class:'lg' });
+  const u = a.logo || APPS_LOGO, w = h('div', { class:'alg' });
   const bg = h('img', { class:'lgb', src:u, alt:'' }), im = h('img', { class:'lgf', src:u, alt:'' });
   im.onload = () => { if (im.naturalWidth / im.naturalHeight > 1.6) w.classList.add('wide'); };
-  im.onerror = () => { w.classList.add('ph'); w.replaceChildren(h('b', {}, (a.name || '?')[0].toUpperCase())); };
+  im.onerror = () => { w.classList.add('ph'); if (a.name === 'Apps') w.innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>'; else w.replaceChildren(h('b', {}, (a.name || '?')[0].toUpperCase())); };
   w.append(bg, im); return w;
 }
 function appTile(a, onOpen) {
-  const b = h('button', { class:'atile', type:'button', 'aria-label':a.name }, Logo(a), h('span', {}, a.name));
+  const b = h('button', { class:'atile', type:'button', 'aria-label':a.name }, Logo(a));
   b.onclick = () => onOpen(a, b); return b;
 }
 function AppsBar(target) {
@@ -1597,9 +1602,9 @@ function openStore(opener) {
   const isIn = a => store.get('apps', []).some(x => appKey(x) === appKey(a));
   const main = h('div', { class:'amain' });
   const tabs = [['start', 'Start'], ['installed', 'Installiert'], ['discover', 'Entdecken'], ['search', 'Suche']];
-  const side = h('div', { class:'aside' }, h('h2', {}, 'Apps'), tabs.map(([k, l]) => { const b = h('button', { type:'button', 'data-t':k }, l); b.onclick = () => { det = null; tab = k; render(); }; return b; }));
+  const side = h('div', { class:'aside' }, h('h2', {}, 'Apps'), tabs.map(([k, l]) => { const b = h('button', { class:'xt', type:'button', 'data-t':k }, l); b.onclick = () => { det = null; tab = k; render(); }; return b; }));
   const el = h('div', { class:'astore', role:'dialog', 'aria-label':'Apps' }, side, main);
-  const tile = a => { const b = h('button', { class:'stile', type:'button', 'aria-label':a.name }, Logo(a), h('b', {}, a.name), h('span', {}, a.description || ''), isIn(a) ? h('i', {}, '✓') : null); b.onclick = () => { det = a; render(true); }; return b; };
+  const tile = a => { const b = h('button', { class:'xtile', type:'button', 'aria-label':a.name }, Logo(a), h('b', {}, a.name), h('span', {}, a.description || ''), isIn(a) ? h('i', {}, '✓') : null); b.onclick = () => { det = a; render(true); }; return b; };
   const grid = l => l.length ? h('div', { class:'agrid' }, l.map(tile)) : h('p', { style:'font-size:2rem;color:#aaa' }, 'Nichts gefunden.');
   const instBtn = a => {
     const lbl = h('em'), bar = h('i'), btn = h('button', { class:'abtn', type:'button' }, bar, lbl); let busy = false;
@@ -1624,7 +1629,7 @@ function openStore(opener) {
   };
   function render(keepFocus) {
     clearInterval(timer);
-    side.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+    side.querySelectorAll('.xt').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
     main.scrollTop = 0;
     if (det) return main.replaceChildren(detail(det));
     if (tab === 'start') {
@@ -1649,9 +1654,9 @@ function openStore(opener) {
     if (!keepFocus && !det) return;
   }
   function close() { clearInterval(timer); el.classList.remove('show'); layerEl = null; setTimeout(() => el.remove(), 250); if (opener && opener.isConnected) opener.focus({ preventScroll:true }); }
-  el._close = () => { if (det) { det = null; render(); const t = main.querySelector('.stile,.ahero'); t && t.focus({ preventScroll:true }); } else close(); };
+  el._close = () => { if (det) { det = null; render(); const t = main.querySelector('.xtile,.ahero'); t && t.focus({ preventScroll:true }); } else close(); };
   document.body.append(el); layerEl = el; render();
-  requestAnimationFrame(() => { el.classList.add('show'); (side.querySelector('.on') || side.querySelector('button')).focus({ preventScroll:true }); });
+  requestAnimationFrame(() => { el.classList.add('show'); (side.querySelector('.on') || side.querySelector('.xt')).focus({ preventScroll:true }); });
   fetchApps().then(l => { cat = l; if (!det) render(); });
 }
 function launchApp(a, from) {
