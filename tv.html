@@ -1101,6 +1101,11 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
 .hspacer .hglass .hinfo{flex:none}
 .hfirst .arow{width:auto;max-width:none;overflow-x:auto;scrollbar-width:none}
 .hfirst .arow::-webkit-scrollbar{display:none}
+/* Weiterschauen: Karussell läuft links bis zum Trennstrich (Rand der Seitenleiste) */
+.hspacer .hglass .hrow{--ext:calc(var(--pad) + 1.6rem + 1px);margin-left:calc(-1rem - var(--ext));padding-left:calc(1rem + var(--ext));scroll-padding-left:calc(1rem + var(--ext))}
+.hspacer .hglass{overflow:visible}
+/* unten angekommen: Apps-Leiste ausgeblendet, bleibt aber per Fernbedienung erreichbar */
+body.home-down .happs{opacity:0}
 /* ===== Appstore – Glas-Design wie Weiterschauen / Apps-Leiste ===== */
 .astore{position:fixed;inset:0;z-index:150;display:flex;gap:2.4rem;padding:3rem var(--pad) 3rem 3rem;color:var(--fg);background:var(--bg);
   --gl-bg:var(--bg-2);--gl-bd:var(--border-2);
@@ -1662,7 +1667,7 @@ const rawGh = u => u || '';
 const APPS_FALLBACK = [{ name:'sona. (SoundCloud Edition)', updated:'16.11.2026', description:'Stream your favorite music from everywhere!', installslite:'https://mediaplus-streaming.vercel.app/apps/sona.html/', logo:APPS_LOGO }];
 let appWin = null, layerEl = null;
 const appKey = a => a.installslite || a.name;
-const installedApps = () => store.get('apps', []);
+const installedApps = () => { const cat = store.get('appcat', []); return store.get('apps', []).map(a => { const c = cat.find(x => appKey(x) === appKey(a)); return c ? { ...a, ...c } : a; }); };
 async function fetchApps() {
   try {
     let t = null;
@@ -1693,6 +1698,7 @@ function AppsBar(target) {
   const paint = () => row.replaceChildren(appTile({ name:'Apps', logo:APPS_LOGO }, (a, b) => openStore(b)), ...installedApps().map(a => appTile(a, (x, b) => launchApp(x, b))));
   paint(); wrap._paint = paint; window._appsPaint = paint;
   target.append(wrap);
+  fetchApps().then(() => { if (wrap.isConnected) paint(); });
 }
 function openStore(opener) {
   if (layerEl) return;
@@ -1722,7 +1728,7 @@ function openStore(opener) {
       busy = true; let p = 0;
       const t = setInterval(() => {
         p = Math.min(100, p + 3 + Math.random() * 9); bar.style.width = p + '%'; lbl.textContent = Math.floor(p) + ' %';
-        if (p >= 100) { clearInterval(t); store.set('apps', [...store.get('apps', []), a]); busy = false; upd(); window._appsPaint && window._appsPaint(); toast(a.name + ' installiert'); const d = main.querySelector('.adel'); if (d) d.hidden = false; }
+        if (p >= 100) { clearInterval(t); store.set('apps', [...store.get('apps', []), { name:a.name, installslite:a.installslite }]); busy = false; upd(); window._appsPaint && window._appsPaint(); toast(a.name + ' installiert'); const d = main.querySelector('.adel'); if (d) d.hidden = false; }
       }, 120);
     };
     upd(); return btn;
@@ -1754,7 +1760,7 @@ function openStore(opener) {
       }
       const ins = cat.filter(isIn), rest = cat.filter(a => !isIn(a));
       main.replaceChildren(...[hero, ins.length ? sh('Installiert', ins.length) : null, ins.length ? grid(ins.slice(0, 6)) : null, sh('Entdecken', rest.length), grid(rest.slice(0, 12))].filter(Boolean));
-    } else if (tab === 'installed') { const l = store.get('apps', []); main.replaceChildren(sh('Installiert', l.length), grid(l)); }
+    } else if (tab === 'installed') { const l = installedApps(); main.replaceChildren(sh('Installiert', l.length), grid(l)); }
     else if (tab === 'discover') main.replaceChildren(sh('Entdecken', cat.length), grid(cat));
     else {
       const sqt = h('span', {}), sq = h('div', { class:'asq', tabindex:'0', role:'textbox', 'aria-label':'Suche' }, icon('search'), sqt), res = h('div');
@@ -1789,7 +1795,7 @@ function launchApp(a, from) {
   sp.style.setProperty('--ds', win.style.getPropertyValue('--ds')); sp.style.setProperty('--dx', win.style.getPropertyValue('--dx')); sp.style.setProperty('--dy', win.style.getPropertyValue('--dy'));
   void win.offsetWidth; win.classList.add('full');
   const t0 = Date.now();
-  fr.onload = () => setTimeout(() => { sp.classList.add('out'); fr.focus(); }, Math.max(0, 1800 - (Date.now() - t0)));
+  fr.onload = () => setTimeout(() => { sp.classList.add('out'); fr.focus(); try { fr.contentWindow.focus(); } catch {} }, Math.max(0, 1800 - (Date.now() - t0)));
   setTimeout(() => { fr.src = a.installslite; }, 600);
   setTimeout(() => sp.classList.add('out'), 12000);
 }
@@ -3296,6 +3302,7 @@ document.addEventListener('keydown', ev => {
   if (s && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); ev.stopPropagation(); openChoice(s); }
 }, true);
 
+window.addEventListener('scroll', () => { document.body.classList.toggle('home-down', document.body.classList.contains('home') && window.scrollY > innerHeight * .45); }, { passive:true });
 function canFocus(el) {
   if (el.disabled || el.hidden || el.tabIndex < 0) return false;
   const r = el.getBoundingClientRect();
@@ -3489,7 +3496,11 @@ function tvKey(ev) {
     return;
   }
 
-  if (appWin && !dlgEl) { try { appWin._frame.focus(); } catch {} return; }
+  if (appWin && !dlgEl) {
+    try { appWin._frame.focus(); appWin._frame.contentWindow.focus(); } catch {}
+    if (t === document.body || t === document.documentElement || t === appWin._frame) { ev.preventDefault(); try { appWin._frame.contentWindow.postMessage({ type:'mp-key', key:k, keyCode:c }, '*'); } catch {} }
+    return;
+  }
   const p = TV.player, v = TV.video;
   if (p && v && document.body.dataset.route === 'watch') {
     const eat = f => { ev.preventDefault(); f(); };
