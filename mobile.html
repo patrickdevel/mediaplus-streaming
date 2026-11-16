@@ -554,6 +554,45 @@ body.overlay #side hr.sep{border-top-color:rgba(127,127,127,.25)}
   .chips{background:rgba(250,250,252,.97)}
   :root[data-theme="dark"] .chips{background:rgba(16,16,20,.97)}
 }
+
+/* ===== Startseite: Hero unter transparentem Header + Weiterschauen-Pille ===== */
+body.home main{padding-top:0}
+body.home .hero{aspect-ratio:auto;height:80vh;height:80svh;min-height:440px;max-height:780px;margin:0 -28px 16px;border:0;border-radius:0}
+@media(max-width:700px){body.home .hero{margin:0 -16px 16px}}
+body.home .hin{padding:20px 20px 28px}
+body.home .hin h2{font-size:clamp(26px,7.4vw,40px)}
+.hero.hascont .hin{padding-bottom:calc(var(--cg,140px) + 50px)}
+.hero.hascont .hdots{bottom:calc(var(--cg,140px) + 26px);right:20px}
+.hero.bare{aspect-ratio:auto;height:auto;min-height:0;max-height:none;background:none;border:0;border-radius:0;overflow:visible;margin:0 0 16px}
+.hero.bare .hglass{position:static;background:rgba(10,10,14,.9)}
+
+.hglass{position:absolute;left:12px;right:12px;bottom:14px;z-index:4;padding:10px 0 12px;border-radius:22px;color:#fff;
+  background:rgba(10,10,14,.3);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);
+  border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 30px rgba(0,0,0,.3);overflow:hidden}
+.hglass .rowh{margin:0 0 8px 14px;font-size:13px;font-weight:600;letter-spacing:.03em;color:rgba(255,255,255,.88)}
+.hglass .hrow{--ml:0px;--mr:0px;flex-wrap:nowrap;gap:10px;margin:0;padding:0 14px 2px;scroll-snap-type:x proximity;scroll-padding-inline:14px;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--ml),#000 calc(100% - var(--mr)),transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 var(--ml),#000 calc(100% - var(--mr)),transparent 100%)}
+.hglass .hrow.fl{--ml:36px}
+.hglass .hrow.fr{--mr:36px}
+.hglass .hrow .card{flex:0 0 128px}
+.hglass .thumb,.hglass .hrow .thumb{margin:0;border-radius:10px;border:1px solid rgba(255,255,255,.18)}
+.hglass .thumb .play,.hglass .thumb .dur,.hglass .thumb .tmark{display:none}
+.hglass .thumb .bar{height:4px;background:rgba(255,255,255,.3)}
+.hglass .hct{margin-top:5px;font-size:11.5px;font-weight:500;line-height:1.3;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.top{transition:background-color .3s,border-color .3s,padding .35s,gap .35s}
+.top::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% + 28px);background:linear-gradient(to bottom,rgba(0,0,0,.6),rgba(0,0,0,0));opacity:0;transition:opacity .3s;pointer-events:none;z-index:-1}
+body.home .top .icon-btn,body.home .logo,body.home .logo .mark,body.home .search,body.home .search input,body.home .search button{transition:color .3s,background-color .3s,border-color .3s}
+body.home.hdr-clear .top{background-color:transparent;border-bottom-color:transparent}
+body.home.hdr-clear .top::before{opacity:1}
+body.home.hdr-clear .top .icon-btn,body.home.hdr-clear .top .icon-btn:hover{color:#fff;background:transparent}
+body.home.hdr-clear .logo{color:#fff}
+body.home.hdr-clear .logo .mark{background:#fff;color:#000}
+body.home.hdr-clear .search{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);box-shadow:none}
+body.home.hdr-clear .search input{color:#fff}
+body.home.hdr-clear .search input::placeholder{color:rgba(255,255,255,.72)}
+body.home.hdr-clear .search button{color:#fff;border-left-color:rgba(255,255,255,.3);background:transparent}
 </style>
 </head>
 <body>
@@ -920,12 +959,34 @@ function Show(arg) {
   run();
 }
 
-function Continue() {
+function Continue(target) {
   const p = store.get('prog', {});
   const items = Object.entries(p).filter(([, v]) => v.pos > 15 && v.dur && v.pos < v.dur - 30).sort((a, b) => b[1].t - a[1].t)
     .map(([id]) => cache.get(id) || loadSaved(id)).filter(Boolean).slice(0, 12);
   if (!items.length) return;
-  main.append(h('h2', { class:'rowh' }, 'Weiterschauen'), h('div', { class:'hrow' }, items.map(e => Card(e))));
+  if (!target) { main.append(h('h2', { class:'rowh' }, 'Weiterschauen'), h('div', { class:'hrow' }, items.map(e => Card(e)))); return; }
+  const cards = items.map(e => {
+    const pr = getProg(e.id), ch = chanOf(e.channel);
+    const pct = pr && pr.dur ? Math.min(100, Math.max(3, Math.round(pr.pos / pr.dur * 100))) : 0;
+    const thumb = h('div', { class:'thumb', style:`--c:${ch.color}` }, h('span', { class:'tmark' }, ch.short), h('span', { class:'bar' }, h('i', { style:`width:${pct}%` })));
+    if (store.get('thumbs', true)) { thumb._e = e; thumbIO.observe(thumb); }
+    return h('a', { class:'card', href:'#/watch/' + encodeURIComponent(e.id), 'aria-label':e.title }, thumb, h('div', { class:'hct' }, e.title));
+  });
+  const row = h('div', { class:'hrow' }, cards);
+  const glass = h('section', { class:'hglass' }, h('h2', { class:'rowh' }, 'Weiterschauen'), row);
+  target.classList.add('hascont');
+  target.append(glass);
+  /* eine Zeile; Fade nur, wenn es in die jeweilige Richtung weitergeht */
+  const fade = () => {
+    row.classList.toggle('fl', row.scrollLeft > 4);
+    row.classList.toggle('fr', row.scrollLeft + row.clientWidth < row.scrollWidth - 4);
+  };
+  const size = () => target.style.setProperty('--cg', glass.offsetHeight + 'px');
+  row.addEventListener('scroll', fade, { passive:true });
+  window.addEventListener('resize', fade);
+  if (window.ResizeObserver) { const ro = new ResizeObserver(() => { size(); fade(); }); ro.observe(glass); cleanups.push(() => ro.disconnect()); }
+  cleanups.push(() => window.removeEventListener('resize', fade));
+  size(); fade(); requestAnimationFrame(() => { size(); fade(); }); setTimeout(fade, 500);
 }
 
 function Rows() {
@@ -983,7 +1044,14 @@ function Browse(label) {
   document.title = 'Media + – ARD-Videos';
   const row = h('div', { class:'chips' }, CHIPS.map(c => h('a', { class:'chip' + (c === chip ? ' active' : ''), href:c.label === 'Neu' ? '#/' : '#/browse/' + encodeURIComponent(c.label) }, c.label)));
   main.append(row);
-  if (chip.label === 'Neu') { Hero(); Quick(); Continue(); Rows(); }
+  if (chip.label === 'Neu') {
+    const B = document.body.classList;
+    B.add('home');
+    const hdr = () => B.toggle('hdr-clear', window.scrollY < 40);
+    window.addEventListener('scroll', hdr, { passive:true }); hdr();
+    cleanups.push(() => { window.removeEventListener('scroll', hdr); B.remove('home', 'hdr-clear'); });
+    const hero = Hero(); Continue(hero); Quick(); Rows();
+  }
   Feed(main, off => search({ text:chip.q, min:chip.min, offset:off }), { emptyText:'Dazu gibt es gerade nichts.' });
 }
 
@@ -1071,6 +1139,7 @@ function loadHls() {
 function Hero() {
   const tok = routeToken, shell = h('section', { class:'hero' });
   main.prepend(shell);
+  const dead = () => { document.body.classList.remove('home', 'hdr-clear'); if (shell.querySelector('.hglass')) shell.classList.add('bare'); else shell.remove(); };
   search({ min:1800, size:30 }).then(r => {
     if (tok !== routeToken) return;
     const good = r.items.filter(x => (x.description || '').length > 80);
@@ -1081,7 +1150,7 @@ function Hero() {
       if (list.includes(x) || tops.has(k)) continue;
       tops.add(k); list.push(x);
     }
-    if (!list.length) return shell.remove();
+    if (!list.length) return dead();
     const track = h('div', { class:'htrack' }), dots = h('div', { class:'hdots' });
     const slides = list.map((e, i) => {
       const ch = chanOf(e.channel), bg = h('div', { class:'hbg' });
@@ -1120,7 +1189,8 @@ function Hero() {
     }, { passive:true });
     cleanups.push(() => clearInterval(timer));
     go(0); start();
-  }).catch(() => shell.remove());
+  }).catch(dead);
+  return shell;
 }
 
 /* =========================================================
@@ -1831,6 +1901,7 @@ const Mini = (() => {
 
 function route() {
   routeToken++; cleanups.forEach(f => f()); cleanups = [];
+  document.body.classList.remove('home', 'hdr-clear');
   thumbQueue.length = 0;
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   const a = parts[0] || '', arg = decodeURIComponent(parts.slice(1).join('/') || '');
