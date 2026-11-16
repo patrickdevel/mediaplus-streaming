@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Uhr</title>
+<style>
+:root{--fg-2:#e6e6e6;--fg-3:#b8b8b8;--fg-4:#959595;--border-2:#454545;--glass:rgba(255,255,255,.09);--fr:0 0 0 .22rem #000,0 0 0 .5rem #fff;color-scheme:dark}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html{font-size:clamp(10px,min(1.15vw,2.04vh),48px);background:#000;scrollbar-width:none}
+html,html *{cursor:none!important}
+::-webkit-scrollbar{display:none}
+body{height:100vh;overflow:hidden;background:radial-gradient(ellipse at 20% 0%,#1d2233,#000 70%);color:#fff;font:500 1rem/1.4 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;user-select:none;touch-action:none;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:inherit}
+:focus{outline:none}
+#app{display:flex;flex-direction:column;height:100vh;padding:3.2rem 4rem}
+.tabs{display:flex;gap:1rem;flex:none}
+.chip{flex:none;height:4.4rem;padding:0 2.2rem;border-radius:999px;font-size:1.4rem;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:.9rem;background:var(--glass);border:2px solid transparent;color:var(--fg-2);transition:transform .14s,background .14s,color .14s,box-shadow .14s}
+.chip.active{border-color:rgba(255,255,255,.75);color:#fff}
+.chip:focus,.btn:focus,.tile:focus{background:#fff;color:#000;border-color:#fff;transform:scale(1.07);box-shadow:var(--fr);position:relative;z-index:4}
+#content{flex:1;min-height:0;overflow-y:auto;margin:0 -.8rem;padding:2rem .8rem 3rem}
+.clock{text-align:center;padding-top:3vh}
+.time{font-size:min(22rem,26vh);font-weight:200;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.time small{font-size:.35em;color:var(--fg-3);margin-left:.2em;font-weight:300}
+.date{font-size:2.4rem;color:var(--fg-3);margin-top:1rem}
+.world{display:grid;grid-template-columns:repeat(5,1fr);gap:1.4rem;margin-top:5vh}
+.tile{background:var(--glass);border-radius:1.4rem;padding:1.6rem;text-align:center;transition:transform .14s}
+.tile small{display:block;font-size:1.15rem;opacity:.7}
+.tile b{display:block;font-size:2.6rem;font-weight:600;margin-top:.4rem;font-variant-numeric:tabular-nums}
+.tile span{font-size:1rem;opacity:.6}
+.btn{height:4.2rem;padding:0 2rem;border-radius:1.1rem;border:2px solid var(--border-2);background:var(--glass);font-size:1.3rem;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:.8rem;transition:transform .14s,background .14s,color .14s,box-shadow .14s}
+.btn.pri{background:#fff;color:#000;border-color:#fff}
+.btn.pri:focus{background:#e8e8e8}
+.btn.sm{width:4.2rem;padding:0;font-size:1.8rem}
+.row{display:flex;gap:1.4rem;align-items:center;justify-content:center;flex-wrap:wrap}
+.big{text-align:center;font-size:min(16rem,20vh);font-weight:200;font-variant-numeric:tabular-nums;line-height:1;padding:2vh 0 4vh}
+.laps{max-width:60rem;margin:3rem auto 0;display:flex;flex-direction:column;gap:.6rem}
+.lap{display:flex;justify-content:space-between;background:var(--glass);border-radius:1rem;padding:1rem 2rem;font-size:1.5rem;font-variant-numeric:tabular-nums}
+.alarm{display:flex;align-items:center;gap:1.6rem;background:var(--glass);border-radius:1.4rem;padding:1.2rem 2rem;max-width:80rem;margin:0 auto 1.1rem}
+.alarm .t{font-size:4rem;font-weight:300;font-variant-numeric:tabular-nums;width:13rem;text-align:center}
+.alarm .sp{flex:1}
+.alarm.off .t{opacity:.4}
+.pre{margin-top:3rem}
+.msg{text-align:center;color:var(--fg-3);font-size:1.4rem;padding:3rem}
+#ring{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.88);display:none;flex-direction:column;align-items:center;justify-content:center;gap:3rem}
+#ring.show{display:flex}
+#ring b{font-size:12rem;font-weight:200}
+#ring .l{font-size:2.6rem;color:var(--fg-3)}
+#toast{position:fixed;left:50%;bottom:3.6rem;transform:translate(-50%,2rem);z-index:60;padding:1.2rem 2.4rem;border-radius:999px;background:#fff;color:#000;font-size:1.3rem;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="tabs" id="tabs">
+    <button class="chip active" data-f data-tab="clock" type="button">Uhr</button>
+    <button class="chip" data-f data-tab="sw" type="button">Stoppuhr</button>
+    <button class="chip" data-f data-tab="timer" type="button">Timer</button>
+  </div>
+  <div id="content"></div>
+</div>
+<div id="ring"><div class="l" id="rl"></div><b id="rt"></b><button class="btn pri" id="rb" data-f type="button">Stoppen</button></div>
+<div id="toast"></div>
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) { if (v == null || v === false) continue; if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v); }
+  for (const c of kids.flat(Infinity)) { if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(c)); }
+  return e;
+}
+const store = { get(k, d) { try { const v = localStorage.getItem('mt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem('mt:' + k, JSON.stringify(v)); } catch {} } };
+let tt; const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2200); };
+const p2 = n => String(n).padStart(2, '0');
+const S = { tab:'clock', alarms:store.get('clkAlarms', [{ h:7, m:0, on:false }]), last:null, col:null, colFor:null };
+const SW = { run:false, t0:0, acc:0, laps:[] };
+const TM = { total:300000, left:300000, run:false, end:0 };
+let ringing = null, audio = null, beepT = 0;
+
+/* Ton */
+function beep() {
+  try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); const o = audio.createOscillator(), g = audio.createGain();
+    o.type = 'sine'; o.frequency.value = 880; g.gain.setValueAtTime(.0001, audio.currentTime); g.gain.exponentialRampToValueAtTime(.4, audio.currentTime + .02); g.gain.exponentialRampToValueAtTime(.0001, audio.currentTime + .35);
+    o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + .4); } catch {}
+}
+function ring(label, big) {
+  if (ringing) return; ringing = label; $('#rl').textContent = label; $('#rt').textContent = big; $('#ring').classList.add('show'); $('#rb').focus();
+  beep(); beepT = setInterval(() => { beep(); setTimeout(beep, 450); }, 1500);
+}
+function stopRing() { clearInterval(beepT); ringing = null; $('#ring').classList.remove('show'); const f = $('.tabs .chip.active'); f && f.focus(); }
+$('#rb').addEventListener('click', stopRing);
+
+/* Uhr */
+const ZONES = [['Berlin', 'Europe/Berlin'], ['London', 'Europe/London'], ['New York', 'America/New_York'], ['Tokio', 'Asia/Tokyo'], ['Sydney', 'Australia/Sydney']];
+const fmtZ = (z, o) => new Intl.DateTimeFormat('de-DE', { timeZone:z, ...o }).format(new Date());
+function renderClock() {
+  const w = h('div', { class:'world' }, ZONES.map(([n, z]) => h('button', { class:'tile', type:'button', 'data-f':true }, h('small', {}, n), h('b', { 'data-z':z }, ''), h('span', { 'data-d':z }, ''))));
+  return h('div', { class:'clock' }, h('div', { class:'time', id:'tm' }), h('div', { class:'date', id:'dt' }), w);
+}
+function tickClock() {
+  const d = new Date(), tm = $('#tm'); if (!tm) return;
+  tm.replaceChildren(p2(d.getHours()) + ':' + p2(d.getMinutes()), h('small', {}, p2(d.getSeconds())));
+  $('#dt').textContent = d.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  $$('[data-z]').forEach(e => { e.textContent = fmtZ(e.dataset.z, { hour:'2-digit', minute:'2-digit' }); });
+  $$('[data-d]').forEach(e => { e.textContent = fmtZ(e.dataset.d, { weekday:'short', day:'numeric', month:'short' }); });
+}
+
+/* Wecker */
+const saveA = () => store.set('clkAlarms', S.alarms);
+function renderAlarm() {
+  const wrap = h('div', {});
+  if (!S.alarms.length) wrap.append(h('div', { class:'msg' }, 'Noch kein Wecker.'));
+  S.alarms.forEach((a, i) => {
+    const adj = (k, d) => { if (k === 'h') a.h = (a.h + d + 24) % 24; else a.m = (a.m + d + 60) % 60; saveA(); rerender(); };
+    wrap.append(h('div', { class:'alarm' + (a.on ? '' : ' off') },
+      h('button', { class:'btn sm', 'data-f':true, type:'button', onclick:() => adj('h', -1) }, '−'), h('button', { class:'btn sm', 'data-f':true, type:'button', onclick:() => adj('h', 1) }, '+'),
+      h('div', { class:'t' }, p2(a.h) + ':' + p2(a.m)),
+      h('button', { class:'btn sm', 'data-f':true, type:'button', onclick:() => adj('m', -5) }, '−'), h('button', { class:'btn sm', 'data-f':true, type:'button', onclick:() => adj('m', 5) }, '+'),
+      h('span', { class:'sp' }),
+      h('button', { class:'btn' + (a.on ? ' pri' : ''), 'data-f':true, type:'button', onclick:() => { a.on = !a.on; saveA(); rerender(); toast(a.on ? 'Wecker an' : 'Wecker aus'); } }, a.on ? 'An' : 'Aus'),
+      h('button', { class:'btn', 'data-f':true, type:'button', onclick:() => { S.alarms.splice(i, 1); saveA(); rerender(); } }, 'Löschen')));
+  });
+  wrap.append(h('div', { class:'row pre' }, h('button', { class:'btn pri', 'data-f':true, type:'button', onclick:() => { if (S.alarms.length >= 8) return toast('Maximal 8 Wecker'); S.alarms.push({ h:7, m:0, on:true }); saveA(); rerender(); } }, '+ Neuer Wecker')),
+    h('div', { class:'msg' }, 'Stunden ±1, Minuten ±5. Der Wecker klingelt nur, solange diese App offen ist.'));
+  return wrap;
+}
+let lastFire = '';
+function checkAlarms() {
+  const d = new Date(), key = p2(d.getHours()) + ':' + p2(d.getMinutes());
+  if (key === lastFire || d.getSeconds() > 5) return;
+  const a = S.alarms.find(x => x.on && p2(x.h) + ':' + p2(x.m) === key);
+  if (a) { lastFire = key; ring('Wecker', key); }
+}
+
+/* Stoppuhr */
+const swMs = () => SW.acc + (SW.run ? performance.now() - SW.t0 : 0);
+const fmtSw = ms => { const c = Math.floor(ms / 10) % 100, s = Math.floor(ms / 1000) % 60, m = Math.floor(ms / 60000); return p2(m) + ':' + p2(s) + '.' + p2(c); };
+function renderSw() {
+  const sBtn = h('button', { class:'btn pri', 'data-f':true, type:'button' }, SW.run ? 'Stopp' : 'Start');
+  sBtn.onclick = () => { if (SW.run) { SW.acc = swMs(); SW.run = false; } else { SW.t0 = performance.now(); SW.run = true; } rerender(); setTimeout(() => $('[data-sw]') && $('[data-sw]').focus(), 0); };
+  sBtn.dataset.sw = 1;
+  const lap = h('button', { class:'btn', 'data-f':true, type:'button', onclick:() => { if (SW.run) { SW.laps.unshift(swMs()); rerender(); } } }, 'Runde');
+  const rst = h('button', { class:'btn', 'data-f':true, type:'button', onclick:() => { SW.run = false; SW.acc = 0; SW.laps = []; rerender(); } }, 'Zurücksetzen');
+  const laps = h('div', { class:'laps' }, SW.laps.map((t, i) => h('div', { class:'lap' }, h('span', {}, 'Runde ' + (SW.laps.length - i)), h('span', {}, fmtSw(t - (SW.laps[i + 1] || 0))), h('span', {}, fmtSw(t)))));
+  return h('div', {}, h('div', { class:'big', id:'swt' }, fmtSw(swMs())), h('div', { class:'row' }, sBtn, lap, rst), laps);
+}
+
+/* Timer */
+const tmMs = () => TM.run ? Math.max(0, TM.end - Date.now()) : TM.left;
+const fmtTm = ms => { const s = Math.ceil(ms / 1000), hh = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return (hh ? hh + ':' + p2(m) : p2(m)) + ':' + p2(s % 60); };
+function setTm(min) { TM.total = TM.left = min * 60000; TM.run = false; rerender(); }
+function renderTimer() {
+  const go = h('button', { class:'btn pri', 'data-f':true, type:'button', 'data-tm':1, onclick:() => {
+    if (TM.run) { TM.left = tmMs(); TM.run = false; } else { if (TM.left <= 0) TM.left = TM.total; TM.end = Date.now() + TM.left; TM.run = true; }
+    rerender(); setTimeout(() => $('[data-tm]') && $('[data-tm]').focus(), 0); } }, TM.run ? 'Pause' : 'Start');
+  const rst = h('button', { class:'btn', 'data-f':true, type:'button', onclick:() => { TM.run = false; TM.left = TM.total; rerender(); } }, 'Zurücksetzen');
+  const adj = (d) => h('button', { class:'btn', 'data-f':true, type:'button', onclick:() => { TM.total = Math.max(60000, TM.total + d * 60000); TM.left = TM.total; TM.run = false; rerender(); } }, (d > 0 ? '+' : '−') + Math.abs(d) + ' Min');
+  return h('div', {}, h('div', { class:'big', id:'tmt' }, fmtTm(tmMs())),
+    h('div', { class:'row' }, go, rst, adj(-1), adj(1), adj(5)),
+    h('div', { class:'row pre' }, [1, 3, 5, 10, 15, 30, 60].map(m => h('button', { class:'btn', 'data-f':true, type:'button', onclick:() => setTm(m) }, m + ' Min'))));
+}
+
+function rerender() {
+  const c = $('#content'), a = document.activeElement, idx = $$('[data-f]', c).indexOf(a), sc = c.scrollTop;
+  c.replaceChildren(S.tab === 'clock' ? renderClock() : S.tab === 'sw' ? renderSw() : renderTimer());
+  c.scrollTop = sc; tickClock();
+  if (idx >= 0) { const n = $$('[data-f]', c); focusEl(n[Math.min(idx, n.length - 1)]); }
+}
+function setTab(t) { S.tab = t; $$('#tabs .chip').forEach(c => c.classList.toggle('active', c.dataset.tab === t)); $('#content').scrollTop = 0; rerender(); }
+$$('#tabs .chip').forEach(c => c.addEventListener('click', () => setTab(c.dataset.tab)));
+
+setInterval(() => {
+  tickClock();
+  if (TM.run && tmMs() <= 0) { TM.run = false; TM.left = 0; ring('Timer abgelaufen', '00:00'); rerender(); }
+}, 250);
+(function raf() { const e = $('#swt'); if (e && SW.run) e.textContent = fmtSw(swMs()); const t = $('#tmt'); if (t) t.textContent = fmtTm(tmMs()); requestAnimationFrame(raf); })();
+
+/* Fernbedienung */
+function vis(el) { if (el.disabled || el.hidden) return false; const r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4 || r.right <= 0 || r.left >= innerWidth) return false; const sc = el.closest('#content'); if (sc) { const b = sc.getBoundingClientRect(); if (r.bottom <= b.top || r.top >= b.bottom) return false; } return true; }
+function focusEl(el) { if (!el) return; el.focus({ preventScroll:true }); if (el.closest('#content')) el.scrollIntoView({ block:'nearest', behavior:'smooth' }); }
+const initial = () => $('.tabs .chip.active');
+function move(dir) {
+  let cur = document.activeElement; if (!cur || !cur.matches || !cur.matches('[data-f]')) cur = null;
+  if (!cur) return focusEl(S.last && S.last.isConnected && vis(S.last) ? S.last : initial());
+  const all = $$('[data-f]').filter(e => e !== cur && vis(e) && (!ringing || e.id === 'rb'));
+  const c = cur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, hz = dir === 'left' || dir === 'right';
+  if (hz || S.colFor !== cur) S.col = null; if (!hz && S.col == null) S.col = cx; const colX = S.col == null ? cx : S.col;
+  let best = null, bs = Infinity;
+  for (const strict of [true, false]) {
+    for (const el of all) {
+      const r = el.getBoundingClientRect(), ex = r.left + r.width / 2, ey = r.top + r.height / 2; let prim, gap, off;
+      if (hz) { if (dir === 'right' ? ex <= cx + 1 : ex >= cx - 1) continue; prim = dir === 'right' ? r.left - c.right : c.left - r.right; gap = Math.max(0, r.top - c.bottom, c.top - r.bottom); if (strict && gap > 8) continue; off = Math.abs(ey - cy); }
+      else { if (dir === 'down' ? ey <= cy + 1 : ey >= cy - 1) continue; prim = dir === 'down' ? r.top - c.bottom : c.top - r.bottom; gap = Math.max(0, r.left - c.right, c.left - r.right); off = Math.abs(ex - colX); }
+      const sc = Math.max(0, prim) + gap * 3 + off * .5 + (!hz && gap > 0 ? 1000 : 0); if (sc < bs) { bs = sc; best = el; }
+    }
+    if (best) break;
+  }
+  if (best) { S.colFor = best; focusEl(best); }
+}
+function goBack() { if (ringing) { stopRing(); return true; } const a = document.activeElement; if (a && a.matches && a.matches('[data-f]') && !a.matches('.tabs .chip')) { focusEl(initial()); return true; } return false; }
+document.addEventListener('keydown', ev => {
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  const k = ev.key, c = ev.keyCode;
+  if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || k === 'Backspace') { if (goBack()) ev.preventDefault(); return; }
+  if (k === 'MediaPlayPause' || c === 179 || c === 10252) { ev.preventDefault(); const b = $('[data-sw],[data-tm]'); if (b) b.click(); return; }
+  const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
+  if (dir) { ev.preventDefault(); return move(dir); }
+});
+document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('[data-f]')) S.last = e.target; });
+const kill = ev => { if (ev.cancelable) ev.preventDefault(); ev.stopImmediatePropagation(); };
+['touchstart','touchmove','touchend','touchcancel','gesturestart'].forEach(t => document.addEventListener(t, kill, { capture:true, passive:false }));
+['contextmenu','dragstart'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
+(() => { const w = () => { ['pointerdown','keydown','click'].forEach(t => document.removeEventListener(t, w, true)); try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume && audio.resume(); const el = document.documentElement, fn = el.requestFullscreen || el.webkitRequestFullscreen; if (fn && !document.fullscreenElement) Promise.resolve(fn.call(el)).catch(() => {}); } catch {} }; ['pointerdown','keydown','click'].forEach(t => document.addEventListener(t, w, true)); })();
+
+setTab('clock'); focusEl(initial());
+})();
+</script>
+</body>
+</html>

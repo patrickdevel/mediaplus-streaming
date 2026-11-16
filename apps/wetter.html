@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Wetter</title>
+<style>
+:root{--fg:#fff;--fg-2:#e6e6e6;--fg-3:#b8b8b8;--fg-4:#959595;--bg-3:#1a1a1a;--border-2:#454545;--glass:rgba(255,255,255,.09);--fr:0 0 0 .22rem #000,0 0 0 .5rem #fff;color-scheme:dark}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html{font-size:clamp(10px,min(1.15vw,2.04vh),48px);background:#000;scrollbar-width:none}
+html,html *{cursor:none!important}
+::-webkit-scrollbar{display:none}
+body{height:100vh;overflow:hidden;background:#000;color:#fff;font:500 1rem/1.4 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;user-select:none;touch-action:none;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:inherit}
+:focus{outline:none}
+.ic{width:2rem;height:2rem;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#bg{position:fixed;inset:0;z-index:0;transition:background 1s;background:linear-gradient(160deg,#1a2a44,#0a0f1a)}
+#bg.night{background:linear-gradient(160deg,#0b0f24,#030409)}
+#bg.rain{background:linear-gradient(160deg,#27323f,#0c1016)}
+#bg.sun{background:linear-gradient(160deg,#2a5d9c,#0e2342)}
+#bg.snow{background:linear-gradient(160deg,#4a5a6e,#1a222c)}
+#app{position:relative;z-index:2;display:flex;height:100vh;padding:3.2rem 4rem;gap:4rem}
+#np{flex:none;width:min(34rem,32vw);display:flex;flex-direction:column;justify-content:center}
+.city{font-size:2.2rem;font-weight:700}
+.upd{font-size:1.1rem;color:var(--fg-3);margin-top:.3rem}
+.big{font-size:11rem;font-weight:300;line-height:1;letter-spacing:-.04em;margin-top:1.4rem}
+.cond{font-size:2rem;font-weight:600;margin-top:.6rem;display:flex;align-items:center;gap:1rem}
+.cond .em{font-size:3.6rem}
+.hl{font-size:1.4rem;color:var(--fg-2);margin-top:.6rem}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2rem}
+.fact{background:var(--glass);border-radius:1.2rem;padding:1.1rem 1.4rem}
+.fact small{display:block;font-size:1rem;color:var(--fg-3)}
+.fact b{font-size:1.6rem}
+#br{flex:1;min-width:0;display:flex;flex-direction:column}
+.tabs{display:flex;gap:1rem;flex:none}
+.chip{flex:none;height:4.4rem;padding:0 2.2rem;border-radius:999px;font-size:1.4rem;font-weight:600;display:inline-flex;align-items:center;gap:.9rem;background:var(--glass);border:2px solid transparent;color:var(--fg-2);transition:transform .14s,background .14s,color .14s,box-shadow .14s}
+.chip.active{border-color:rgba(255,255,255,.75);color:#fff}
+.chip:focus{background:#fff;color:#000;border-color:#fff;transform:scale(1.07);box-shadow:var(--fr);position:relative;z-index:4}
+#content{flex:1;min-height:0;overflow-y:auto;margin:.6rem -.8rem 0;padding:1.4rem .8rem 3rem}
+.head{font-size:1.6rem;font-weight:700;margin:0 0 1.4rem}
+.hours{display:flex;gap:1.2rem;overflow-x:auto;padding:1rem .8rem;margin:-1rem -.8rem}
+.hr{flex:none;width:10rem;text-align:center;background:var(--glass);border-radius:1.4rem;padding:1.4rem .6rem;transition:transform .14s}
+.hr:focus,.day:focus,.cty:focus{background:#fff;color:#000;transform:scale(1.06);box-shadow:var(--fr);position:relative;z-index:4}
+.hr .t{font-size:1.2rem;color:inherit;opacity:.8}.hr .em{font-size:3rem;margin:.6rem 0}.hr .d{font-size:1.7rem;font-weight:700}.hr .p{font-size:1.05rem;opacity:.75;margin-top:.3rem}
+.days{display:flex;flex-direction:column;gap:1rem}
+.day{display:flex;align-items:center;gap:2rem;background:var(--glass);border-radius:1.3rem;padding:1.2rem 2rem;transition:transform .14s}
+.day .n{width:11rem;font-size:1.5rem;font-weight:700}.day .em{font-size:2.8rem;width:5rem}.day .p{width:7rem;font-size:1.2rem;opacity:.8}.day .c{flex:1;font-size:1.3rem;opacity:.85}.day .m{font-size:1.6rem;font-weight:700;white-space:nowrap}
+.day .m span{opacity:.6;font-weight:500}
+.sfield{display:flex;align-items:center;gap:1.2rem;height:5.2rem;padding:0 1.8rem;border-radius:1.2rem;border:2px solid var(--border-2);background:var(--glass);font-size:1.9rem;font-weight:600}
+.sfield .ph{color:var(--fg-4);font-weight:500}
+.caret{display:inline-block;width:.2rem;height:1.9rem;background:#fff;vertical-align:-.25rem;margin-left:.15rem;animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.kb{display:grid;grid-template-columns:repeat(10,1fr);gap:.6rem;margin-top:1.4rem}
+.key{height:4.2rem;border-radius:.9rem;background:var(--glass);font-size:1.5rem;font-weight:600;display:grid;place-items:center;text-transform:uppercase;transition:transform .12s,background .12s,color .12s}
+.key.w4{grid-column:span 4}.key.w3{grid-column:span 3}.key.act{text-transform:none;font-size:1.3rem}
+.key:focus{background:#fff;color:#000;transform:scale(1.1);box-shadow:var(--fr);position:relative;z-index:4}
+.cl{display:flex;flex-direction:column;gap:1rem;margin-top:1.6rem}
+.cty{display:flex;align-items:center;gap:1.4rem;background:var(--glass);border-radius:1.2rem;padding:1.2rem 2rem;font-size:1.5rem;font-weight:600;transition:transform .14s}
+.cty small{font-size:1.1rem;opacity:.7;font-weight:500}
+.cty .sp{flex:1}
+.msg{padding:4rem 2rem;text-align:center;color:var(--fg-3);font-size:1.4rem}
+#toast{position:fixed;left:50%;bottom:3.6rem;transform:translate(-50%,2rem);z-index:20;padding:1.2rem 2.4rem;border-radius:999px;background:#fff;color:#000;font-size:1.3rem;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="app">
+  <section id="np"></section>
+  <section id="br">
+    <div class="tabs" id="tabs">
+      <button class="chip active" data-f data-tab="hours" type="button">Stündlich</button>
+      <button class="chip" data-f data-tab="days" type="button">7 Tage</button>
+      <button class="chip" data-f data-tab="places" type="button">Orte</button>
+    </div>
+    <div id="content"></div>
+  </section>
+</div>
+<div id="toast"></div>
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) { if (v == null || v === false) continue; if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v); }
+  for (const c of kids.flat(Infinity)) { if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(c)); }
+  return e;
+}
+const store = { get(k, d) { try { const v = localStorage.getItem('mt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem('mt:' + k, JSON.stringify(v)); } catch {} } };
+let tt; const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); };
+
+const WX = { 0:['Klar','☀️'],1:['Überwiegend klar','🌤️'],2:['Teils bewölkt','⛅'],3:['Bedeckt','☁️'],45:['Nebel','🌫️'],48:['Reifnebel','🌫️'],51:['Leichter Nieselregen','🌦️'],53:['Nieselregen','🌦️'],55:['Starker Nieselregen','🌧️'],56:['Gefrierender Nieselregen','🌧️'],57:['Gefrierender Nieselregen','🌧️'],61:['Leichter Regen','🌦️'],63:['Regen','🌧️'],65:['Starker Regen','🌧️'],66:['Eisregen','🌧️'],67:['Eisregen','🌧️'],71:['Leichter Schneefall','🌨️'],73:['Schneefall','🌨️'],75:['Starker Schneefall','❄️'],77:['Schneegriesel','❄️'],80:['Regenschauer','🌦️'],81:['Regenschauer','🌧️'],82:['Starke Schauer','⛈️'],85:['Schneeschauer','🌨️'],86:['Starke Schneeschauer','❄️'],95:['Gewitter','⛈️'],96:['Gewitter mit Hagel','⛈️'],99:['Schweres Gewitter','⛈️'] };
+const wx = c => WX[c] || ['–', '❔'];
+const DEF = [{ name:'Koblenz', lat:50.3569, lon:7.5890, country:'Deutschland' }];
+const S = { tab:'hours', cities:store.get('wxCities', DEF), sel:store.get('wxSel', 0), data:null, loading:false, err:null, typed:'', res:null, last:null, col:null, colFor:null };
+if (!S.cities.length) S.cities = DEF; if (S.sel >= S.cities.length) S.sel = 0;
+const city = () => S.cities[S.sel];
+const deg = v => Math.round(v) + '°';
+const DAYS = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const hhmm = s => s.slice(11, 16);
+
+async function load() {
+  const c = city(); S.loading = true; S.err = null; paint();
+  try {
+    const u = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day,pressure_msl,precipitation&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=7&wind_speed_unit=kmh`;
+    const r = await fetch(u); if (!r.ok) throw new Error('Status ' + r.status);
+    S.data = await r.json();
+  } catch (e) { S.err = e.message || String(e); }
+  S.loading = false; paint();
+}
+function paintBg() {
+  const bg = $('#bg'), d = S.data; bg.className = '';
+  if (!d) return;
+  const c = d.current.weather_code;
+  if (!d.current.is_day) bg.classList.add('night');
+  else if (c >= 71 && c <= 86) bg.classList.add('snow');
+  else if (c >= 51) bg.classList.add('rain');
+  else if (c <= 2) bg.classList.add('sun');
+}
+function paintNow() {
+  const np = $('#np'), d = S.data;
+  if (S.loading && !d) return np.replaceChildren(h('div', { class:'city' }, city().name), h('div', { class:'upd' }, 'Lädt …'));
+  if (!d) return np.replaceChildren(h('div', { class:'city' }, city().name), h('div', { class:'msg' }, 'Wetter nicht erreichbar.', h('br'), S.err || ''), h('button', { class:'chip', 'data-f':true, onclick:load }, 'Erneut versuchen'));
+  const c = d.current, w = wx(c.weather_code), dd = d.daily;
+  np.replaceChildren(
+    h('div', { class:'city' }, city().name), h('div', { class:'upd' }, 'Stand ' + hhmm(c.time) + ' Uhr'),
+    h('div', { class:'big' }, deg(c.temperature_2m)),
+    h('div', { class:'cond' }, h('span', { class:'em' }, w[1]), w[0]),
+    h('div', { class:'hl' }, `H: ${deg(dd.temperature_2m_max[0])}  T: ${deg(dd.temperature_2m_min[0])}`),
+    h('div', { class:'facts' },
+      f('Gefühlt', deg(c.apparent_temperature)), f('Wind', Math.round(c.wind_speed_10m) + ' km/h'),
+      f('Feuchte', c.relative_humidity_2m + ' %'), f('Luftdruck', Math.round(c.pressure_msl) + ' hPa'),
+      f('Sonnenaufgang', hhmm(dd.sunrise[0])), f('Sonnenuntergang', hhmm(dd.sunset[0]))));
+  document.title = deg(c.temperature_2m) + ' ' + city().name;
+}
+const f = (a, b) => h('div', { class:'fact' }, h('small', {}, a), h('b', {}, b));
+function renderHours() {
+  const d = S.data; if (!d) return h('div', { class:'msg' }, S.loading ? 'Lädt …' : 'Keine Daten');
+  const now = d.current.time.slice(0, 13), H = d.hourly; let i = H.time.findIndex(t => t.slice(0, 13) >= now); if (i < 0) i = 0;
+  const row = h('div', { class:'hours' });
+  for (let k = i; k < Math.min(i + 24, H.time.length); k++)
+    row.append(h('button', { class:'hr', type:'button', 'data-f':true },
+      h('div', { class:'t' }, k === i ? 'Jetzt' : H.time[k].slice(11, 13) + ' Uhr'), h('div', { class:'em' }, wx(H.weather_code[k])[1]),
+      h('div', { class:'d' }, deg(H.temperature_2m[k])), h('div', { class:'p' }, '💧 ' + (H.precipitation_probability[k] ?? 0) + '%')));
+  return h('div', {}, h('div', { class:'head' }, 'Nächste 24 Stunden'), row);
+}
+function renderDays() {
+  const d = S.data; if (!d) return h('div', { class:'msg' }, S.loading ? 'Lädt …' : 'Keine Daten');
+  const D = d.daily;
+  return h('div', { class:'days' }, D.time.map((t, i) => h('button', { class:'day', type:'button', 'data-f':true },
+    h('span', { class:'n' }, i === 0 ? 'Heute' : DAYS[new Date(t + 'T12:00').getDay()]), h('span', { class:'em' }, wx(D.weather_code[i])[1]),
+    h('span', { class:'p' }, '💧 ' + (D.precipitation_probability_max[i] ?? 0) + '%'), h('span', { class:'c' }, wx(D.weather_code[i])[0]),
+    h('span', { class:'m' }, deg(D.temperature_2m_max[i]), ' ', h('span', {}, deg(D.temperature_2m_min[i]))))));
+}
+const KEYS = 'abcdefghijklmnopqrstuvwxyzäöüß'.split('');
+function paintField() { const s = $('#sf'); if (s) s.replaceChildren(S.typed ? document.createTextNode(S.typed) : h('span', { class:'ph' }, 'Ort suchen …'), h('span', { class:'caret' })); }
+const type = c => { if (S.typed.length < 40) { S.typed += c; paintField(); } };
+function renderPlaces() {
+  const wrap = h('div', {},
+    h('div', { class:'sfield' }, h('div', { id:'sf' })),
+    h('div', { class:'kb' }, KEYS.map(c => h('button', { class:'key', type:'button', 'data-f':true, onclick:() => type(c) }, c)),
+      h('button', { class:'key act w4', type:'button', 'data-f':true, onclick:() => type(' ') }, 'Leerzeichen'),
+      h('button', { class:'key act w3', type:'button', 'data-f':true, onclick:() => { S.typed = S.typed.slice(0, -1); paintField(); } }, '⌫ Löschen'),
+      h('button', { class:'key act w3', type:'button', 'data-f':true, onclick:find }, 'Suchen')),
+    h('div', { class:'cl', id:'cl' }));
+  setTimeout(() => { paintField(); paintCl(); }, 0);
+  return wrap;
+}
+function paintCl() {
+  const cl = $('#cl'); if (!cl) return;
+  const rows = [];
+  if (S.res) {
+    rows.push(h('div', { class:'head' }, S.res.length ? 'Suchergebnisse' : 'Nichts gefunden'));
+    S.res.forEach(r => rows.push(h('button', { class:'cty', type:'button', 'data-f':true, onclick:() => addCity(r) }, h('span', {}, r.name), h('small', {}, [r.admin1, r.country].filter(Boolean).join(', ')), h('span', { class:'sp' }), '+ Hinzufügen')));
+  }
+  rows.push(h('div', { class:'head', style:'margin-top:1rem' }, 'Gespeicherte Orte'));
+  S.cities.forEach((c, i) => rows.push(h('button', { class:'cty', type:'button', 'data-f':true, onclick:() => { S.sel = i; store.set('wxSel', i); S.data = null; load(); toast(c.name); } },
+    h('span', {}, (i === S.sel ? '● ' : '') + c.name), h('small', {}, c.country || ''), h('span', { class:'sp' }),
+    S.cities.length > 1 ? h('span', { class:'del', 'data-i':i }, 'Entfernen: Rot / Taste 1') : ''))); 
+  cl.replaceChildren(...rows);
+}
+async function find() {
+  const q = S.typed.trim(); if (q.length < 2) return toast('Bitte Ort eingeben');
+  try {
+    const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=de&name=' + encodeURIComponent(q));
+    const j = await r.json(); S.res = (j.results || []).map(x => ({ name:x.name, lat:x.latitude, lon:x.longitude, country:x.country, admin1:x.admin1 }));
+  } catch { return toast('Suche nicht möglich'); }
+  paintCl(); const f = $('#cl .cty'); if (f) focusEl(f);
+}
+function addCity(r) {
+  if (!S.cities.some(c => c.name === r.name && Math.abs(c.lat - r.lat) < .01)) S.cities.push({ name:r.name, lat:r.lat, lon:r.lon, country:r.country });
+  S.sel = S.cities.findIndex(c => c.name === r.name); store.set('wxCities', S.cities); store.set('wxSel', S.sel);
+  S.res = null; S.data = null; toast(r.name + ' gespeichert'); load(); paintCl();
+}
+function removeFocused() {
+  const a = document.activeElement; if (!a || !a.classList.contains('cty')) return;
+  const i = $$('#cl .cty').filter(e => e.querySelector('.del') || e.textContent.includes('')).indexOf(a);
+  const el = a.querySelector('.del'); if (!el) return;
+  const idx = +el.dataset.i; const nm = S.cities[idx].name;
+  S.cities.splice(idx, 1); if (S.sel >= S.cities.length) S.sel = 0; else if (idx < S.sel) S.sel--;
+  store.set('wxCities', S.cities); store.set('wxSel', S.sel); toast(nm + ' entfernt'); S.data = null; load();
+}
+function paintContent() {
+  const c = $('#content'); c.replaceChildren(S.tab === 'hours' ? renderHours() : S.tab === 'days' ? renderDays() : renderPlaces());
+}
+function paint() { paintBg(); paintNow(); if (S.tab !== 'places' || !$('#sf')) paintContent(); }
+function setTab(t) { S.tab = t; $$('#tabs .chip').forEach(c => c.classList.toggle('active', c.dataset.tab === t)); $('#content').scrollTop = 0; paintContent(); }
+$$('#tabs .chip').forEach(c => c.addEventListener('click', () => setTab(c.dataset.tab)));
+
+/* Fernbedienung */
+function vis(el) { if (el.disabled || el.hidden) return false; const r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4 || r.right <= 0 || r.left >= innerWidth) return false; const sc = el.closest('#content'); if (sc) { const b = sc.getBoundingClientRect(); if (r.bottom <= b.top || r.top >= b.bottom) return false; } return true; }
+function focusEl(el) { if (!el) return; el.focus({ preventScroll:true }); if (el.closest('#content')) el.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' }); }
+const initial = () => $('.tabs .chip.active');
+function move(dir) {
+  let cur = document.activeElement; if (!cur || !cur.matches || !cur.matches('[data-f]')) cur = null;
+  if (!cur) return focusEl(S.last && S.last.isConnected && vis(S.last) ? S.last : initial());
+  const all = $$('[data-f]').filter(e => e !== cur && vis(e));
+  const c = cur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, hz = dir === 'left' || dir === 'right';
+  if (hz || S.colFor !== cur) S.col = null; if (!hz && S.col == null) S.col = cx; const colX = S.col == null ? cx : S.col;
+  let best = null, bs = Infinity;
+  for (const strict of [true, false]) {
+    for (const el of all) {
+      const r = el.getBoundingClientRect(), ex = r.left + r.width / 2, ey = r.top + r.height / 2; let prim, gap, off;
+      if (hz) { if (dir === 'right' ? ex <= cx + 1 : ex >= cx - 1) continue; prim = dir === 'right' ? r.left - c.right : c.left - r.right; gap = Math.max(0, r.top - c.bottom, c.top - r.bottom); if (strict && gap > 8) continue; off = Math.abs(ey - cy); }
+      else { if (dir === 'down' ? ey <= cy + 1 : ey >= cy - 1) continue; prim = dir === 'down' ? r.top - c.bottom : c.top - r.bottom; gap = Math.max(0, r.left - c.right, c.left - r.right); off = Math.abs(ex - colX); }
+      const sc = Math.max(0, prim) + gap * 3 + off * .5 + (!hz && gap > 0 ? 1000 : 0); if (sc < bs) { bs = sc; best = el; }
+    }
+    if (best) break;
+  }
+  if (best) { S.colFor = best; focusEl(best); }
+}
+function goBack() { const a = document.activeElement; if (a && a.matches && a.matches('[data-f]') && !a.matches('.tabs .chip')) { focusEl(initial()); return true; } return false; }
+document.addEventListener('keydown', ev => {
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  const k = ev.key, c = ev.keyCode, typing = S.tab === 'places' && !!$('#sf');
+  if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !typing)) { if (goBack()) ev.preventDefault(); return; }
+  if (k === 'Backspace' && typing) { ev.preventDefault(); S.typed = S.typed.slice(0, -1); return paintField(); }
+  const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
+  if (dir) { ev.preventDefault(); return move(dir); }
+  if (k === 'ColorF0Red' || c === 403 || k === '1') { if (S.tab === 'places' && document.activeElement.classList.contains('cty')) return removeFocused(); }
+  if (k === 'r' && !typing) return load();
+  if (typing && k === 'Enter' && document.activeElement === document.body) return find();
+  if (typing && k.length === 1 && /[\p{L}\p{N} ]/u.test(k)) { ev.preventDefault(); type(k.toLowerCase()); }
+});
+document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('[data-f]')) S.last = e.target; });
+const kill = ev => { if (ev.cancelable) ev.preventDefault(); ev.stopImmediatePropagation(); };
+['touchstart','touchmove','touchend','touchcancel','gesturestart'].forEach(t => document.addEventListener(t, kill, { capture:true, passive:false }));
+['contextmenu','dragstart'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
+(() => { const w = () => { ['pointerdown','keydown','click'].forEach(t => document.removeEventListener(t, w, true)); try { const el = document.documentElement, fn = el.requestFullscreen || el.webkitRequestFullscreen; if (fn && !document.fullscreenElement) Promise.resolve(fn.call(el)).catch(() => {}); } catch {} }; ['pointerdown','keydown','click'].forEach(t => document.addEventListener(t, w, true)); })();
+
+setInterval(() => { if (!document.hidden) load(); }, 600000);
+setTab('hours'); load(); focusEl(initial());
+})();
+</script>
+</body>
+</html>
