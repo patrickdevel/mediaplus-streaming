@@ -1,0 +1,4 @@
+Name: sona. (SoundCloud Edition)
+Description: Stream your favorite music from everywhere!
+Installslite:
+Logo:
