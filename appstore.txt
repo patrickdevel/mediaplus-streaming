@@ -1,7 +1,11 @@
-Name: Spotify
+Name: Wetter
 Updated: 16.11.2026
-Description: Stream your favorite music from everywhere!
-Installslite: https://open.spotify.com/
-Logo: https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/sona.png?raw=true
+Description: An easy weather app
+Installslite: https://mediaplus-streaming.vercel.app/apps/wetter.html
+Logo: https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/weather.png?raw=true
 ---
-Name:...
+Name: Uhr
+Updated: 16.11.2026
+Description: An easy clock app
+Installslite: https://mediaplus-streaming.vercel.app/apps/uhr.html
+Logo: https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/clock.png?raw=true
