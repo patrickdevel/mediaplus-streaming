@@ -1180,7 +1180,6 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
 .xtile .alg{border-radius:var(--r)}
 .xtile:focus{background:var(--bg-3);box-shadow:var(--fr);border-color:transparent!important}
 .xtile i{background:var(--bg);color:var(--fg);border-color:var(--border-2)}
-.adet{flex-direction:row}
 .adet .alg{border-radius:var(--r-lg);box-shadow:var(--shadow)}
 .adet .meta span{background:var(--bg-3);border:1px solid var(--border);color:var(--fg-2);border-radius:var(--r-sm)}
 .abtn{border-radius:var(--r-sm);border:1px solid var(--border-2)!important;background:var(--bg)!important;color:var(--fg-2)}
@@ -1199,7 +1198,14 @@ body.welcome-on>*:not(#welcome):not(svg):not(script){-webkit-filter:blur(10px);f
 .astore.detail .aside{display:none}
 .astore.detail .aback{display:flex}
 .astore.detail{padding-top:9rem;padding-left:var(--pad)}
-.astore.detail .amain{justify-content:center}
+.astore.detail .amain{justify-content:flex-start;padding-top:1.4rem}
+.adet{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);gap:4rem;align-items:center;padding:3rem;min-height:0;flex:none}
+.adet>div{min-width:0}
+.adet .alg{width:100%}
+.adet h2{font-size:3.4rem;overflow-wrap:anywhere;line-height:1.15}
+.adet p{max-width:none;font-size:1.6rem}
+.adet .acts{gap:1.2rem}
+.abtn{min-width:0;padding:1.2rem 2.6rem}
 .awin{position:fixed;inset:0;z-index:160;background:#000;clip-path:inset(var(--t) var(--r) var(--b) var(--l) round 2.2rem);transition:clip-path .45s cubic-bezier(.2,.8,.2,1)}
 .awin.full{clip-path:inset(0 0 0 0 round 0)}
 .awin iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
@@ -1727,7 +1733,7 @@ function openStore(opener) {
     side.querySelectorAll('.xt').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
     main.scrollTop = 0;
     el.classList.toggle('detail', !!det);
-    if (det) return main.replaceChildren(detail(det));
+    if (det) { const more = cat.filter(x => appKey(x) !== appKey(det)); return main.replaceChildren(...[detail(det), more.length ? sh('Das könnte dir auch gefallen', more.length) : null, more.length ? grid(more.slice(0, 12)) : null].filter(Boolean)); }
     if (tab === 'start') {
       const feat = cat.slice(0, 5); let i = 0;
       const slides = feat.map((a, k) => { const l = Logo(a); if (!k) l.classList.add('on'); return l; });
