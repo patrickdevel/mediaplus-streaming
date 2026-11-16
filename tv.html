@@ -1661,7 +1661,7 @@ function Continue(target) {
 
 /* ===== Apps (Store, Installation, Start) ===== */
 const APPS_LOGO = 'https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/apps.png?raw=true';
-const APPS_SRC = 'https://mediaplus-streaming.vercel.app/appstore.txt';
+const APPS_SRC = 'https://raw.githubusercontent.com/patrickdevel/mediaplus-streaming/main/apps.html';
 const rawGh = u => u || '';
 const APPS_FALLBACK = [{ name:'sona. (SoundCloud Edition)', updated:'16.11.2026', description:'Stream your favorite music from everywhere!', installslite:'https://mediaplus-streaming.vercel.app/apps/sona.html/', logo:APPS_LOGO }];
 let appWin = null, layerEl = null;
@@ -1672,7 +1672,7 @@ const installedApps = () => { const cat = store.get('appcat', []); return store.
 async function fetchApps() {
   try {
     let t = null;
-    for (const u of [APPS_SRC]) {
+    for (const u of [APPS_SRC, 'https://github.com/patrickdevel/mediaplus-streaming/raw/main/apps.html', 'https://mediaplus-streaming.vercel.app/apps.html']) {
       try { const r = await fetch(u + (u.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache:'no-store' }); if (r.ok) { t = await r.text(); break; } } catch {}
     }
     if (!t) throw 0;
@@ -3498,15 +3498,16 @@ function tvKey(ev) {
   TV.pending = false;
   const k = ev.key, c = ev.keyCode, t = ev.target;
 
-  if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !/^(input|textarea|select)$/i.test(t.tagName))) {
-    if (goBack()) ev.preventDefault();
+  if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { ev.preventDefault(); goHomeNow(); return; }
+  /* App offen: ALLE Tasten (auch Zurück) an die App weiterreichen – die App meldet per mp-app-exit, wenn sie geschlossen werden soll */
+  if (appWin && !dlgEl) {
+    ev.preventDefault();
+    try { appWin._frame.focus(); appWin._frame.contentWindow.focus(); } catch {}
+    try { appWin._frame.contentWindow.postMessage({ type:'mp-key', key:k, keyCode:c }, '*'); } catch {}
     return;
   }
-
-  if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { ev.preventDefault(); goHomeNow(); return; }
-  if (appWin && !dlgEl) {
-    try { appWin._frame.focus(); appWin._frame.contentWindow.focus(); } catch {}
-    if (t === document.body || t === document.documentElement || t === appWin._frame) { ev.preventDefault(); try { appWin._frame.contentWindow.postMessage({ type:'mp-key', key:k, keyCode:c }, '*'); } catch {} }
+  if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !/^(input|textarea|select)$/i.test(t.tagName))) {
+    if (goBack()) ev.preventDefault();
     return;
   }
   const p = TV.player, v = TV.video;
