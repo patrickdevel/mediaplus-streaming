@@ -348,9 +348,10 @@ function buildArticle() {
     kids.push(h('div', { class:'msg-sub', style:'text-align:left;margin-top:1rem' }, 'Tipp: Mit „Neu laden“ erneut versuchen.'));
   }
 
+  // Wichtig: kein data-f, damit kein hässlicher Fokus-Rahmen um den Text erscheint
   return h('div', {},
     bar,
-    h('div', { class:'article', 'data-f':true, tabindex:'-1', 'data-key':'art' }, kids));
+    h('div', { class:'article', tabindex:'-1', 'data-key':'art' }, kids));
 }
 
 function buildContent() {
@@ -362,7 +363,7 @@ function renderSide() {
     h('div', { class:'side-head' }, 'Ressorts'),
     ...FEEDS.map(f => h('button', {
       class: 'res' + (f.id === S.feed ? ' act' : ''), 'data-f':true, 'data-key':'res-' + f.id, type:'button',
-      onclick: () => setFeed(f.id)
+      onclick:() => setFeed(f.id)
     }, f.name)),
     h('div', { class:'side-gap' }),
     h('button', { class:'res', 'data-f':true, 'data-key':'reload', type:'button', onclick:() => { toast('Wird aktualisiert …'); loadFeed(S.feed, true); } }, '↻ Aktualisieren')
@@ -517,12 +518,27 @@ document.addEventListener('keydown', ev => {
 
   /* Im Artikel: hoch/runter scrollen statt Fokus bewegen */
   if (S.article && (dir === 'up' || dir === 'down')) {
-    const cont = $('#content'), a = document.activeElement;
-    const onBar = a && a.dataset && (a.dataset.key === 'back' || a.dataset.key === 'reload-art');
-    if (dir === 'down' && onBar) { focusEl($('[data-key="art"]'), false); cont.scrollTop += cont.clientHeight * .5; return; }
-    if (dir === 'up' && !onBar && cont.scrollTop <= 2) { focusEl($('[data-key="back"]'), false); return; }
-    cont.scrollTop += (dir === 'down' ? 1 : -1) * cont.clientHeight * .55;
-    return;
+    const a = document.activeElement;
+    const inSide = a && a.closest && a.closest('#side');
+    
+    // Wenn der Fokus in der Seitenleiste liegt, normale Navigation zulassen
+    if (!inSide) {
+      const cont = $('#content');
+      const onBar = a && a.dataset && (a.dataset.key === 'back' || a.dataset.key === 'reload-art');
+      
+      if (dir === 'down') {
+        if (onBar) focusEl($('[data-key="art"]'), false);
+        cont.scrollTop += cont.clientHeight * .5;
+      } else {
+        if (cont.scrollTop <= 2) {
+          if (!onBar) focusEl($('[data-key="back"]'), false);
+        } else {
+          cont.scrollTop -= cont.clientHeight * .5;
+        }
+      }
+      return;
+    }
+    // Wenn inSide -> normale Navigation (fällt durch zu move(dir))
   }
 
   move(dir);
