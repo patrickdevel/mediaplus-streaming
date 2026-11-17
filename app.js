@@ -593,6 +593,85 @@ function openSettings(opener) {
   zoomOpen(opener, () => { el.classList.add('show'); const f = list.children[0]; f && f.focus({ preventScroll:true }); });
 }
 
+/* ===== Kontrollzentrum (3-Punkte-Button neben der Uhr) ===== */
+let sleepT = 0, sleepEnd = 0, sleepMin = 0;
+function setSleep(min) {
+  clearTimeout(sleepT); sleepT = 0; sleepEnd = 0; sleepMin = min;
+  if (!min) return;
+  sleepEnd = Date.now() + min * 60000;
+  sleepT = setTimeout(() => {
+    sleepT = 0; sleepEnd = 0; sleepMin = 0;
+    document.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
+    ScreenSaver.show(true); toast('Einschlaf-Timer abgelaufen');
+  }, min * 60000);
+}
+function ccSyms() {
+  const f = document.querySelector('svg symbol'), svg = f && f.parentNode;
+  if (!svg || svg.querySelector('#i-dots')) return;
+  svg.insertAdjacentHTML('beforeend',
+    '<symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></symbol>' +
+    '<symbol id="i-phone" viewBox="0 0 24 24"><rect x="6.5" y="2" width="11" height="20" rx="3"/><path d="M10.5 18.5h3"/></symbol>' +
+    '<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></symbol>' +
+    '<symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8"/><path d="M12 9.5v4l2.5 2M9.5 2h5"/></symbol>');
+}
+function openControl(opener) {
+  if (layerEl) return;
+  ccSyms();
+  const el = h('div', { class:'acc mz', role:'dialog', 'aria-label':'Kontrollzentrum' });
+  const bg = h('div', { class:'acc-bg' });
+  const tiles = [];
+  const T = (cls, kids, fn, label) => { const b = h('button', { class:'t ' + cls, type:'button', 'aria-label':label }, ...kids); b.onclick = fn; tiles.push(b); return b; };
+  const go = fn => { el._close(); setTimeout(fn, 300); };
+  const dark = () => document.documentElement.dataset.theme === 'dark';
+
+  const tm = h('b', { class:'ctime' });
+  const tick = () => { const d = new Date(); tm.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const clock = T('big', [tm, h('span', {}, 'Bildschirmschoner')], () => go(() => ScreenSaver.show(true)), 'Bildschirmschoner mit Uhr starten');
+
+  const thI = h('span', { class:'ti' }), thS = h('small', {});
+  const paintTh = () => { thI.replaceChildren(icon(dark() ? 'moon' : 'sun')); thS.textContent = dark() ? 'Dunkel' : 'Hell'; };
+  const theme = T('pill', [thI, h('span', { class:'tx' }, h('b', {}, 'Design'), thS)], () => { const v = dark() ? 'light' : 'dark'; store.set('theme', v); setTheme(v); paintTh(); }, 'Design wechseln');
+
+  const SL = [0, 15, 30, 60], slS = h('small', {});
+  const paintSl = () => { slS.textContent = sleepMin ? sleepMin + ' Min.' : 'Aus'; sleep.classList.toggle('on', !!sleepMin); };
+  const sleep = T('pill', [h('span', { class:'ti' }, icon('timer')), h('span', { class:'tx' }, h('b', {}, 'Einschlafen'), slS)], () => { setSleep(SL[(SL.indexOf(sleepMin) + 1) % SL.length]); paintSl(); }, 'Einschlaf-Timer');
+
+  const rand = T('pill wide', [h('span', { class:'ti' }, icon('shuffle')), h('span', { class:'tx' }, h('b', {}, 'Überrasch mich'), h('small', {}, 'Zufälliges Video'))], () => go(() => { location.hash = '#/random'; }), 'Zufälliges Video');
+
+  const rnd = (ic, label, fn) => T('rnd', [icon(ic)], () => go(fn), label);
+  const row = h('div', { class:'acc-row' },
+    rnd('search', 'Suche', () => { location.hash = '#/suche'; }),
+    rnd('phone', IS_TV ? 'Mit Handy koppeln' : 'An TV senden', () => { location.hash = IS_TV ? '#/pair' : '#/send'; }),
+    rnd('grid', 'Apps', () => openStore(opener)),
+    rnd('settings', 'Einstellungen', () => openSettings(opener)));
+  const cap = h('div', { class:'acc-cap' });
+  const panel = h('div', { class:'acc-panel' }, clock, theme, sleep, rand, row, cap);
+  el.addEventListener('focusin', ev => { const t = ev.target.closest && ev.target.closest('.t'); cap.textContent = t && t.classList.contains('rnd') ? t.getAttribute('aria-label') : ''; });
+  bg.addEventListener('mousedown', () => el._close());
+  el.append(bg, panel);
+
+  tick(); paintTh(); paintSl();
+  const iv = setInterval(tick, 5000), hc = () => el._close();
+  window.addEventListener('hashchange', hc);
+  el._close = () => {
+    if (el._closing) return; el._closing = true;
+    clearInterval(iv); window.removeEventListener('hashchange', hc);
+    el.classList.remove('show', 'rdy'); if (layerEl === el) layerEl = null;
+    setTimeout(() => el.remove(), 700);
+    if (opener && opener.isConnected) opener.focus({ preventScroll:true });
+  };
+  document.body.append(el); layerEl = el;
+
+  /* Start: jede Kachel fliegt vom Button aus an ihren Platz (nahe zuerst), beim Schließen zurück */
+  const pr = panel.getBoundingClientRect(), o = opener.getBoundingClientRect(), ox = o.left + o.width / 2, oy = o.top + o.height / 2;
+  const pos = tiles.map(t => { let x = 0, y = 0, n = t; while (n && n !== panel) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } return { t, cx:pr.left + x + t.offsetWidth / 2, cy:pr.top + y + t.offsetHeight / 2 }; });
+  pos.forEach(p => { p.d = Math.hypot(ox - p.cx, oy - p.cy); }); pos.sort((a, b) => a.d - b.d);
+  pos.forEach((p, i) => { p.t.style.setProperty('--dx', (ox - p.cx) * .9 + 'px'); p.t.style.setProperty('--dy', (oy - p.cy) * .9 + 'px'); p.t.style.setProperty('--od', i * 36 + 'ms'); p.t.style.setProperty('--cd', (pos.length - 1 - i) * 16 + 'ms'); });
+  void el.offsetWidth;
+  requestAnimationFrame(() => { el.classList.remove('mz'); el.classList.add('show'); clock.focus({ preventScroll:true }); });
+  setTimeout(() => { if (layerEl === el) el.classList.add('rdy'); }, 1000);
+}
+
 /* Klick: Icon schrumpft kurz, springt dann federnd auf Vollbild, danach öffnet sich sofort die App */
 function zoomOpen(from, ready) {
   if (!from || !from.isConnected) { requestAnimationFrame(() => ready && ready()); return; }
@@ -691,7 +770,10 @@ function Browse(label) {
     const clk = h('div', { class:'hclock' });
     const tick = () => { const d = new Date(); clk.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
     tick(); const ct = setInterval(tick, 10000); document.body.append(clk);
-    cleanups.push(() => { clearInterval(ct); clk.remove(); });
+    ccSyms();
+    const more = h('button', { class:'hmore', type:'button', 'aria-label':'Kontrollzentrum', onclick:() => openControl(more) }, icon('dots', 'fill'));
+    document.body.append(more);
+    cleanups.push(() => { clearInterval(ct); clk.remove(); more.remove(); });
     window.addEventListener('scroll', onScroll, { passive:true }); onScroll();
     cleanups.push(() => { window.removeEventListener('scroll', onScroll); document.body.style.removeProperty('--hp'); });
     Rows();
@@ -2150,6 +2232,7 @@ function focusEl(el) {
     if (row) { const a = el.getBoundingClientRect(), b = row.getBoundingClientRect(); row.scrollBy({ left:(a.left + a.width / 2) - (b.left + b.width / 2), behavior:'smooth' }); }
     return;
   }
+  if (el.closest('.acc,.hmore')) return;
   if (el.closest('.astore')) { el.scrollIntoView({ block:'center', behavior:'smooth' }); return; }
   if (el.closest('.happs')) { if (window.scrollY > 2) window.scrollTo({ top:0, behavior:'smooth' }); const r = el.parentElement; r.scrollTo({ left:el.offsetLeft - r.offsetLeft - 10, behavior:'smooth' }); return; }
   if (document.body.classList.contains('home') && el.closest('.hero,.hglass')) {
@@ -2286,7 +2369,7 @@ function move(dir) {
   const hit = scored.find(s => canFocus(s[1]));
   if (hit) { TV.colFor = hit[1]; return focusEl(hit[1]); }
   if (cur.closest('#side') && dir === 'right') return closeSide();
-  if (dir === 'left' && !cur.closest('#side,.pmenu,.player,.sticky-player,.sugg,.sleft')) openSide();
+  if (dir === 'left' && !cur.closest('#side,.pmenu,.player,.sticky-player,.sugg,.sleft,.acc')) openSide();
 }
 
 /* FIX: goBack verlässt NIE das Vollbild */
