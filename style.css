@@ -1388,3 +1388,18 @@ body.hicon{filter:contrast(1.25)}
 .astore .aempty{color:rgba(0,0,0,.5)}
 .astore .aback{background:rgba(255,255,255,.5)!important;border:0!important;color:#111;z-index:5}
 .astore .aback:focus{background:#fff!important;color:#111;box-shadow:0 1.2vh 3vh rgba(10,40,90,.25)}
+
+
+/* ===== Liquid Glass: App-Dock + Weiterschauen-Dock ===== */
+.happs,.hglass{--lg-bf:blur(.7rem) saturate(1.5) brightness(1.07)}
+.happs.lg-on,.happs.lg-lite,.hglass.lg-on,.hglass.lg-lite{
+  background:linear-gradient(160deg,rgba(255,255,255,.17),rgba(255,255,255,.035) 40%,rgba(255,255,255,.09)),rgba(14,14,20,.14);
+  border:0;
+  box-shadow:inset 1.5px 2px 2px -1px rgba(255,255,255,.55),inset -1.5px -2px 2px -1px rgba(255,255,255,.28),
+    inset 0 0 2.4rem rgba(255,255,255,.07),0 1.4rem 3.6rem rgba(0,0,0,.34),0 .2rem .8rem rgba(0,0,0,.22)}
+.happs.lg-on,.hglass.lg-on{-webkit-backdrop-filter:var(--lg-bf)!important;backdrop-filter:var(--lg-bf)!important}
+.happs.lg-lite,.hglass.lg-lite{-webkit-backdrop-filter:blur(1.4rem) saturate(1.7) brightness(1.1)!important;backdrop-filter:blur(1.4rem) saturate(1.7) brightness(1.1)!important}
+.happs.lg-on::after,.happs.lg-lite::after,.hglass.lg-on::after,.hglass.lg-lite::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;
+  background:linear-gradient(145deg,rgba(255,255,255,.8),rgba(255,255,255,.08) 30%,rgba(255,255,255,.04) 62%,rgba(255,255,255,.42));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
