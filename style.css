@@ -1316,3 +1316,20 @@ body.hicon{filter:contrast(1.25)}
 .aset .srow:active .tg.on::after{transform:translateX(2.6vh)}
 /* Schließen: sanft ausblenden */
 .aset:not(.show) .sin{opacity:0;transform:scale(.97);transition:opacity .2s,transform .3s}
+
+/* ===== Fixes: kein Verrutschen, Fade unten, kein Schweben, Icon-Zoom ===== */
+.aset,.aset .sin{overflow:clip}
+.aset{clip-path:none!important;opacity:0;transition:opacity .5s .2s!important}
+.aset.show{opacity:1}
+.aset .sfl .sico{animation:none!important}
+.aset .slist{left:50vw;right:3vw;top:15vh;bottom:2vh;padding:3vh 2.5vw 12vh;
+ -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 11vh),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 11vh),transparent)}
+.zoomic{position:fixed;z-index:170;overflow:hidden;border-radius:2.2rem;background:#111;pointer-events:none;
+ transition:left .7s cubic-bezier(.65,0,.2,1),top .7s cubic-bezier(.65,0,.2,1),width .7s cubic-bezier(.65,0,.2,1),height .7s cubic-bezier(.65,0,.2,1),border-radius .7s cubic-bezier(.65,0,.2,1),opacity .55s ease}
+.zoomic.out{opacity:0}
+.zoomic .alg{width:100%!important;height:100%;aspect-ratio:auto;border-radius:0!important;transform:none!important;box-shadow:none!important}
+.ablur{z-index:169;transition-duration:.45s}
+.awin{clip-path:none!important;opacity:0;transform:scale(1.04);transition:opacity .5s ease,transform .5s ease!important}
+.awin.full{opacity:1;transform:none}
+.awin.full .asplash .alg{animation:none}
+.asplash{transition:opacity .4s!important}
