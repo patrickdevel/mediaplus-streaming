@@ -491,111 +491,102 @@ function openStore(opener) {
   fetchApps().then(l => { cat = l; if (!det) render(); });
 }
 
-/* ===== Einstellungen ===== */
-(function(){ const b = document.body; if (store.get('noanim', false)) b.classList.add('noanim'); if (store.get('bigtext', false)) b.classList.add('bigtext'); if (store.get('hicon', false)) b.classList.add('hicon'); if (store.get('cursor', false)) document.documentElement.style.cursor = 'auto'; })();
+/* ===== Einstellungen (nur echte Optionen) ===== */
+(function(){ if (store.get('noanim', false)) document.body.classList.add('noanim'); if (store.get('cursor', false)) document.documentElement.style.cursor = 'auto'; })();
 function openSettings(opener) {
   if (layerEl) return;
-  const r = opener ? opener.getBoundingClientRect() : { top:innerHeight * .4, left:innerWidth * .4, right:innerWidth * .6, bottom:innerHeight * .6 };
+  const r = opener ? opener.getBoundingClientRect() : { top:innerHeight * .42, left:innerWidth * .42, right:innerWidth * .58, bottom:innerHeight * .58 };
   const el = h('div', { class:'aset', role:'dialog', 'aria-label':'Einstellungen' });
   el.style.setProperty('--t', r.top + 'px'); el.style.setProperty('--l', r.left + 'px'); el.style.setProperty('--r', (innerWidth - r.right) + 'px'); el.style.setProperty('--b', (innerHeight - r.bottom) + 'px');
-  const title = h('h1', {}, 'Einstellungen'), list = h('div', { class:'slist' });
-  const ico = h('div', { class:'sico' }); ico.innerHTML = '<div>Media+</div>';
-  const inner = h('div', { class:'sin' }, title, ico, list); el.append(inner);
+  const title = h('h1', {}, 'Einstellungen'), list = h('div', { class:'slist' }), sname = h('small', {}, 'Einstellungen');
+  const ico = h('div', { class:'sfl' }, h('div', { class:'sico' }, h('div', {}, h('b', {}, 'Media+'), sname)));
+  const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => { try { PLUS.importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
+  el.append(h('div', { class:'sin' }, title, ico, list), file);
   const chev = () => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.innerHTML = '<path d="m9 5 7 7-7 7"/>'; return s; };
-  const B = (k, d) => store.get(k, d);
-  const applyAll = () => {
-    document.body.classList.toggle('noanim', !!B('noanim', false));
-    document.body.classList.toggle('bigtext', !!B('bigtext', false));
-    document.body.classList.toggle('hicon', !!B('hicon', false));
-  };
-  const T = (label, key, def, fn) => ({ t:'toggle', label, key, def, fn });
-  const C = (label, key, opts, def) => ({ t:'cycle', label, key, opts, def });
+  const g = (k, d) => store.get(k, d), same = (a, b) => typeof a === 'number' ? Math.abs(a - b) < .001 : a === b;
+  const cue = () => g('cue', {}), setCue = o => { store.set('cue', { ...cue(), ...o }); PLUS.applyLook(); };
+  /* Typen: toggle (an/aus), cycle (Werte durchschalten), action, link, info */
+  const T = (label, get, set) => ({ t:'toggle', label, get, set });
+  const TK = (label, key, def, fn) => T(label, () => g(key, def), v => { store.set(key, v); fn && fn(v); });
+  const C = (label, vals, get, set) => ({ t:'cycle', label, vals, get, set });
+  const CK = (label, key, vals, def, fn) => C(label, vals, () => g(key, def), v => { store.set(key, v); fn && fn(v); });
   const A = (label, fn, dng) => ({ t:'action', label, fn, dng });
-  const I = (label, val) => ({ t:'info', label, val });
   const L = (label, href) => ({ t:'link', label, href });
-  const clearKey = (k, msg) => A(msg, async () => { if (await askConfirm(msg + '?', 'Löschen')) { store.set(k, []); markNav(); toast('Erledigt'); } }, true);
+  const I = (label, val) => ({ t:'info', label, val: typeof val === 'function' ? val : () => val });
+  const reroute = () => route();
+  const saver = () => { ScreenSaver.schedule(); };
+  const wipe = (key, label) => A(label, async () => { if (await askConfirm(label + '?', 'Löschen')) { store.set(key, Array.isArray(g(key, [])) ? [] : {}); markNav(); toast('Erledigt'); } }, true);
   const cats = [
-    ['Allgemein', [
-      T('Dunkles Design', 'theme', false, v => { setTheme(v ? 'dark' : 'light'); store.set('theme', v ? 'dark' : 'light'); }),
-      T('Vorschaubilder', 'thumbs', true),
-      T('Animationen reduzieren', 'noanim', false, applyAll),
-      C('Sprache', 'lang', ['Deutsch', 'English'], 'Deutsch'),
-      C('Startseite', 'startpage', ['Neu', 'Weiterschauen', 'Apps'], 'Neu'),
-      A('Neu laden', () => location.reload())]],
-    ['Profile und Accounts', [
-      I('Profil', 'Gast'), I('Konto', 'Nicht angemeldet'), L('Geräte koppeln', '#/pair'), L('Inhalte senden', '#/send')]],
-    ['Video und Audio', [
-      T('Nächstes Video automatisch', 'autonext', true),
-      T('Autoplay', 'autoplay', true),
-      C('Qualität', 'quality', ['Auto', 'Hoch', 'Mittel', 'Niedrig'], 'Auto'),
-      C('Lautstärke-Normalisierung', 'norm', ['Aus', 'Auto', 'Nachts'], 'Aus'),
-      T('Untertitel standardmäßig', 'subsdef', false),
-      C('Untertitelgröße', 'subsize', ['Klein', 'Normal', 'Groß'], 'Normal'),
-      C('Wiedergabe-Geschwindigkeit', 'speed', ['0,75×', '1×', '1,25×', '1,5×'], '1×')]],
+    ['Darstellung', [
+      T('Dunkles Design', () => document.documentElement.dataset.theme === 'dark', v => { store.set('theme', v ? 'dark' : 'light'); setTheme(v ? 'dark' : 'light'); }),
+      TK('Vorschaubilder', 'thumbs', true, reroute),
+      CK('Akzentfarbe', 'accent', [['Standard', ''], ['Blau', '#0070f3'], ['Rot', '#e5484d'], ['Grün', '#30a46c'], ['Orange', '#f5a623'], ['Lila', '#8e4ec6']], '', () => { PLUS.applyLook(); reroute(); }),
+      CK('Kartengröße', 'cw', [['Klein', .8], ['Mittel', 1], ['Groß', 1.3]], 1, () => { PLUS.applyLook(); reroute(); }),
+      CK('Helligkeit', 'bright', [['70 %', .7], ['100 %', 1], ['130 %', 1.3]], 1, () => PLUS.applyLook()),
+      TK('Animationen reduzieren', 'noanim', false, v => document.body.classList.toggle('noanim', v)),
+      TK('Maus-Zeiger anzeigen', 'cursor', false, v => { document.documentElement.style.cursor = v ? 'auto' : 'none'; })]],
+    ['Wiedergabe', [
+      TK('Nächstes Video automatisch', 'autonext', true),
+      CK('Geschwindigkeit', 'speed', [['0,75×', .75], ['1×', 1], ['1,25×', 1.25], ['1,5×', 1.5], ['2×', 2]], 1),
+      C('Untertitel-Größe', [['Klein', .8], ['Mittel', 1], ['Groß', 1.4], ['XL', 1.9]], () => cue().size || 1, v => setCue({ size:v })),
+      C('Untertitel-Hintergrund', [['Aus', 'transparent'], ['Halb', 'rgba(0,0,0,.6)'], ['Schwarz', '#000']], () => cue().bg || 'rgba(0,0,0,.6)', v => setCue({ bg:v })),
+      C('Untertitel-Farbe', [['Weiß', '#fff'], ['Gelb', '#ff0'], ['Cyan', '#0ff']], () => cue().fg || '#fff', v => setCue({ fg:v }))]],
     ['Bildschirmschoner', [
-      T('Bildschirmschoner', 'ss', true),
-      C('Starten nach', 'sstime', ['2 Min.', '5 Min.', '10 Min.', '15 Min.'], '5 Min.'),
-      C('Art', 'sstype', ['Vorschaubilder', 'Uhr', 'Schwarz'], 'Vorschaubilder')]],
-    ['Mitteilungen', [
-      T('Hinweise anzeigen', 'toasts', true),
-      T('App-Updates melden', 'appupd', true),
-      T('Neue Videos melden', 'newvid', false)]],
+      TK('Bildschirmschoner', 'saverOn', true, v => v ? saver() : ScreenSaver.hide()),
+      TK('Uhr anzeigen', 'saverClock', true, saver),
+      CK('Starten nach', 'saverDelay', [['1 Min.', 1], ['5 Min.', 5], ['10 Min.', 10], ['20 Min.', 20], ['30 Min.', 30]], 5, saver),
+      CK('Bildwechsel', 'saverInterval', [['10 s', 10], ['30 s', 30], ['60 s', 60]], 30, saver)]],
     ['Apps', [
-      I('Installierte Apps', String(store.get('apps', []).length)),
-      T('Beim Schließen nachfragen', 'askclose', true),
-      T('Apps vorladen', 'prewarm', true),
+      I('Installierte Apps', () => String(store.get('apps', []).length)),
+      TK('Beim Schließen nachfragen', 'askclose', true),
       A('App-Katalog neu laden', async () => { await fetchApps(); window._appsPaint && window._appsPaint(); toast('Katalog aktualisiert'); }),
       A('Alle Apps deinstallieren', async () => { if (await askConfirm('Alle Apps deinstallieren?', 'Deinstallieren')) { store.set('apps', []); window._appsPaint && window._appsPaint(); toast('Apps entfernt'); } }, true)]],
-    ['Fernbedienungen und Geräte', [
-      L('Gerät koppeln', '#/pair'), L('Inhalt senden', '#/send'),
-      T('Maus-Zeiger anzeigen', 'cursor', false, v => { document.documentElement.style.cursor = v ? 'auto' : 'none'; }),
-      I('Tasten', 'Pfeile · OK · Zurück · Home')]],
-    ['Bedienungshilfen', [
-      T('Große Schrift', 'bigtext', false, applyAll),
-      T('Hoher Kontrast', 'hicon', false, applyAll),
-      T('Bewegung reduzieren', 'noanim', false, applyAll)]],
-    ['Datenschutz', [
-      T('Verlauf speichern', 'savehist', true),
-      clearKey('hist', 'Verlauf löschen'), clearKey('saved', 'Gemerkte Videos löschen'),
-      A('Alle Daten zurücksetzen', async () => { if (await askConfirm('Alle Einstellungen und Daten zurücksetzen?', 'Zurücksetzen')) { try { Object.keys(localStorage).filter(k => k.startsWith('mt:')).forEach(k => localStorage.removeItem(k)); } catch {} location.reload(); } }, true)]],
-    ['Netzwerk', [
-      I('Status', navigator.onLine ? 'Verbunden' : 'Offline'),
-      I('Verbindung', (navigator.connection && navigator.connection.effectiveType || 'unbekannt').toUpperCase()),
-      A('Verbindung testen', async () => { const t = Date.now(); try { await fetch(location.href, { cache:'no-store', method:'HEAD' }); toast('Online · ' + (Date.now() - t) + ' ms'); } catch { toast('Keine Verbindung'); } })]],
+    ['Zugänglichkeit', [
+      L('Audiodeskription', '#/access/ad'), L('Gebärdensprache', '#/access/dgs'), L('Mit Untertitel', '#/access/ut')]],
+    ['Kopplung', [
+      IS_TV ? L('Mit Handy koppeln (QR)', '#/pair') : L('An TV senden', '#/send')]],
+    ['Daten', [
+      A('Exportieren (JSON)', () => PLUS.exportData()),
+      A('Importieren …', () => file.click()),
+      wipe('hist', 'Verlauf löschen'), wipe('saved', 'Gemerkte Videos löschen'),
+      A('Alles zurücksetzen', async () => { if (await askConfirm('Alle Einstellungen und Daten zurücksetzen?', 'Zurücksetzen')) { try { Object.keys(localStorage).filter(k => k.startsWith('mt:')).forEach(k => localStorage.removeItem(k)); } catch {} location.reload(); } }, true)]],
     ['Info', [
-      I('Name', 'Media+'), I('Version', '2.0'), I('Verlauf', String(store.get('hist', []).length)), I('Gemerkt', String(store.get('saved', []).length)),
-      I('Hinweis', 'Inoffiziell, nicht mit der ARD verbunden')]]
+      I('Verlauf', () => String(store.get('hist', []).length)), I('Gemerkt', () => String(store.get('saved', []).length)),
+      I('Netzwerk', () => navigator.onLine ? 'Verbunden' : 'Offline'),
+      A('Verbindung testen', async () => { const t0 = Date.now(); try { await fetch(location.href, { cache:'no-store', method:'HEAD' }); toast('Online · ' + (Date.now() - t0) + ' ms'); } catch { toast('Keine Verbindung'); } })]]
   ];
   let sub = null;
-  const row = (label, right, onclick, cls) => { const b = h('button', { class:'srow' + (cls ? ' ' + cls : ''), type:'button' }, h('span', {}, label), right); if (onclick) b.onclick = onclick; return b; };
-  function draw(focusIdx) {
-    list.replaceChildren(); list.scrollTop = 0;
-    if (!sub) {
-      title.textContent = 'Einstellungen';
-      cats.forEach(([n, items], i) => list.append(row(n, chev(), () => { sub = i; draw(0); })));
-    } else {
-      const [n, items] = cats[sub]; title.textContent = n;
-      list.append(row('Zurück', h('span', { class:'v' }, ''), () => { const i = sub; sub = null; draw(i); }));
-      items.forEach(it => {
+  const pop = n => { n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); };
+  const row = (label, right, onclick, cls, i) => { const b = h('button', { class:'srow' + (cls ? ' ' + cls : ''), type:'button', style:'--i:' + i }, h('span', {}, label), right); if (onclick) b.onclick = onclick; return b; };
+  const label = (it, v) => { const f = it.vals.find(x => same(x[1], v)); return f ? f[0] : it.vals[0][0]; };
+  function draw(dir, focusIdx) {
+    list.className = 'slist ' + dir; list.replaceChildren(); list.scrollTop = 0;
+    const name = sub == null ? 'Einstellungen' : cats[sub][0];
+    title.textContent = name; sname.textContent = name; pop(title); pop(sname);
+    let i = 0;
+    if (sub == null) cats.forEach(([n], k) => list.append(row(n, chev(), () => { sub = k; draw('fwd', 0); }, '', i++)));
+    else {
+      list.append(row('Zurück', '', () => { const k = sub; sub = null; draw('back', k); }, 'bk', i++));
+      cats[sub][1].forEach(it => {
         if (it.t === 'toggle') {
-          const tg = h('span', { class:'tg' + (B(it.key, it.def) ? ' on' : '') });
-          list.append(row(it.label, tg, () => { const v = !B(it.key, it.def); store.set(it.key, v); tg.classList.toggle('on', v); it.fn && it.fn(v); }));
+          const tg = h('span', { class:'tg' + (it.get() ? ' on' : '') });
+          list.append(row(it.label, tg, () => { const v = !it.get(); it.set(v); tg.classList.toggle('on', !!it.get()); }, '', i++));
         } else if (it.t === 'cycle') {
-          const v = h('span', { class:'v' }, B(it.key, it.def));
-          list.append(row(it.label, v, () => { const cur = it.opts.indexOf(B(it.key, it.def)); const nx = it.opts[(cur + 1) % it.opts.length]; store.set(it.key, nx); v.textContent = nx; }));
-        } else if (it.t === 'action') list.append(row(it.label, '', () => it.fn(), it.dng ? 'dng' : ''));
-        else if (it.t === 'link') list.append(row(it.label, chev(), () => { el._close(true); location.hash = it.href; }));
-        else list.append(row(it.label, h('span', { class:'v' }, it.val)));
+          const v = h('span', { class:'v' }, label(it, it.get()));
+          list.append(row(it.label, v, () => { const cur = it.vals.findIndex(x => same(x[1], it.get())); const nx = it.vals[(cur + 1) % it.vals.length]; it.set(nx[1]); v.textContent = nx[0]; pop(v); }, '', i++));
+        } else if (it.t === 'action') list.append(row(it.label, '', () => it.fn(), it.dng ? 'dng' : '', i++));
+        else if (it.t === 'link') list.append(row(it.label, chev(), () => { el._close(true); location.hash = it.href; }, '', i++));
+        else list.append(row(it.label, h('span', { class:'v' }, it.val()), null, 'inf', i++));
       });
     }
-    const t = list.children[focusIdx || 0]; if (t) t.focus({ preventScroll:true });
+    const t = list.children[sub == null ? (focusIdx || 0) : Math.min(1, list.children.length - 1)]; if (t) t.focus({ preventScroll:true });
   }
   el._close = (force) => {
-    if (sub != null && !force) { const i = sub; sub = null; draw(i); return; }
+    if (sub != null && !force) { const k = sub; sub = null; draw('back', k); return; }
     el.classList.remove('show'); layerEl = null; setTimeout(() => el.remove(), 450);
     if (opener && opener.isConnected) opener.focus({ preventScroll:true });
   };
-  document.body.append(el); layerEl = el; draw(0);
+  document.body.append(el); layerEl = el; draw('fwd', 0); list.style.setProperty('--d', '260ms');
   void el.offsetWidth; requestAnimationFrame(() => { el.classList.add('show'); const f = list.children[0]; f && f.focus({ preventScroll:true }); });
 }
 
@@ -2615,23 +2606,7 @@ const PLUS = (() => {
         L('captions', 'Mit Untertitel', '#/access/ut')),
       SEC('Kopplung Handy ↔ TV',
         IS_TV ? L('share', 'Mit Handy koppeln (QR)', '#/pair') : L('share', 'An TV senden', '#/send')),
-      SEC('Akzentfarbe',
-        B('x', 'Standard', () => { store.set('accent', ''); applyLook(); route(); }, !store.get('accent', '')),
-        ...COLORS.map(c => h('button', { class:'swatch' + (store.get('accent', '') === c ? ' on' : ''), type:'button', style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); route(); } }))),
-      SEC('Kartengröße',
-        B('grid', 'Klein',  () => { store.set('cw', .8);  applyLook(); route(); }, store.get('cw', 1) === .8),
-        B('grid', 'Mittel', () => { store.set('cw', 1);   applyLook(); route(); }, store.get('cw', 1) === 1),
-        B('grid', 'Groß',   () => { store.set('cw', 1.3); applyLook(); route(); }, store.get('cw', 1) === 1.3)),
-      SEC('Screensaver',
-        B('sun', 'An',  () => { store.set('saverOn', true);  ScreenSaver.schedule(); route(); }, store.get('saverOn', true)),
-        B('moon', 'Aus', () => { store.set('saverOn', false); ScreenSaver.hide();     route(); }, !store.get('saverOn', true)),
-        B('sun', 'Uhr anzeigen',   () => { store.set('saverClock', true);  ScreenSaver.schedule(); route(); }, store.get('saverClock', true)),
-        B('moon', 'Uhr ausblenden', () => { store.set('saverClock', false); ScreenSaver.schedule(); route(); }, !store.get('saverClock', true)),
-        ...([1, 5, 10, 20, 30].map(m => B('history', 'Nach ' + m + ' Min', () => { store.set('saverDelay', m); ScreenSaver.schedule(); route(); }, (store.get('saverDelay', 5) || 5) === m))),
-        ...([10, 30, 60].map(s => B('film', 'Bildwechsel ' + s + ' s', () => { store.set('saverInterval', s); ScreenSaver.schedule(); route(); }, (store.get('saverInterval', 30) || 30) === s)))),
-      SEC('Daten',
-        B('download', 'Exportieren (JSON)', exportData),
-        B('refresh', 'Importieren …', () => file.click())),
+      SEC('Einstellungen', B('settings', 'Einstellungen öffnen', () => openSettings())),
       file
     );
     main.append(hd('Mehr'), wrap);
@@ -2730,7 +2705,7 @@ const PLUS = (() => {
     if ((k === 'ok' || k === 'pp') && ScreenSaver.playRec()) return;
     if (k === 'home') { location.hash = '#/'; return; }
     if (k === 'menu') { openSide(); return; }
-    if (k === 'settings') { location.hash = '#/plus'; return; }
+    if (k === 'settings') { openSettings(); return; }
     document.dispatchEvent(new KeyboardEvent('keydown', { key:'Shift', bubbles:true }));
     const P = TV.player || (cur && cur.player), V = P && P.querySelector('video');
     const a = document.activeElement && document.activeElement !== document.body ? document.activeElement : document.body;
@@ -3262,7 +3237,7 @@ const PLUS = (() => {
     more();
   }
 
-  return { shorts, live, subsPage, access, random, more, pairPage, sendPage, sendTv, init };
+  return { shorts, live, subsPage, access, random, more, pairPage, sendPage, sendTv, init, applyLook, exportData, importData };
 })();
 
 (function init() {
