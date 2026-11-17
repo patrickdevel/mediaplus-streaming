@@ -1260,3 +1260,19 @@ body.home-down .happs{opacity:0}
 body.noanim *{transition-duration:0s!important;animation-duration:0s!important}
 body.bigtext{zoom:1.12}
 body.hicon{filter:contrast(1.25)}
+
+/* ===== Einstellungen: Layout in vw/vh (überschreibt oben) ===== */
+.aset h1{top:6vh;left:0;right:0;font-size:5.2vh;text-align:center}
+.aset .sico{left:7vw;top:53%;width:min(30vw,56vh);height:min(30vw,56vh);border-radius:22%;transform:translateY(-50%)}
+.aset .sico div{font-size:min(5vw,9vh);gap:0;letter-spacing:-.02em}
+.aset .slist{left:52vw;right:5vw;top:17vh;bottom:3vh;gap:1.3vh;padding:1.5vh 1.5vw}
+.aset .srow{font-size:3.3vh;padding:0 2.2vw;height:8.6vh;min-height:8.6vh;border-radius:99px}
+.aset .srow .v{font-size:3vh}
+.aset .srow svg{width:3.4vh;height:3.4vh}
+.aset .tg{width:8vh;height:4.6vh}
+.aset .tg::after{top:.5vh;left:.5vh;width:3.6vh;height:3.6vh}
+.aset .tg.on::after{transform:translateX(3.4vh)}
+@media (max-width:800px){
+ .aset .sico{display:none}
+ .aset .slist{left:5vw}
+}
