@@ -3310,3 +3310,100 @@ const PLUS = (() => {
   route();
   Welcome.firstRun();
 })();
+
+
+/* ===== Liquid Glass für App-Dock (.happs) und Weiterschauen-Dock (.hglass) =====
+   Physik wie in liquidglass (shaders.ts): Biconvex-Bevel, Brechung (IOR 1.5) am Rand,
+   chromatische Aberration, Fresnel-/Specular-Rand. Umsetzung als SVG-Displacement-Map,
+   die per backdrop-filter auf das Bild/Video hinter dem Dock wirkt (Chromium).
+   Andere Browser bekommen die "lite"-Variante (Blur + Glanzrand). */
+(function () {
+  const REFRACT = 0.69, CHROMA = 0.06, SLOPE_MAX = 3, REFR_POW = 1 - 1 / 1.5;
+  const NS = 'http://www.w3.org/2000/svg', XL = 'http://www.w3.org/1999/xlink';
+  const ua = navigator.userAgent;
+  const canRefract = /Chrome\//.test(ua) && !/Firefox\//.test(ua) && !!(window.CSS && CSS.supports && CSS.supports('backdrop-filter', 'url(#x)'));
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.setAttribute('aria-hidden', 'true');
+  svg.style.cssText = 'position:absolute;width:0;height:0;pointer-events:none';
+  const defs = document.createElementNS(NS, 'defs'); svg.append(defs); document.body.append(svg);
+  const mk = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const live = new Set(), st = new WeakMap(); let uid = 0;
+
+  function makeMap(w, h, r, zR, maxD) {
+    const k = w * h > 360000 ? .5 : 1, cw = Math.max(2, Math.round(w * k)), ch = Math.max(2, Math.round(h * k));
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    const ctx = cv.getContext('2d'), img = ctx.createImageData(cw, ch), d = img.data;
+    const hx = w / 2, hy = h / 2, rr = Math.min(r, hx, hy), scale = 2 * maxD, gain = REFR_POW * 2 * REFRACT * 30;
+    for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) {
+      const px = (x + .5) / k - hx, py = (y + .5) / k - hy;
+      const qx = Math.abs(px) - hx + rr, qy = Math.abs(py) - hy + rr, ox = Math.max(qx, 0), oy = Math.max(qy, 0);
+      const inside = -(Math.min(Math.max(qx, qy), 0) + Math.hypot(ox, oy) - rr);
+      let ex = 0, ey = 0;
+      if (inside > 0 && inside < zR + 40) {
+        let gx, gy;
+        if (qx > 0 || qy > 0) { const l = Math.hypot(ox, oy) || 1; gx = Math.sign(px) * ox / l; gy = Math.sign(py) * oy / l; }
+        else if (qx > qy) { gx = Math.sign(px); gy = 0; } else { gx = 0; gy = Math.sign(py); }
+        const slope = inside < zR ? Math.min(SLOPE_MAX, (zR - inside) / Math.sqrt(Math.max(inside * (2 * zR - inside), 1e-3))) : 0;
+        const dep = Math.min(1, inside / zR), dp = dep * dep * (3 - 2 * dep);
+        ex = -gx * slope * gain + (-px / hx) * REFRACT * 4 * dp;
+        ey = -gy * slope * gain + (-py / hy) * REFRACT * 4 * dp;
+      }
+      const i = (y * cw + x) * 4;
+      d[i] = Math.max(0, Math.min(255, Math.round(255 * (.5 + ex / scale))));
+      d[i + 1] = Math.max(0, Math.min(255, Math.round(255 * (.5 + ey / scale))));
+      d[i + 2] = 128; d[i + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    return { url: cv.toDataURL('image/png'), scale };
+  }
+
+  function attach(el) {
+    const s = { key: '', raf: 0 };
+    st.set(el, s); live.add(el);
+    if (!canRefract) { el.classList.add('lg-lite'); return; }
+    const id = 'lgf' + (++uid);
+    const f = mk('filter', { id, filterUnits: 'userSpaceOnUse', x: 0, y: 0, width: 1, height: 1, 'color-interpolation-filters': 'sRGB' });
+    const im = mk('feImage', { x: 0, y: 0, width: 1, height: 1, preserveAspectRatio: 'none', result: 'map' });
+    const ch = (c, m, res) => [mk('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', scale: 1, xChannelSelector: 'R', yChannelSelector: 'G', result: 'd' + c }),
+      mk('feColorMatrix', { in: 'd' + c, type: 'matrix', values: m, result: res })];
+    const R = ch('r', '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0', 'cr'), G = ch('g', '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0', 'cg'), B = ch('b', '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0', 'cb');
+    f.append(im, ...R, ...G, ...B, mk('feBlend', { in: 'cr', in2: 'cg', mode: 'screen', result: 'rg' }), mk('feBlend', { in: 'rg', in2: 'cb', mode: 'screen' }));
+    defs.append(f);
+    Object.assign(s, { id, f, im, dr: R[0], dg: G[0], db: B[0] });
+    el.style.setProperty('--lg-bf', `blur(.7rem) url(#${id}) saturate(1.5) brightness(1.07)`);
+    el.classList.add('lg-on');
+  }
+
+  function update(el) {
+    const s = st.get(el); if (!s || !s.f) return;
+    const w = el.offsetWidth, h = el.offsetHeight; if (w < 8 || h < 8) return;
+    const r = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, key = w + 'x' + h + '/' + r;
+    if (key === s.key) return; s.key = key;
+    const zR = Math.max(10, Math.min(48, r * .9, Math.min(w, h) / 2 - 1)), maxD = gainMax(zR);
+    const m = makeMap(w, h, r, zR, maxD);
+    s.f.setAttribute('width', w); s.f.setAttribute('height', h);
+    s.im.setAttribute('width', w); s.im.setAttribute('height', h);
+    s.im.setAttribute('href', m.url); s.im.setAttributeNS(XL, 'xlink:href', m.url);
+    s.dg.setAttribute('scale', m.scale); s.dr.setAttribute('scale', m.scale * (1 + CHROMA)); s.db.setAttribute('scale', m.scale * (1 - CHROMA));
+  }
+  const gainMax = () => REFR_POW * 2 * REFRACT * 30 * SLOPE_MAX + REFRACT * 4;
+
+  const ro = 'ResizeObserver' in window ? new ResizeObserver(es => es.forEach(e => {
+    const s = st.get(e.target); if (!s || s.raf) return;
+    s.raf = requestAnimationFrame(() => { s.raf = 0; update(e.target); });
+  })) : null;
+
+  function scan() {
+    document.querySelectorAll('.happs,.hglass').forEach(el => {
+      if (st.has(el)) return;
+      attach(el); if (ro) ro.observe(el); update(el);
+    });
+    live.forEach(el => {
+      if (el.isConnected) return;
+      const s = st.get(el); if (ro) ro.unobserve(el); if (s && s.f) s.f.remove(); if (s && s.raf) cancelAnimationFrame(s.raf);
+      live.delete(el); st.delete(el);
+    });
+  }
+  scan(); setInterval(scan, 400);
+  window.addEventListener('resize', () => live.forEach(el => { const s = st.get(el); if (s) s.key = ''; update(el); }));
+})();
