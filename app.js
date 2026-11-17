@@ -486,9 +486,8 @@ function openStore(opener) {
   }
   function close() { clearInterval(timer); el.classList.remove('show'); layerEl = null; setTimeout(() => el.remove(), 300); if (opener && opener.isConnected) opener.focus({ preventScroll:true }); }
   el._close = () => { if (det) { det = null; render(); const t = main.querySelector('.xtile,.ahero'); t && t.focus({ preventScroll:true }); } else close(); };
-  const zm = zoomOpen(opener); setTimeout(zm.fade, 380);
   document.body.append(el); layerEl = el; render();
-  requestAnimationFrame(() => { el.classList.add('show'); (side.querySelector('.on') || side.querySelector('.xt')).focus({ preventScroll:true }); });
+  zoomOpen(opener, () => { el.classList.add('show'); (side.querySelector('.on') || side.querySelector('.xt')).focus({ preventScroll:true }); });
   fetchApps().then(l => { cat = l; if (!det) render(); });
 }
 
@@ -588,25 +587,27 @@ function openSettings(opener) {
     if (opener && opener.isConnected) opener.focus({ preventScroll:true });
   };
   el.addEventListener('scroll', ev => { if (ev.target !== list) { ev.target.scrollTop = 0; ev.target.scrollLeft = 0; } }, true);
-  const zm = zoomOpen(opener); setTimeout(zm.fade, 380);
-  document.body.append(el); layerEl = el; draw('fwd', 0); list.style.setProperty('--d', '620ms');
-  void el.offsetWidth; requestAnimationFrame(() => { el.classList.add('show'); const f = list.children[0]; f && f.focus({ preventScroll:true }); });
+  list.addEventListener('scroll', () => list.style.setProperty('--mt', list.scrollTop > 6 ? '9vh' : '0px'));
+  document.body.append(el); layerEl = el; draw('fwd', 0); list.style.setProperty('--d', '120ms');
+  zoomOpen(opener, () => { el.classList.add('show'); const f = list.children[0]; f && f.focus({ preventScroll:true }); });
 }
 
-/* Icon vergrößert sich bis zum Vollbild, blendet dann zur App/zum Screen über */
-function zoomOpen(from) {
-  if (!from || !from.isConnected) return { fade() {} };
+/* Klick: Icon schrumpft kurz, springt dann federnd auf Vollbild, danach öffnet sich sofort die App */
+function zoomOpen(from, ready) {
+  if (!from || !from.isConnected) { requestAnimationFrame(() => ready && ready()); return; }
   const r = from.getBoundingClientRect(), lg = from.querySelector('.alg');
   const z = h('div', { class:'zoomic' }), bl = h('div', { class:'ablur' });
   z.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
   if (lg) z.append(lg.cloneNode(true));
   document.body.append(bl, z); void z.offsetWidth;
-  requestAnimationFrame(() => { bl.classList.add('on'); z.style.cssText = 'left:0;top:0;width:100vw;height:100vh;border-radius:0'; });
-  return { fade() { z.classList.add('out'); bl.classList.remove('on'); setTimeout(() => { z.remove(); bl.remove(); }, 700); } };
+  requestAnimationFrame(() => { z.classList.add('shr'); bl.classList.add('on'); });
+  setTimeout(() => { z.classList.remove('shr'); z.classList.add('go'); z.style.cssText = 'left:0;top:0;width:100vw;height:100vh;border-radius:0'; }, 150);
+  setTimeout(() => { ready && ready(); }, 560);
+  setTimeout(() => { z.classList.add('out'); bl.classList.remove('on'); }, 600);
+  setTimeout(() => { z.remove(); bl.remove(); }, 1000);
 }
 function launchApp(a, from) {
   if (appWin) return;
-  const zm = zoomOpen(from);
   const win = h('div', { class:'awin' });
   const sp = h('div', { class:'asplash' }, Logo(a), h('div', { class:'asp' }));
   const fr = h('iframe', { title:a.name, allow:'autoplay; fullscreen; encrypted-media', tabindex:'0' });
@@ -614,11 +615,10 @@ function launchApp(a, from) {
   win.append(fr, sp); document.body.append(win);
   appWin = win; win._frame = fr; win._from = from;
   history.pushState({ mpApp:1 }, '');
-  requestAnimationFrame(() => win.classList.add('full'));
-  setTimeout(zm.fade, from ? 380 : 0);
   const t0 = Date.now();
+  zoomOpen(from, () => win.classList.add('full'));
   const reveal = () => { sp.classList.add('out'); try { fr.focus(); fr.contentWindow.focus(); } catch {} };
-  fr.onload = () => setTimeout(reveal, Math.max(0, 1000 - (Date.now() - t0)));
+  fr.onload = () => setTimeout(reveal, Math.max(0, 640 - (Date.now() - t0)));
   setTimeout(reveal, 8000);
 }
 async function askCloseApp() {
