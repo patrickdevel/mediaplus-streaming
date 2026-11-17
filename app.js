@@ -420,6 +420,7 @@ function openStore(opener) {
   let cat = [], tab = 'start', det = null, q = '', timer = null;
   const isIn = a => store.get('apps', []).some(x => appKey(x) === appKey(a));
   const main = h('div', { class:'amain' });
+  main.addEventListener('scroll', () => main.style.setProperty('--mt', main.scrollTop > 6 ? '9vh' : '0px'));
   const tabs = [['start', 'Start', 'sgrid'], ['installed', 'Installiert', 'scheck'], ['discover', 'Entdecken', 'scompass'], ['search', 'Suche', 'search']];
   const side = h('div', { class:'aside' },
     h('div', { class:'ahead' }, Logo({ name:'Apps', logo:APPS_LOGO }), h('h2', {}, 'Apps')),
@@ -429,7 +430,7 @@ function openStore(opener) {
   back.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zurück</span>';
   const el = h('div', { class:'astore', role:'dialog', 'aria-label':'Apps' }, back, side, main);
   back.onclick = () => el._close();
-  const tile = a => { const b = h('button', { class:'xtile', type:'button', 'aria-label':a.name }, Logo(a), h('b', {}, a.name), h('span', {}, a.description || ''), isIn(a) ? h('i', {}, icon('scheck'), 'Installiert') : null); b.onclick = () => { det = a; render(true); }; return b; };
+  const tile = (a, i) => { const b = h('button', { class:'xtile', style:'--i:' + Math.min(i, 14), type:'button', 'aria-label':a.name }, Logo(a), h('b', {}, a.name), h('span', {}, a.description || ''), isIn(a) ? h('i', {}, icon('scheck'), 'Installiert') : null); b.onclick = () => { det = a; render(true); }; return b; };
   const grid = l => l.length ? h('div', { class:'agrid' }, l.map(tile)) : h('div', { class:'aempty' }, icon('sbox'), 'Nichts gefunden.');
   const sh = (t, n) => h('div', { class:'ash' }, h('h3', {}, t), n == null ? null : h('span', {}, String(n)));
   const instBtn = a => {
@@ -477,7 +478,7 @@ function openStore(opener) {
     else if (tab === 'discover') main.replaceChildren(sh('Entdecken', cat.length), grid(cat));
     else {
       const sqt = h('span', {}), sq = h('div', { class:'asq', tabindex:'0', role:'textbox', 'aria-label':'Suche' }, icon('search'), sqt), res = h('div');
-      const draw = () => { sqt.textContent = q || 'Apps suchen …'; sqt.style.color = q ? '#fff' : 'rgba(255,255,255,.5)'; const l = cat.filter(a => !q || a.name.toLowerCase().includes(q.toLowerCase())); res.replaceChildren(grid(l)); };
+      const draw = () => { sqt.textContent = q || 'Apps suchen …'; sqt.style.color = q ? '#111' : 'rgba(0,0,0,.45)'; const l = cat.filter(a => !q || a.name.toLowerCase().includes(q.toLowerCase())); res.replaceChildren(grid(l)); };
       const keys = h('div', { class:'akeys' }, [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', '␣', '⌫'].map(k => h('button', { type:'button', onclick:() => { q = k === '⌫' ? q.slice(0, -1) : k === '␣' ? q + ' ' : q + k; draw(); } }, k)));
       sq.addEventListener('keydown', ev => { if (/^[a-z0-9 ]$/i.test(ev.key)) { q += ev.key; draw(); ev.stopPropagation(); } else if (ev.key === 'Backspace') { q = q.slice(0, -1); draw(); ev.stopPropagation(); } });
       main.replaceChildren(sq, keys, res); draw();
@@ -485,7 +486,7 @@ function openStore(opener) {
     if (!keepFocus && !det) return;
   }
   function close() { clearInterval(timer); el.classList.remove('show'); layerEl = null; setTimeout(() => el.remove(), 300); if (opener && opener.isConnected) opener.focus({ preventScroll:true }); }
-  el._close = () => { if (det) { det = null; render(); const t = main.querySelector('.xtile,.ahero'); t && t.focus({ preventScroll:true }); } else close(); };
+  el._close = (force) => { if (det && !force) { det = null; render(); const t = main.querySelector('.xtile,.ahero'); t && t.focus({ preventScroll:true }); } else close(); };
   document.body.append(el); layerEl = el; render();
   zoomOpen(opener, () => { el.classList.add('show'); (side.querySelector('.on') || side.querySelector('.xt')).focus({ preventScroll:true }); });
   fetchApps().then(l => { cat = l; if (!det) render(); });
@@ -618,6 +619,7 @@ function launchApp(a, from) {
   const t0 = Date.now();
   zoomOpen(from, () => win.classList.add('full'));
   const reveal = () => { sp.classList.add('out'); try { fr.focus(); fr.contentWindow.focus(); } catch {} };
+  fr.addEventListener('load', () => { try { fr.contentWindow.addEventListener('keydown', ev => { const k = ev.key, c = ev.keyCode; if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { ev.preventDefault(); goHomeNow(); } }, true); } catch {} });
   fr.onload = () => setTimeout(reveal, Math.max(0, 640 - (Date.now() - t0)));
   setTimeout(reveal, 8000);
 }
@@ -2309,10 +2311,23 @@ function goBack() {
 }
 
 function goHomeNow() {
-  if (appWin) { if (appWin._asking) return; closeApp(); }
-  document.querySelectorAll('.astore').forEach(e => e._close && e._close());
-  if (location.hash && location.hash !== '#/') location.hash = '#/'; else window.scrollTo({ top:0, behavior:'smooth' });
-  setTimeout(() => { const f = initialTarget(); if (f) focusEl(f); }, 350);
+  if (typeof dlgEl !== 'undefined' && dlgEl) { try { (dlgEl._cancel || closeDlg)(); closeDlg(); } catch {} }
+  if (appWin) closeApp();
+  if (layerEl && layerEl._close) layerEl._close(true);
+  document.querySelectorAll('.astore,.aset').forEach(e => e._close && e._close(true));
+  const already = !location.hash || location.hash === '#/';
+  if (!already) location.hash = '#/';
+  else {
+    /* schon auf dem Homescreen: ganz nach oben, Reihen zurücksetzen */
+    window.scrollTo({ top:0, behavior:'smooth' }); document.documentElement.scrollTop = 0;
+    document.querySelectorAll('main .hrow,main .arow').forEach(r => { try { r.scrollTo({ left:0, behavior:'smooth' }); } catch {} });
+  }
+  let tries = 0;
+  const focusHero = () => {
+    const f = document.body.classList.contains('home') ? initialTarget() : null;
+    if (f) { focusEl(f); window.scrollTo({ top:0, behavior:'smooth' }); } else if (++tries < 14) setTimeout(focusHero, 150);
+  };
+  setTimeout(focusHero, already ? 420 : 350);
 }
 function tvKey(ev) {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
@@ -2709,7 +2724,7 @@ const PLUS = (() => {
   if (IS_TV) document.addEventListener('loadstart', ev => { const v = ev.target; if (v && v.tagName === 'VIDEO') { const x = store.get('vol'); if (x != null) try { v.volume = +x; } catch {} } }, true);
   function remoteKey(k) {
     if ((k === 'ok' || k === 'pp') && ScreenSaver.playRec()) return;
-    if (k === 'home') { location.hash = '#/'; return; }
+    if (k === 'home') { goHomeNow(); return; }
     if (k === 'menu') { openSide(); return; }
     if (k === 'settings') { openSettings(); return; }
     document.dispatchEvent(new KeyboardEvent('keydown', { key:'Shift', bubbles:true }));
