@@ -60,6 +60,63 @@
 <main id="main"></main>
 <div id="toast" role="status"></div>
 
+<style>
+#boot{position:fixed;inset:0;z-index:99999;background:#050505;opacity:1;transition:opacity .9s ease,transform .9s ease;cursor:none;touch-action:none}
+#boot.out{opacity:0;transform:scale(1.04);pointer-events:none}
+#boot canvas{position:absolute;inset:0;width:100%;height:100%}
+</style>
+<div id="boot" aria-hidden="true"><canvas id="bootcv"></canvas></div>
+<script>
+(function(){
+  var el=document.getElementById('boot'),cv=document.getElementById('bootcv'),ctx=cv.getContext('2d');
+  var B=window.BOOT={active:true,skip:function(){finish();}};
+  var dur=(10+Math.random()*5)*1000,t0=performance.now(),raf=0,done=false;
+  var au=new Audio('startup.mp3');au.preload='auto';
+  function play(){if(!done)au.play().catch(function(){});}
+  play();
+  function size(){var d=window.devicePixelRatio||1;cv.width=Math.round(innerWidth*d);cv.height=Math.round(innerHeight*d);}
+  size();addEventListener('resize',size);
+  function draw(t){
+    var W=cv.width,H=cv.height,k=Math.min(W/960,H/540),cx=480,cy=270;
+    ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='#050505';ctx.fillRect(0,0,W,H);
+    ctx.setTransform(k,0,0,k,(W-960*k)/2,(H-540*k)/2);
+    var c=ctx;
+    c.save();c.beginPath();c.rect(0,0,960,540);c.clip();
+    var off=draw.o||(draw.o=document.createElement('canvas'));
+    if(off.width!==960||off.height!==540){off.width=960;off.height=540;}
+    var o=off.getContext('2d');o.setTransform(1,0,0,1,0,0);o.clearRect(0,0,960,540);
+    o.font='700 132px Inter,"Helvetica Neue",Arial,sans-serif';o.fillStyle='#7f7f89';o.textBaseline='middle';o.textAlign='center';
+    o.fillText('Media+',cx,cy);
+    var mw=o.measureText('Media+').width,x0=cx-mw/2,ph=((t/1.5)%1+1)%1,sx=x0-160+(mw+320)*ph;
+    var g=o.createLinearGradient(sx-130,0,sx+130,0);
+    g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');
+    o.globalCompositeOperation='source-atop';o.fillStyle=g;o.fillRect(0,0,960,540);
+    c.drawImage(off,0,0);c.restore();
+  }
+  function loop(now){
+    var e=now-t0;
+    draw((e/1000)%6);
+    if(e>=dur)return finish();
+    raf=requestAnimationFrame(loop);
+  }
+  raf=requestAnimationFrame(loop);
+  function finish(){
+    if(done)return;done=true;cancelAnimationFrame(raf);
+    el.classList.add('out');
+    var v=au.volume,n=0,fade=setInterval(function(){n++;au.volume=Math.max(0,v*(1-n/9));if(n>=9){clearInterval(fade);au.pause();}},100);
+    setTimeout(function(){B.active=false;el.remove();removeEventListener('resize',size);},950);
+  }
+  /* während des Starts: keine Bedienung am TV */
+  ['keydown','keyup','keypress','click','dblclick','pointerdown','pointerup','mousedown','mouseup','touchstart','touchend','wheel','contextmenu'].forEach(function(ev){
+    window.addEventListener(ev,function(e){
+      if(!B.active)return;
+      if(ev==='keydown'||ev==='pointerdown'||ev==='click')play();
+      e.preventDefault();e.stopImmediatePropagation();
+    },true);
+  });
+})();
+</script>
 <script src="app.js"></script>
 </body>
 </html>
