@@ -486,6 +486,7 @@ function openStore(opener) {
   }
   function close() { clearInterval(timer); el.classList.remove('show'); layerEl = null; setTimeout(() => el.remove(), 300); if (opener && opener.isConnected) opener.focus({ preventScroll:true }); }
   el._close = () => { if (det) { det = null; render(); const t = main.querySelector('.xtile,.ahero'); t && t.focus({ preventScroll:true }); } else close(); };
+  const zm = zoomOpen(opener); setTimeout(zm.fade, 380);
   document.body.append(el); layerEl = el; render();
   requestAnimationFrame(() => { el.classList.add('show'); (side.querySelector('.on') || side.querySelector('.xt')).focus({ preventScroll:true }); });
   fetchApps().then(l => { cat = l; if (!det) render(); });
@@ -586,33 +587,39 @@ function openSettings(opener) {
     el.classList.remove('show'); layerEl = null; setTimeout(() => el.remove(), 450);
     if (opener && opener.isConnected) opener.focus({ preventScroll:true });
   };
-  document.body.append(el); layerEl = el; draw('fwd', 0); list.style.setProperty('--d', '260ms');
+  el.addEventListener('scroll', ev => { if (ev.target !== list) { ev.target.scrollTop = 0; ev.target.scrollLeft = 0; } }, true);
+  const zm = zoomOpen(opener); setTimeout(zm.fade, 380);
+  document.body.append(el); layerEl = el; draw('fwd', 0); list.style.setProperty('--d', '620ms');
   void el.offsetWidth; requestAnimationFrame(() => { el.classList.add('show'); const f = list.children[0]; f && f.focus({ preventScroll:true }); });
 }
 
+/* Icon vergrößert sich bis zum Vollbild, blendet dann zur App/zum Screen über */
+function zoomOpen(from) {
+  if (!from || !from.isConnected) return { fade() {} };
+  const r = from.getBoundingClientRect(), lg = from.querySelector('.alg');
+  const z = h('div', { class:'zoomic' }), bl = h('div', { class:'ablur' });
+  z.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+  if (lg) z.append(lg.cloneNode(true));
+  document.body.append(bl, z); void z.offsetWidth;
+  requestAnimationFrame(() => { bl.classList.add('on'); z.style.cssText = 'left:0;top:0;width:100vw;height:100vh;border-radius:0'; });
+  return { fade() { z.classList.add('out'); bl.classList.remove('on'); setTimeout(() => { z.remove(); bl.remove(); }, 700); } };
+}
 function launchApp(a, from) {
   if (appWin) return;
-  const r = from ? from.getBoundingClientRect() : { top:innerHeight * .4, left:innerWidth * .4, right:innerWidth * .6, bottom:innerHeight * .6 };
+  const zm = zoomOpen(from);
   const win = h('div', { class:'awin' });
-  win.style.setProperty('--t', r.top + 'px'); win.style.setProperty('--l', r.left + 'px');
-  win.style.setProperty('--r', (innerWidth - r.right) + 'px'); win.style.setProperty('--b', (innerHeight - r.bottom) + 'px');
   const sp = h('div', { class:'asplash' }, Logo(a), h('div', { class:'asp' }));
   const fr = h('iframe', { title:a.name, allow:'autoplay; fullscreen; encrypted-media', tabindex:'0' });
-  const bl = h('div', { class:'ablur' }); document.body.append(bl); win._blur = bl; requestAnimationFrame(() => bl.classList.add('on'));
   fr.src = a.installslite;
   win.append(fr, sp); document.body.append(win);
   appWin = win; win._frame = fr; win._from = from;
   history.pushState({ mpApp:1 }, '');
-  const lg = sp.querySelector('.alg'), lr = lg.getBoundingClientRect();
-  win.style.setProperty('--ds', (r.right - r.left) / lr.width);
-  win.style.setProperty('--dx', ((r.left + r.right) / 2 - (lr.left + lr.right) / 2) + 'px');
-  win.style.setProperty('--dy', ((r.top + r.bottom) / 2 - (lr.top + lr.bottom) / 2) + 'px');
-  sp.style.setProperty('--ds', win.style.getPropertyValue('--ds')); sp.style.setProperty('--dx', win.style.getPropertyValue('--dx')); sp.style.setProperty('--dy', win.style.getPropertyValue('--dy'));
-  void win.offsetWidth; win.classList.add('full');
+  requestAnimationFrame(() => win.classList.add('full'));
+  setTimeout(zm.fade, from ? 380 : 0);
   const t0 = Date.now();
-  const reveal = () => { sp.classList.add('out'); try { fr.focus(); fr.contentWindow.focus(); } catch {} setTimeout(() => { if (win._blur) win._blur.remove(); }, 300); };
-  fr.onload = () => setTimeout(reveal, Math.max(0, 380 - (Date.now() - t0)));
-  setTimeout(reveal, 7000);
+  const reveal = () => { sp.classList.add('out'); try { fr.focus(); fr.contentWindow.focus(); } catch {} };
+  fr.onload = () => setTimeout(reveal, Math.max(0, 1000 - (Date.now() - t0)));
+  setTimeout(reveal, 8000);
 }
 async function askCloseApp() {
   if (!appWin || appWin._asking) return; appWin._asking = true;
@@ -622,9 +629,8 @@ async function askCloseApp() {
 }
 function closeApp() {
   const w = appWin; if (!w) return; appWin = null;
-  if (w._blur) { document.body.append(w._blur); w._blur.classList.add('on'); }
-  w.classList.remove('full'); w.style.transition = 'clip-path .34s cubic-bezier(.32,.72,0,1), opacity .2s .18s'; w.style.opacity = '0';
-  setTimeout(() => { w.remove(); if (w._blur) { w._blur.classList.remove('on'); setTimeout(() => w._blur.remove(), 260); } }, 360);
+  w.classList.remove('full');
+  setTimeout(() => w.remove(), 520);
   if (history.state && history.state.mpApp) history.back();
   if (w._from && w._from.isConnected) w._from.focus({ preventScroll:true });
 }
