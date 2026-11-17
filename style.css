@@ -1333,3 +1333,16 @@ body.hicon{filter:contrast(1.25)}
 .awin.full{opacity:1;transform:none}
 .awin.full .asplash .alg{animation:none}
 .asplash{transition:opacity .4s!important}
+
+/* ===== Klick-Animation: schrumpfen → federnd auf Vollbild → App sofort ===== */
+@property --mt{syntax:'<length>';inherits:false;initial-value:0px}
+.aset .slist{transition:--mt .25s;
+ -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--mt,0px),#000 calc(100% - 11vh),transparent);
+ mask-image:linear-gradient(to bottom,transparent 0,#000 var(--mt,0px),#000 calc(100% - 11vh),transparent)}
+.zoomic{transition:transform .15s ease-out,opacity .3s ease!important}
+.zoomic.shr{transform:scale(.82)}
+.zoomic.go{transition:left .56s cubic-bezier(.2,1.25,.35,1),top .56s cubic-bezier(.2,1.25,.35,1),width .56s cubic-bezier(.2,1.25,.35,1),height .56s cubic-bezier(.2,1.25,.35,1),border-radius .5s ease,transform .15s,opacity .3s!important}
+.ablur{transition-duration:.25s!important}
+.awin{transform:none!important;transition:opacity .12s linear!important}
+.aset{transition:opacity .15s linear!important}
+.asplash{transition:opacity .25s!important}
