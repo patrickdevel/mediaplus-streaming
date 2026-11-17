@@ -1388,3 +1388,53 @@ body.hicon{filter:contrast(1.25)}
 .astore .aempty{color:rgba(0,0,0,.5)}
 .astore .aback{background:rgba(255,255,255,.5)!important;border:0!important;color:#111;z-index:5}
 .astore .aback:focus{background:#fff!important;color:#111;box-shadow:0 1.2vh 3vh rgba(10,40,90,.25)}
+
+
+/* ===== Kontrollzentrum: 3-Punkte-Button + Panel (nur Blur) ===== */
+.hmore{position:fixed;top:2.1rem;right:3.4rem;z-index:30;width:3.8rem;height:3.8rem;padding:0;margin:0;border:0;border-radius:50%;display:grid;place-items:center;color:#fff;cursor:pointer;
+  background:rgba(10,10,14,.22);-webkit-backdrop-filter:blur(3rem) saturate(1.5)!important;backdrop-filter:blur(3rem) saturate(1.5)!important;
+  transition:opacity .35s ease,transform .35s ease,background .2s,color .2s}
+.hmore .ic{width:2.2rem;height:2.2rem}
+.hmore::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(210,210,216,.45),rgba(210,210,216,.07) 50%,rgba(210,210,216,.26));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.hmore:focus,.hmore:hover{outline:0;background:#fff;color:#111;transform:scale(1.1)}
+body.home-prev .hmore,body.home-scrolled .hmore{opacity:0;transform:translateY(-.6rem);pointer-events:none;visibility:hidden;transition:opacity .35s ease,transform .35s ease,visibility 0s .35s}
+body:not(.home) .hmore{display:none}
+.hclock{right:8.4rem}
+
+.acc{position:fixed;inset:0;z-index:150;pointer-events:none}
+.acc.show{pointer-events:auto}
+.acc-bg{position:absolute;inset:0;opacity:0;transition:opacity .3s ease .1s;
+  background:radial-gradient(ellipse 70% 80% at 100% 0%,rgba(0,0,0,.5),rgba(0,0,0,.18) 55%,transparent 80%)}
+.acc.show .acc-bg{opacity:1;transition:opacity .45s ease}
+.acc-panel{position:absolute;top:7.8rem;right:3.4rem;width:31.5rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.acc .t{position:relative;display:flex;margin:0;padding:0;font:inherit;color:#fff;text-align:left;cursor:pointer;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);
+  -webkit-backdrop-filter:blur(2.6rem) saturate(1.5)!important;backdrop-filter:blur(2.6rem) saturate(1.5)!important;
+  box-shadow:0 1rem 3rem rgba(0,0,0,.28);
+  opacity:0;transform:translate(var(--dx,0),var(--dy,0)) scale(.32);
+  transition:transform .3s cubic-bezier(.5,0,.75,.4),opacity .22s ease,background .2s,color .2s;transition-delay:var(--cd,0ms)}
+.acc.show .t{opacity:1;transform:none;transition:transform .66s cubic-bezier(.2,1.2,.3,1),opacity .28s ease,background .2s,color .2s;transition-delay:var(--od,0ms)}
+.acc.rdy .t{transition:transform .24s cubic-bezier(.2,.9,.3,1.25),background .18s,color .18s,opacity .2s;transition-delay:0ms}
+.acc .t:focus,.acc .t:hover{outline:0;background:#fff;color:#111;border-color:#fff;box-shadow:0 1.2rem 3.6rem rgba(0,0,0,.4)}
+.acc.rdy .t:focus,.acc.rdy .t:hover{transform:scale(1.06)}
+.acc .t.on{background:rgba(255,255,255,.3)}
+.acc .t.on:focus,.acc .t.on:hover{background:#fff}
+.acc .big{grid-column:1;grid-row:1 / span 2;min-width:0;flex-direction:column;justify-content:space-between;align-items:flex-start;padding:1.6rem;border-radius:2.6rem}
+.acc .big .ctime{font-family:"Special Gothic Expanded One",system-ui,sans-serif;font-weight:400;font-size:3.3rem;line-height:1;letter-spacing:.01em}
+.acc .big span{font-size:1.4rem;font-weight:600;line-height:1.2;opacity:.9}
+.acc .pill{align-items:center;gap:.9rem;height:6rem;padding:0 1.4rem;border-radius:3rem}
+.acc .pill .ti{display:grid;place-items:center;flex:none}
+.acc .pill .ic{width:2.6rem;height:2.6rem}
+.acc .pill .tx{display:flex;flex-direction:column;min-width:0}
+.acc .pill b{overflow:hidden;text-overflow:ellipsis;font-size:1.4rem;font-weight:600;line-height:1.15;white-space:nowrap}
+.acc .pill small{font-size:1.25rem;font-weight:500;line-height:1.2;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc .wide{grid-column:1 / -1}
+.acc-row{grid-column:1 / -1;display:flex;justify-content:space-between}
+.acc .rnd{width:5.8rem;height:5.8rem;border-radius:50%;align-items:center;justify-content:center}
+.acc .rnd .ic{width:2.6rem;height:2.6rem}
+.acc-cap{grid-column:1 / -1;height:2rem;text-align:center;font-size:1.35rem;font-weight:600;color:#fff;text-shadow:0 .1rem .6rem rgba(0,0,0,.7)}
+
+.acc.mz .t{transition:none!important}
