@@ -499,7 +499,7 @@ function openSettings(opener) {
   const el = h('div', { class:'aset', role:'dialog', 'aria-label':'Einstellungen' });
   el.style.setProperty('--t', r.top + 'px'); el.style.setProperty('--l', r.left + 'px'); el.style.setProperty('--r', (innerWidth - r.right) + 'px'); el.style.setProperty('--b', (innerHeight - r.bottom) + 'px');
   const title = h('h1', {}, 'Einstellungen'), list = h('div', { class:'slist' });
-  const ico = h('div', { class:'sico' }); ico.innerHTML = '<div><svg viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></svg>Media+</div>';
+  const ico = h('div', { class:'sico' }); ico.innerHTML = '<div>Media+</div>';
   const inner = h('div', { class:'sin' }, title, ico, list); el.append(inner);
   const chev = () => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.innerHTML = '<path d="m9 5 7 7-7 7"/>'; return s; };
   const B = (k, d) => store.get(k, d);
