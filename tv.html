@@ -92,6 +92,7 @@
     var g=o.createLinearGradient(sx-130,0,sx+130,0);
     g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');
     o.globalCompositeOperation='source-atop';o.fillStyle=g;o.fillRect(0,0,960,540);
+    o.globalCompositeOperation='source-over';
     c.drawImage(off,0,0);c.restore();
   }
   function loop(now){
