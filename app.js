@@ -2766,6 +2766,8 @@ const PLUS = (() => {
     const isDupe = i => { if (!i) return false; if (seenIds.includes(i)) return true; seenIds.push(i); if (seenIds.length > 300) seenIds.shift(); return false; };
     function handleMsg(d) {
       if (!d || isDupe(d.i) || d.t === 'ping') return;
+      if (window.BOOT && BOOT.active) { if (d.t === 'skip' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///skip')) BOOT.skip(); return; }
+      if (d.t === 'skip' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///skip')) return;
       if (d.t === 'reload' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///reload')) {
         history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return;
       }
@@ -3285,6 +3287,7 @@ const PLUS = (() => {
     const q = $('#q').value.trim();
     const ql = q.toLowerCase();
     if (ql === '///reload' && store.get('tvTopic')) { PLUS.sendTv({ t:'reload' }); $('#q').value = ''; return; }
+    if (ql === '///skip') { if (store.get('tvTopic')) PLUS.sendTv({ t:'skip' }); $('#q').value = ''; return; }
     if (ql === '///hi') {
       if (store.get('tvTopic')) PLUS.sendTv({ t:'hi' });
       else Welcome.show();
