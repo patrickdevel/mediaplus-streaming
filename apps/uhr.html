@@ -49,6 +49,21 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:
 #ring .l{font-size:2.6rem;color:var(--fg-3)}
 #toast{position:fixed;left:50%;bottom:3.6rem;transform:translate(-50%,2rem);z-index:60;padding:1.2rem 2.4rem;border-radius:999px;background:#fff;color:#000;font-size:1.3rem;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
 #toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ===== TV-Stil (wie Einstellungen / Apps): Aqua-Verlauf, weiche weiße Pills, Fokus = weiß + größer ===== */
+html{background:#76c8ff}
+body{background:radial-gradient(60% 70% at 15% 20%,#8fdcff 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#7fb2ff 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#7fc9c9 0,transparent 60%),linear-gradient(160deg,#76c8ff,#9ec4dc 55%,#6fb3c4)!important;background-attachment:fixed;color:#111!important}
+
+:root{--fg-2:#111;--fg-3:rgba(0,0,0,.5);--fg-4:rgba(0,0,0,.4);--border-2:transparent;--glass:rgba(255,255,255,.32);--fr:0 1.2rem 3rem rgba(0,0,0,.22)}
+.chip{height:4.6rem}
+.chip.active{background:rgba(255,255,255,.62);border-color:transparent;color:#111}
+.chip:focus,.btn:focus,.tile:focus{border-color:transparent}
+.tile,.alarm{border-radius:2.6rem}.lap{border-radius:99px}
+.btn{border-radius:99px}
+.btn.pri,.btn.pri:hover{background:#3b78c2;color:#fff;border-color:transparent}
+.btn.pri:focus{background:#fff;color:#111}
+.time small,.date{color:rgba(0,0,0,.5)}
+#ring{background:rgba(30,60,90,.85);color:#fff}#ring .l{color:rgba(255,255,255,.8)}
 </style>
 </head>
 <body>
@@ -210,6 +225,8 @@ function goBack() { if (ringing) { stopRing(); return true; } const a = document
 document.addEventListener('keydown', ev => {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const k = ev.key, c = ev.keyCode;
+
+  if (k === 'Enter' || c === 13 || k === ' ') { const a = document.activeElement; if (a && a !== document.body && a.matches && a.matches('button,[data-f],[tabindex]') && a.click) { ev.preventDefault(); a.click(); return; } }
   if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || k === 'Backspace') { if (goBack()) ev.preventDefault(); else { try { parent.postMessage({ type:'mp-app-exit' }, '*'); } catch {} } return; }
   if (k === 'MediaPlayPause' || c === 179 || c === 10252) { ev.preventDefault(); const b = $('[data-sw],[data-tm]'); if (b) b.click(); return; }
   const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
