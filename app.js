@@ -774,6 +774,11 @@ function Browse(label) {
     const more = h('button', { class:'hmore', type:'button', 'aria-label':'Kontrollzentrum', onclick:() => openControl(more) }, icon('dots', 'fill'));
     document.body.append(more);
     cleanups.push(() => { clearInterval(ct); clk.remove(); more.remove(); });
+    document.body.classList.add('home-ap');
+    const apFocus = () => { const a = document.activeElement; document.body.classList.toggle('home-ap', !a || a === document.body || !!a.closest('.happs,#side,.hmore,.acc')); };
+    const apOut = () => setTimeout(apFocus, 0);
+    document.addEventListener('focusin', apFocus); document.addEventListener('focusout', apOut);
+    cleanups.push(() => { document.removeEventListener('focusin', apFocus); document.removeEventListener('focusout', apOut); document.body.classList.remove('home-ap'); });
     window.addEventListener('scroll', onScroll, { passive:true }); onScroll();
     cleanups.push(() => { window.removeEventListener('scroll', onScroll); document.body.style.removeProperty('--hp'); });
     Rows();
@@ -986,7 +991,7 @@ function Hero() {
     const slides = list.map((e, i) => {
       const ch = chanOf(e.channel), bg = h('div', { class:'hbg' });
       if (store.get('thumbs', true)) bg._e = e;
-      const link = h('a', { class:'btn primary big', href:'#/watch/' + encodeURIComponent(e.id), tabindex:i ? '-1' : null }, icon('play', 'fill'), 'Jetzt ansehen');
+      const link = h('a', { class:'btn primary big', href:'#/watch/' + encodeURIComponent(e.id), tabindex:i ? '-1' : null }, icon('play', 'fill'), 'Jetzt abspielen');
       dots.append(h('i', {}));
       return { bg, link, el:h('div', { class:'hslide' }, bg, h('div', { class:'hin' },
         h('span', { class:'hbadge' }, Avatar(ch), ch.name),
@@ -1029,7 +1034,7 @@ function Hero() {
     go(0); start();
     if (document.body.classList.contains('home') && window.scrollY < 5) {
       const ae = document.activeElement;
-      if (!ae || ae === document.body || ae.closest('.hglass,.chips,main')) { window.scrollTo(0, 0); slides[0].link.focus({ preventScroll:true }); }
+      if (!ae || ae === document.body) { window.scrollTo(0, 0); const t = $('.happs .atile'); (t || slides[0].link).focus({ preventScroll:true }); }
     }
   }).catch(() => shell.remove());
 }
@@ -2283,7 +2288,7 @@ function focusEl(el) {
 function initialTarget() {
   if (document.body.dataset.route === 'suche') return $('main .key');
   if (document.body.dataset.route === 'watch') return $('.watch .player[tabindex]') || $('main .btn.primary');
-  if (document.body.classList.contains('home')) { const hb = $('.hero .hslide a[tabindex="0"]') || $('.hero .btn.primary'); return hb || null; }
+  if (document.body.classList.contains('home')) return $('.happs .atile') || $('.hero .hslide a[tabindex="0"]') || $('.hero .btn.primary') || null;
   return $('main .chip.active, main .btn.primary, main .mopt, main .stile, main .card');
 }
 function openSide() { focusEl($('#side .nav.active') || $('#side .nav')); }
@@ -2292,6 +2297,10 @@ function closeSide() { const t = TV.last && TV.last.isConnected && canFocus(TV.l
 function move(dir) {
   let cur = document.activeElement;
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
+  if (cur && document.body.classList.contains('home') && window.scrollY < 4 && !dlgEl && !layerEl) {
+    if (dir === 'down' && cur.closest('.hero')) { const t = $('.happs .atile'); if (t) { navTick(); return focusEl(t); } }
+    if (dir === 'up' && cur.closest('.happs')) { const t = $('.hero .hslide a[tabindex="0"]'); if (t) { navTick(); return focusEl(t); } }
+  }
   const all = Array.from(document.querySelectorAll(FOCUSABLE)).filter(el =>
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
     (!(dlgEl || layerEl) || (dlgEl || layerEl).contains(el) || (!dlgEl && layerEl.classList.contains('acc') && el.classList.contains('hmore'))) &&
