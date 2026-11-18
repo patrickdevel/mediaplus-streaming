@@ -1814,44 +1814,64 @@ const ScreenSaver = (() => {
   let digits = [], lastHM = '', digitTimers = [];
   let recQ = [], recCur = null, recBusy = false, recEl = null, hintEl = null;
   const recSeen = new Set();
-  /* YouTube-Hintergrundvideo (stumm, ohne Bedienelemente, Loop) */
+  /* Hintergrundvideo: direkte Stream-URL über Piped/Invidious-Instanzen -> reines <video>, keinerlei YouTube-Oberfläche.
+     Fallback: versteckter YouTube-Player (zugeschnitten). */
   const YT_ID = '_VlrdVwG7sI';
-  let yt = null, ytReady = false, ytEl = null, ytWatch = 0, ytStopT = 0;
+  const PIPED = ['https://pipedapi.kavin.rocks', 'https://pipedapi.adminforge.de', 'https://api.piped.private.coffee', 'https://pipedapi.leptons.xyz'];
+  const INVID = ['https://yewtu.be', 'https://inv.nadeko.net', 'https://invidious.nerdvpn.de'];
+  let sv = null, ytEl = null, ytStopT = 0, ytTok = 0, ytFb = null, ytFbReady = false, ytFbWatch = 0;
+  const tmo = (u, ms = 7000) => { const c = new AbortController(); setTimeout(() => c.abort(), ms); return fetch(u, { signal:c.signal }).then(r => { if (!r.ok) throw 0; return r.json(); }); };
+  async function ytResolve() {
+    const jobs = [
+      ...PIPED.map(b => tmo(b + '/streams/' + YT_ID).then(d => {
+        const l = (d.videoStreams || []).filter(x => x.videoOnly && /mp4/i.test(x.mimeType || x.format || '') && /avc1/.test(x.codec || x.mimeType || '') && x.height <= 1080 && x.url).sort((a, b) => b.height - a.height);
+        if (!l.length) throw 0; return l[0].url;
+      })),
+      ...INVID.map(b => tmo(b + '/api/v1/videos/' + YT_ID + '?local=true').then(d => {
+        const l = (d.adaptiveFormats || []).filter(x => /video\/mp4/.test(x.type || '') && /avc1/.test(x.type || '') && parseInt(x.size) <= 1920 * 1080 + 1 && x.url).sort((a, b) => parseInt(b.size) - parseInt(a.size));
+        if (!l.length) throw 0; return l[0].url.startsWith('http') ? l[0].url : b + l[0].url;
+      }))];
+    return Promise.any(jobs);
+  }
   function ytInit() {
-    if (yt || !ytEl) return;
-    const tgt = h('div'); ytEl.replaceChildren(tgt);
-    const mk = () => { if (yt) return; yt = new YT.Player(tgt, {
-      videoId:YT_ID, host:'https://www.youtube-nocookie.com',
-      playerVars:{ autoplay:0, controls:0, disablekb:1, fs:0, iv_load_policy:3, modestbranding:1, rel:0, playsinline:1, cc_load_policy:0, loop:1, playlist:YT_ID, origin:location.origin },
-      events:{
-        onReady:e => { try { e.target.mute(); } catch {} ytReady = true; if (visible) ytPlay(); },
-        onStateChange:e => {
-          if (e.data === 1) ytEl.classList.add('on');
-          if (e.data === 0) { e.target.seekTo(0, true); e.target.playVideo(); }
-        }
-      } }); };
+    if (sv || !ytEl) return;
+    sv = h('video', { muted:true, loop:true, playsinline:true, preload:'auto', tabindex:'-1' });
+    sv.muted = true; sv.loop = true; sv.controls = false; sv.setAttribute('playsinline', ''); sv.setAttribute('disableRemotePlayback', '');
+    sv.addEventListener('playing', () => ytEl.classList.add('on'));
+    /* URL abgelaufen / Fehler (bei 11 h Video möglich) -> neue URL holen und an derselben Stelle weitermachen */
+    let retry = 0;
+    sv.addEventListener('error', () => { if (visible && retry++ < 4) ytLoad(sv.currentTime || 0); else if (visible) ytFallback(); });
+    ytEl.replaceChildren(sv);
+  }
+  async function ytLoad(at = 0) {
+    const tok = ++ytTok;
+    try {
+      const u = await ytResolve();
+      if (tok !== ytTok || !visible) return;
+      sv.src = u;
+      sv.addEventListener('loadedmetadata', () => { try { if (at) sv.currentTime = at; } catch {} const p = sv.play(); p && p.catch(() => {}); }, { once:true });
+    } catch { if (tok === ytTok && visible) ytFallback(); }
+  }
+  function ytFallback() {
+    if (ytFb) { try { ytFbReady && ytFb.playVideo(); } catch {} return; }
+    const tgt = h('div'); ytEl.append(tgt);
+    const mk = () => { if (ytFb) return; ytFb = new YT.Player(tgt, { videoId:YT_ID, host:'https://www.youtube-nocookie.com',
+      playerVars:{ autoplay:0, controls:0, disablekb:1, fs:0, iv_load_policy:3, modestbranding:1, rel:0, playsinline:1, loop:1, playlist:YT_ID, origin:location.origin },
+      events:{ onReady:e => { try { e.target.mute(); e.target.playVideo(); } catch {} ytFbReady = true; },
+        onStateChange:e => { if (e.data === 1) ytEl.classList.add('on'); if (e.data === 0) { e.target.seekTo(0, true); e.target.playVideo(); } } } }); };
     if (window.YT && YT.Player) mk();
-    else {
-      const prev = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = () => { try { prev && prev(); } catch {} mk(); };
-      if (!document.getElementById('yt-api')) { const sc = document.createElement('script'); sc.id = 'yt-api'; sc.src = 'https://www.youtube.com/iframe_api'; document.head.append(sc); }
-    }
+    else { window.onYouTubeIframeAPIReady = mk; const sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api'; document.head.append(sc); }
   }
   function ytPlay() {
     clearTimeout(ytStopT);
-    if (!ytReady || !yt) return;
-    try {
-      ytEl.classList.remove('on');
-      yt.mute(); yt.seekTo(0, true); yt.playVideo();
-      clearInterval(ytWatch);
-      /* kurz vor Ende neu starten, damit nie Endkarten/Vorschläge erscheinen */
-      ytWatch = setInterval(() => { try { const d = yt.getDuration(); if (d > 2 && yt.getCurrentTime() > d - .7) yt.seekTo(0, true); } catch {} }, 400);
-    } catch {}
+    if (!sv) return;
+    ytEl.classList.remove('on');
+    if (sv.src && sv.readyState > 1) { try { const p = sv.play(); p && p.catch(() => {}); } catch {} }
+    else ytLoad(0);
   }
   function ytStop() {
-    clearInterval(ytWatch);
     clearTimeout(ytStopT);
-    ytStopT = setTimeout(() => { try { yt && ytReady && yt.pauseVideo(); } catch {} }, 1000);
+    ytStopT = setTimeout(() => { try { sv && sv.pause(); ytFb && ytFbReady && ytFb.pauseVideo(); } catch {} }, 1000);
   }
   const HINT = 'Taste oder Bewegung zum Fortfahren';
   async function fillRecs() {
