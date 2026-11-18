@@ -2802,6 +2802,14 @@ const PLUS = (() => {
     osdEl.replaceChildren(...[icon(ic), h('span', {}, text), pct == null ? null : h('span', { class:'ob' }, h('i', { style:'width:' + pct + '%' }))].filter(Boolean));
     osdEl.classList.add('show'); clearTimeout(osdT); osdT = setTimeout(() => osdEl.classList.remove('show'), 1700);
   }
+  let vhEl = null, vhT = 0;
+  function volHud(vol, muted) {
+    if (!vhEl) { vhEl = h('div', { id:'vhud', role:'status' }, h('i', { class:'vf' }), h('span', { class:'vi' })); document.body.append(vhEl); }
+    const pc = muted ? 0 : Math.round(vol * 100);
+    vhEl.querySelector('.vf').style.width = pc + '%';
+    vhEl.querySelector('.vi').replaceChildren(icon(muted || !pc ? 'mute' : 'vol'));
+    vhEl.classList.add('show'); clearTimeout(vhT); vhT = setTimeout(() => vhEl.classList.remove('show'), 1700);
+  }
   /* Globale Lautstärke: gilt für JEDES Video auf jeder Seite (Player, Vorschau, Shorts, Live) und wird an Apps im Fenster gesendet */
   const gAudio = {
     vids() { return Array.from(document.querySelectorAll('video')); },
@@ -2835,11 +2843,11 @@ const PLUS = (() => {
     if (k === 'mute') {
       const st = gAudio.state(); let vol = st.vol, m = !st.muted;
       if (!m && !(vol > 0)) vol = .5;
-      gAudio.apply(vol, m); osd(m ? 'mute' : 'vol', m ? 'Ton aus' : 'Ton an'); return;
+      gAudio.apply(vol, m); volHud(vol, m); return;
     }
     if (k === 'vup' || k === 'vdn') {
       const st = gAudio.state(); const vol = clamp((st.muted && k === 'vup' && !(st.vol > 0) ? 0 : st.vol) + (k === 'vup' ? .1 : -.1), 0, 1);
-      gAudio.apply(vol, false); const pc = Math.round(vol * 100); osd(pc ? 'vol' : 'mute', 'Lautstärke ' + pc + ' %', pc);
+      gAudio.apply(vol, false); volHud(vol, false);
       return;
     }
     if (k === 'cc') {
