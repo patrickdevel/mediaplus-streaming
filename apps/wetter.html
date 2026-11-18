@@ -62,6 +62,25 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:
 .msg{padding:4rem 2rem;text-align:center;color:var(--fg-3);font-size:1.4rem}
 #toast{position:fixed;left:50%;bottom:3.6rem;transform:translate(-50%,2rem);z-index:20;padding:1.2rem 2.4rem;border-radius:999px;background:#fff;color:#000;font-size:1.3rem;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
 #toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ===== TV-Stil (wie Einstellungen / Apps): Aqua-Verlauf, weiche weiße Pills, Fokus = weiß + größer ===== */
+html{background:#76c8ff}
+body{background:radial-gradient(60% 70% at 15% 20%,#8fdcff 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#7fb2ff 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#7fc9c9 0,transparent 60%),linear-gradient(160deg,#76c8ff,#9ec4dc 55%,#6fb3c4)!important;background-attachment:fixed;color:#111!important}
+
+:root{--fg:#111;--fg-2:#111;--fg-3:rgba(0,0,0,.5);--fg-4:rgba(0,0,0,.4);--border-2:transparent;--glass:rgba(255,255,255,.32);--bg-3:rgba(255,255,255,.5);--fr:0 1.2rem 3rem rgba(0,0,0,.22)}
+#bg,#bg.sun{background:transparent!important}
+#bg.night{background:linear-gradient(160deg,#6f86b8,#8fa3cc)!important}
+#bg.rain{background:linear-gradient(160deg,#8da2b5,#a9bac8)!important}
+#bg.snow{background:linear-gradient(160deg,#b8c9d8,#dbe6ee)!important}
+.chip{height:4.6rem}
+.chip.active{background:rgba(255,255,255,.62);border-color:transparent;color:#111}
+.chip:focus,.hr:focus,.day:focus,.cty:focus,.key:focus{border-color:transparent}
+.hr,.day,.cty,.fact{border-radius:2.6rem}
+.day,.cty{border-radius:99px;padding-left:2.6rem;padding-right:2.6rem}
+.key{border-radius:99px}
+.sfield{border-radius:99px;border-color:transparent;padding:0 2.6rem}
+.caret{background:#111}
+.head,.city{color:#111}
 </style>
 </head>
 <body>
@@ -241,6 +260,8 @@ function goBack() { const a = document.activeElement; if (a && a.matches && a.ma
 document.addEventListener('keydown', ev => {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const k = ev.key, c = ev.keyCode, typing = S.tab === 'places' && !!$('#sf');
+
+  if (k === 'Enter' || c === 13 || k === ' ') { const a = document.activeElement; if (a && a !== document.body && a.matches && a.matches('button,[data-f],[tabindex]') && a.click) { ev.preventDefault(); a.click(); return; } }
   if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !typing)) { if (goBack()) ev.preventDefault(); else { try { parent.postMessage({ type:'mp-app-exit' }, '*'); } catch {} } return; }
   if (k === 'Backspace' && typing) { ev.preventDefault(); S.typed = S.typed.slice(0, -1); return paintField(); }
   const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
