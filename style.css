@@ -1444,3 +1444,26 @@ body:not(.home) .hmore{display:none}
 
 /* Button bleibt im offenen Zustand über dem Panel, hell markiert und bedienbar zum Schließen */
 .hmore.on{z-index:160;background:rgba(255,255,255,.92);color:#111;box-shadow:0 0 0 .35rem rgba(255,255,255,.28),0 .6rem 2rem rgba(0,0,0,.35)}
+
+/* ===== Home: zwei Zustände – Fokus auf Apps (Standard) / Fokus im Karussell ===== */
+body.home .hero .hin{transition:padding-bottom .6s cubic-bezier(.2,.8,.2,1),opacity .3s,transform .3s}
+body.home .hero .hin>*{transition:font-size .5s cubic-bezier(.2,.8,.2,1),opacity .4s,margin .5s cubic-bezier(.2,.8,.2,1),transform .5s cubic-bezier(.2,.8,.2,1)}
+body.home .hero .hin .hbadge{transition:font-size .5s cubic-bezier(.2,.8,.2,1),transform .5s cubic-bezier(.2,.8,.2,1)}
+body.home .hero .hin .btn.big,body.home .hero .hin .sub{transition:font-size .5s cubic-bezier(.2,.8,.2,1),padding .5s cubic-bezier(.2,.8,.2,1),height .5s cubic-bezier(.2,.8,.2,1),min-height .5s cubic-bezier(.2,.8,.2,1)}
+
+/* Zustand A: Apps fokussiert → Titel groß, alles andere deutlich kleiner */
+body.home.home-ap .hero .hin{padding-bottom:23rem}
+body.home.home-ap .hero .hin .hbadge{font-size:1.1rem;transform:scale(.85);transform-origin:left bottom}
+body.home.home-ap .hero .hin p{font-size:1.15rem;line-height:1.35;-webkit-line-clamp:1;opacity:.8}
+body.home.home-ap .hero .hin .btn.big{font-size:1.2rem;min-height:3.4rem;height:3.4rem;padding:0 1.6rem}
+body.home.home-ap .hero .hin .btn.big .ic{width:1.4rem;height:1.4rem}
+body.home.home-ap .hero .hin .sub{font-size:1.1rem}
+
+/* Zustand B: Karussell fokussiert → Dock rutscht nach unten, nur „Apps“ bleibt */
+body.home:not(.home-ap) .hero .hin{padding-bottom:11rem}
+.hfirst .happs{transition:width .6s cubic-bezier(.2,.8,.2,1),padding .6s cubic-bezier(.2,.8,.2,1),transform .6s cubic-bezier(.2,.8,.2,1),border-radius .6s,opacity .25s}
+.hfirst .happs .rowh{transition:margin .6s cubic-bezier(.2,.8,.2,1)}
+.hfirst .happs .arow{max-height:20rem;opacity:1;transform:none;transition:max-height .6s cubic-bezier(.2,.8,.2,1),opacity .35s .1s,transform .6s cubic-bezier(.2,.8,.2,1),padding .6s cubic-bezier(.2,.8,.2,1),margin .6s cubic-bezier(.2,.8,.2,1)}
+body.home:not(.home-ap) .hfirst .happs{width:11rem;padding:1rem 1.6rem;border-radius:2rem;transform:translateY(1rem)}
+body.home:not(.home-ap) .hfirst .happs .rowh{margin:0 0 0 .2rem}
+body.home:not(.home-ap) .hfirst .happs .arow{max-height:0;opacity:0;transform:translateY(4rem);padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;pointer-events:none;transition:max-height .6s cubic-bezier(.2,.8,.2,1),opacity .2s,transform .6s cubic-bezier(.6,0,.8,.4),padding .6s cubic-bezier(.2,.8,.2,1),margin .6s cubic-bezier(.2,.8,.2,1)}
