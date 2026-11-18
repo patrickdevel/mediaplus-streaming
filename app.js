@@ -615,7 +615,7 @@ function ccSyms() {
     '<symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8"/><path d="M12 9.5v4l2.5 2M9.5 2h5"/></symbol>');
 }
 function openControl(opener) {
-  if (layerEl) return;
+  if (layerEl) { if (layerEl.classList.contains('acc')) layerEl._close(); return; }
   ccSyms();
   const el = h('div', { class:'acc mz', role:'dialog', 'aria-label':'Kontrollzentrum' });
   const bg = h('div', { class:'acc-bg' });
@@ -655,12 +655,12 @@ function openControl(opener) {
   window.addEventListener('hashchange', hc);
   el._close = () => {
     if (el._closing) return; el._closing = true;
-    clearInterval(iv); window.removeEventListener('hashchange', hc);
+    clearInterval(iv); window.removeEventListener('hashchange', hc); opener.classList.remove('on');
     el.classList.remove('show', 'rdy'); if (layerEl === el) layerEl = null;
     setTimeout(() => el.remove(), 700);
     if (opener && opener.isConnected) opener.focus({ preventScroll:true });
   };
-  document.body.append(el); layerEl = el;
+  document.body.append(el); layerEl = el; opener.classList.add('on');
 
   /* Start: jede Kachel fliegt vom Button aus an ihren Platz (nahe zuerst), beim Schließen zurück */
   const pr = panel.getBoundingClientRect(), o = opener.getBoundingClientRect(), ox = o.left + o.width / 2, oy = o.top + o.height / 2;
@@ -2294,7 +2294,7 @@ function move(dir) {
   if (!cur || cur === document.body || cur === document.documentElement) cur = null;
   const all = Array.from(document.querySelectorAll(FOCUSABLE)).filter(el =>
     !el.closest('.mini') && !el.disabled && !el.hidden && el.tabIndex >= 0 &&
-    (!(dlgEl || layerEl) || (dlgEl || layerEl).contains(el)) &&
+    (!(dlgEl || layerEl) || (dlgEl || layerEl).contains(el) || (!dlgEl && layerEl.classList.contains('acc') && el.classList.contains('hmore'))) &&
     !(cur && (el === cur || el.contains(cur) || cur.contains(el))) &&
     !(cur && cur.closest('.sleft') && (dir === 'up' || dir === 'down') && !el.closest('.sleft')) &&
     !(cur && cur.closest('#side') && (dir === 'up' || dir === 'down') && !el.closest('#side')));
@@ -2369,7 +2369,7 @@ function move(dir) {
   const hit = scored.find(s => canFocus(s[1]));
   if (hit) { TV.colFor = hit[1]; return focusEl(hit[1]); }
   if (cur.closest('#side') && dir === 'right') return closeSide();
-  if (dir === 'left' && !cur.closest('#side,.pmenu,.player,.sticky-player,.sugg,.sleft,.acc')) openSide();
+  if (dir === 'left' && !cur.closest('#side,.pmenu,.player,.sticky-player,.sugg,.sleft,.acc,.hmore.on')) openSide();
 }
 
 /* FIX: goBack verlässt NIE das Vollbild */
