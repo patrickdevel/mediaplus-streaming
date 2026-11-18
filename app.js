@@ -1814,53 +1814,6 @@ const ScreenSaver = (() => {
   let digits = [], lastHM = '', digitTimers = [];
   let recQ = [], recCur = null, recBusy = false, recEl = null, hintEl = null;
   const recSeen = new Set();
-  /* Hintergrundvideo: YouTube-Player läuft 5 s VOR dem Bildschirmschoner unsichtbar an (stumm).
-     Erst wenn er spielt und der Schoner einblendet, ist er sichtbar -> Ladeoberfläche/Steuerelemente nie zu sehen. */
-  const YT_ID = '_VlrdVwG7sI';
-  const WARM_MS = 5000;
-  let yt = null, ytReady = false, ytEl = null, ytWatch = 0, ytStopT = 0, warmT = 0, warmed = false, ytWant = false;
-  function ytInit() {
-    if (yt || !ytEl) return;
-    const tgt = h('div'); ytEl.replaceChildren(tgt);
-    const mk = () => { if (yt) return; yt = new YT.Player(tgt, {
-      videoId:YT_ID, host:'https://www.youtube-nocookie.com',
-      playerVars:{ autoplay:0, controls:0, disablekb:1, fs:0, iv_load_policy:3, modestbranding:1, rel:0, playsinline:1, cc_load_policy:0, loop:1, playlist:YT_ID, origin:location.origin },
-      events:{
-        onReady:e => { try { e.target.mute(); } catch {} ytReady = true; if (ytWant) ytPlay(); },
-        onStateChange:e => {
-          if (e.data === 1) ytEl.classList.add('on');
-          if (e.data === 0) { e.target.seekTo(0, true); e.target.playVideo(); }
-        } } }); };
-    if (window.YT && YT.Player) mk();
-    else {
-      const prev = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = () => { try { prev && prev(); } catch {} mk(); };
-      if (!document.getElementById('yt-api')) { const sc = document.createElement('script'); sc.id = 'yt-api'; sc.src = 'https://www.youtube.com/iframe_api'; document.head.append(sc); }
-    }
-  }
-  function ytPlay() {
-    ytWant = true; clearTimeout(ytStopT);
-    if (!ytReady || !yt) return;
-    try {
-      ytEl.classList.remove('on');
-      yt.mute(); yt.seekTo(0, true); yt.playVideo();
-      clearInterval(ytWatch);
-      ytWatch = setInterval(() => { try { const d = yt.getDuration(); if (d > 2 && yt.getCurrentTime() > d - .7) yt.seekTo(0, true); } catch {} }, 400);
-    } catch {}
-  }
-  function ytStop() {
-    ytWant = false; clearInterval(ytWatch); clearTimeout(ytStopT);
-    ytStopT = setTimeout(() => { try { yt && ytReady && yt.pauseVideo(); } catch {} }, 1000);
-  }
-  /* Vorlauf: Schoner-Ebene unsichtbar „rendern“ lassen, Video starten */
-  function warmUp() {
-    if (visible || warmed || !store.get('saverOn', true) || playing()) return;
-    ensure(); warmed = true; root.classList.add('warm'); ytPlay();
-  }
-  function cancelWarm() {
-    clearTimeout(warmT);
-    if (warmed && !visible) { warmed = false; if (root) root.classList.remove('warm'); ytStop(); }
-  }
   const HINT = 'Taste oder Bewegung zum Fortfahren';
   async function fillRecs() {
     if (recBusy || recQ.length >= 3) return;
@@ -2105,8 +2058,7 @@ const ScreenSaver = (() => {
     dateEl  = h('div', { class:'saver-date' });
     const clockWrap = h('div', { class:'saver-clock-wrap' }, clockEl, dateEl);
     root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
-      h('div', { class:'saver-bg' }, imgA.el, imgB.el, ytEl = h('div', { class:'saver-yt' })),
-      h('div', { class:'saver-vblur' }),
+      h('div', { class:'saver-bg' }, imgA.el, imgB.el),
       h('div', { class:'saver-overlay' }),
       clockWrap, recEl = h('div', { class:'srec' }, ...(order = [0, 1, 2].map(i => h('div', { class:'srec-c p' + i })))),
       hintEl = h('div', { class:'saver-hint' }, HINT));
@@ -2115,7 +2067,7 @@ const ScreenSaver = (() => {
     buildClock();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitDigits);
     fitDigits();
-    ytInit();
+    TV_SAVER_IMAGES.forEach(src => { const i = new Image(); i.src = src; });
   }
 
   function tickClock() {
@@ -2125,8 +2077,22 @@ const ScreenSaver = (() => {
 
   function nextImage() {
     if (!root || !visible) return;
-    if (recQ.length) showRec(recQ.shift()); else hideRec();
-    fillRecs();
+    index = (index + 1) % TV_SAVER_IMAGES.length;
+    const next = index % 2 ? imgB : imgA, old = index % 2 ? imgA : imgB;
+    const start = () => {
+      if (!visible) return;
+      next.el.style.zIndex = 2; old.el.style.zIndex = 1;
+      next.el.classList.remove('on', 'ken'); void next.el.offsetWidth;
+      next.el.classList.add('on', 'ken');
+      if (recQ.length) showRec(recQ.shift()); else hideRec();
+      fillRecs();
+      clearTimeout(old.kt);
+      old.kt = setTimeout(() => {
+        if (old.el.style.zIndex !== '1') return;
+        old.el.style.transition = 'none'; old.el.classList.remove('on', 'ken'); void old.el.offsetWidth; old.el.style.transition = '';
+      }, 2500);
+    };
+    setSlide(next, TV_SAVER_IMAGES[index]).then(start);
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
 
@@ -2140,7 +2106,6 @@ const ScreenSaver = (() => {
       d.strip.style.transition = 'none';
       d.strip.style.transform = `translateY(${-(d.pos * DH)}em)`;
     });
-    ytStop();
     root.classList.add('leaving');
     root.classList.remove('show');
     document.body.classList.remove('saver-on');
@@ -2155,8 +2120,13 @@ const ScreenSaver = (() => {
     visible = true; lastHM = '';
     clearDigitTimers();
     digits.forEach(d => { d.val = -1; d.pos = MID; });
-    if (!already && !warmed) ytPlay();
-    warmed = false; root.classList.remove('warm');
+    if (!already) {
+      index = 0;
+      root.style.setProperty('--kd', (interval() / 1000 + 6) + 's');
+      [imgA, imgB].forEach(x => { clearTimeout(x.kt); x.el.style.zIndex = ''; x.el.classList.remove('on', 'ken'); });
+      setSlide(imgB, TV_SAVER_IMAGES[1]);
+      setSlide(imgA, TV_SAVER_IMAGES[0]).then(() => { if (!visible) return; void imgA.el.offsetWidth; imgA.el.classList.add('on', 'ken'); });
+    }
     root.classList.toggle('hide-clock', !store.get('saverClock', true));
     fitDigits();
     root.classList.remove('leaving');
@@ -2169,7 +2139,7 @@ const ScreenSaver = (() => {
     fillRecs().then(() => setTimeout(() => { if (visible && !recCur && recQ.length) showRec(recQ.shift()); }, 2500));
   }
 
-  function schedule() { clearTimeout(timer); cancelWarm(); if (store.get('saverOn', true)) { timer = setTimeout(show, delay()); warmT = setTimeout(warmUp, Math.max(0, delay() - WARM_MS)); } }
+  function schedule() { clearTimeout(timer); if (store.get('saverOn', true)) timer = setTimeout(show, delay()); }
   function activity() { if (visible) hide(); else schedule(); }
   function start() {
     ensure();
