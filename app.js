@@ -2804,7 +2804,7 @@ const PLUS = (() => {
   }
   let vhEl = null, vhT = 0;
   function volHud(vol, muted) {
-    if (!vhEl) { vhEl = h('div', { id:'vhud', role:'status' }, h('i', { class:'vf' }), h('span', { class:'vi' })); document.body.append(vhEl); }
+    if (!vhEl) { vhEl = h('div', { id:'vhud', role:'status' }, h('span', { class:'vi' }), h('span', { class:'vt' }, h('i', { class:'vf' }))); document.body.append(vhEl); }
     const pc = muted ? 0 : Math.round(vol * 100);
     vhEl.querySelector('.vf').style.width = pc + '%';
     vhEl.querySelector('.vi').replaceChildren(icon(muted || !pc ? 'mute' : 'vol'));
