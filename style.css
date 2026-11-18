@@ -1450,3 +1450,20 @@ body:not(.home) .hmore{display:none}
 .acc-bg{-webkit-backdrop-filter:blur(2.6rem) saturate(1.2)!important;backdrop-filter:blur(2.6rem) saturate(1.2)!important}
 .hmore.on{z-index:400!important;position:fixed}
 .hmore.on::after{z-index:1}
+
+/* ===== Home: Apps-Dock + Karussell-Infos je nach Fokus ===== */
+.hfirst{clip-path:inset(-6rem -6rem 0 -6rem)}
+.hfirst .happs{transition:transform .65s cubic-bezier(.2,.9,.2,1),opacity .25s}
+.hfirst .happs .arow{transition:opacity .35s ease}
+/* Fokus auf Karussell: Dock rutscht nach unten, nur "Apps" bleibt lesbar */
+body.home:not(.home-ap):not(.home-scrolled) .hfirst .happs{transform:translateY(calc(100% - 1.6rem))}
+body.home:not(.home-ap):not(.home-scrolled) .hfirst .happs .arow{opacity:0}
+/* Karussell-Text: Titel bleibt, alles andere klein, solange die Apps fokussiert sind */
+body.home .hero .hin{transition:padding-bottom .65s cubic-bezier(.2,.9,.2,1)}
+body.home.home-bar:not(.home-ap) .hero .hin{padding-bottom:12rem}
+body.home .hero .hin .hbadge,body.home .hero .hin p,body.home .hero .hin .hact .sub,body.home .hero .hin .btn{transition:font-size .5s ease,height .5s ease,padding .5s ease,margin .5s ease}
+body.home.home-ap .hero .hin .hbadge{font-size:1rem;padding:.2rem .8rem .2rem .2rem}
+body.home.home-ap .hero .hin h2{margin:.8rem 0 .6rem}
+body.home.home-ap .hero .hin p{font-size:1.1rem;margin:0 0 1rem}
+body.home.home-ap .hero .hin .btn.big{height:3.2rem;padding:0 1.6rem;font-size:1.2rem;border-radius:1rem}
+body.home.home-ap .hero .hin .hact .sub{font-size:1.05rem}
