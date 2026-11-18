@@ -1452,15 +1452,21 @@ body:not(.home) .hmore{display:none}
 .hmore.on::after{z-index:1}
 
 /* ===== Home: Apps-Dock + Karussell-Infos je nach Fokus ===== */
-/* kein clip-path auf .hfirst: das würde den Hintergrund-Blur des Docks abschneiden */
-.hfirst .happs{transition:transform .65s cubic-bezier(.2,.9,.2,1),opacity .25s}
+/* Weiterschauen lugt unten ein Stück ins Bild */
+.hfirst{height:calc(100vh - 8rem)}
+/* Apps-Dock: bei Fokus aufs Karussell schrumpft es nach unten, nur "Apps" bleibt lesbar (kein clip-path -> Blur bleibt) */
+.hfirst .happs{overflow:hidden;max-height:40rem;transition:max-height .65s cubic-bezier(.2,.9,.2,1),opacity .25s}
 .hfirst .happs .arow{transition:opacity .35s ease}
-/* Fokus auf Karussell: Dock rutscht nach unten aus dem Bild, nur "Apps" bleibt lesbar */
-body.home:not(.home-ap):not(.home-scrolled) .hfirst .happs{transform:translateY(calc(100% - 1.6rem))}
+body.home:not(.home-ap):not(.home-scrolled) .hfirst .happs{max-height:4.6rem}
 body.home:not(.home-ap):not(.home-scrolled) .hfirst .happs .arow{opacity:0}
-/* Fokus auf Apps: nur der Titel, oberhalb des Docks */
+/* Fokus auf Apps: Titel groß oberhalb des Docks, alle anderen Infos klein oben rechts */
 body.home .hero .hin{transition:padding-bottom .65s cubic-bezier(.2,.9,.2,1)}
-body.home.home-bar:not(.home-ap) .hero .hin{padding-bottom:12rem}
-body.home.home-bar.home-ap .hero .hin{padding-bottom:38rem}
-body.home .hero .hin .hbadge,body.home .hero .hin p,body.home .hero .hin .hact{transition:opacity .4s ease,max-height .5s ease,margin .5s ease;max-height:30rem}
-body.home.home-ap .hero .hin .hbadge,body.home.home-ap .hero .hin p,body.home.home-ap .hero .hin .hact{opacity:0;max-height:0;margin-top:0;margin-bottom:0;overflow:hidden;pointer-events:none}
+body.home.home-bar:not(.home-ap) .hero .hin{padding-bottom:18rem}
+body.home.home-bar.home-ap .hero .hin{padding-bottom:46rem;transform:none!important;animation:none!important}
+body.home.home-ap .hero .hin .hbadge,body.home.home-ap .hero .hin p,body.home.home-ap .hero .hin .hact{position:absolute;right:6.4rem;margin:0;width:34rem;max-width:34rem;justify-content:flex-end;text-align:right;animation:hinfoFade .5s ease both}
+body.home.home-ap .hero .hin .hbadge{top:9rem;width:auto;font-size:1.1rem;padding:.2rem .9rem .2rem .2rem}
+body.home.home-ap .hero .hin p{top:12.6rem;font-size:1.15rem}
+body.home.home-ap .hero .hin .hact{top:15.4rem;gap:1rem;flex-wrap:nowrap}
+body.home.home-ap .hero .hin .btn.big{height:3.2rem;padding:0 1.6rem;font-size:1.2rem;border-radius:1rem}
+body.home.home-ap .hero .hin .hact .sub{font-size:1.05rem}
+@keyframes hinfoFade{from{opacity:0}}
