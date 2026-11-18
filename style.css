@@ -1478,3 +1478,4 @@ body.home:not(.home-ap) .hfirst .happs .arow{opacity:0;transition:opacity .25s}
   -webkit-mask-composite:source-in;mask-composite:intersect}
 .tv-saver.rec-on .saver-vblur{opacity:1}
 .saver-yt iframe{position:absolute;top:50%;left:50%;width:max(100vw,177.78vh);height:max(100vh,56.25vw);border:0;transform:translate(-50%,-50%) scale(1.2);pointer-events:none}
+.tv-saver.warm:not(.show){visibility:visible;pointer-events:none}
