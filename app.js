@@ -1814,6 +1814,45 @@ const ScreenSaver = (() => {
   let digits = [], lastHM = '', digitTimers = [];
   let recQ = [], recCur = null, recBusy = false, recEl = null, hintEl = null;
   const recSeen = new Set();
+  /* YouTube-Hintergrundvideo (stumm, ohne Bedienelemente, Loop) */
+  const YT_ID = '_VlrdVwG7sI';
+  let yt = null, ytReady = false, ytEl = null, ytWatch = 0, ytStopT = 0;
+  function ytInit() {
+    if (yt || !ytEl) return;
+    const tgt = h('div'); ytEl.replaceChildren(tgt);
+    const mk = () => { if (yt) return; yt = new YT.Player(tgt, {
+      videoId:YT_ID, host:'https://www.youtube-nocookie.com',
+      playerVars:{ autoplay:0, controls:0, disablekb:1, fs:0, iv_load_policy:3, modestbranding:1, rel:0, playsinline:1, cc_load_policy:0, loop:1, playlist:YT_ID, origin:location.origin },
+      events:{
+        onReady:e => { try { e.target.mute(); } catch {} ytReady = true; if (visible) ytPlay(); },
+        onStateChange:e => {
+          if (e.data === 1) ytEl.classList.add('on');
+          if (e.data === 0) { e.target.seekTo(0, true); e.target.playVideo(); }
+        }
+      } }); };
+    if (window.YT && YT.Player) mk();
+    else {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => { try { prev && prev(); } catch {} mk(); };
+      if (!document.getElementById('yt-api')) { const sc = document.createElement('script'); sc.id = 'yt-api'; sc.src = 'https://www.youtube.com/iframe_api'; document.head.append(sc); }
+    }
+  }
+  function ytPlay() {
+    clearTimeout(ytStopT);
+    if (!ytReady || !yt) return;
+    try {
+      ytEl.classList.remove('on');
+      yt.mute(); yt.seekTo(0, true); yt.playVideo();
+      clearInterval(ytWatch);
+      /* kurz vor Ende neu starten, damit nie Endkarten/Vorschläge erscheinen */
+      ytWatch = setInterval(() => { try { const d = yt.getDuration(); if (d > 2 && yt.getCurrentTime() > d - .7) yt.seekTo(0, true); } catch {} }, 400);
+    } catch {}
+  }
+  function ytStop() {
+    clearInterval(ytWatch);
+    clearTimeout(ytStopT);
+    ytStopT = setTimeout(() => { try { yt && ytReady && yt.pauseVideo(); } catch {} }, 1000);
+  }
   const HINT = 'Taste oder Bewegung zum Fortfahren';
   async function fillRecs() {
     if (recBusy || recQ.length >= 3) return;
@@ -2058,7 +2097,8 @@ const ScreenSaver = (() => {
     dateEl  = h('div', { class:'saver-date' });
     const clockWrap = h('div', { class:'saver-clock-wrap' }, clockEl, dateEl);
     root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
-      h('div', { class:'saver-bg' }, imgA.el, imgB.el),
+      h('div', { class:'saver-bg' }, imgA.el, imgB.el, ytEl = h('div', { class:'saver-yt' })),
+      h('div', { class:'saver-vblur' }),
       h('div', { class:'saver-overlay' }),
       clockWrap, recEl = h('div', { class:'srec' }, ...(order = [0, 1, 2].map(i => h('div', { class:'srec-c p' + i })))),
       hintEl = h('div', { class:'saver-hint' }, HINT));
@@ -2067,7 +2107,7 @@ const ScreenSaver = (() => {
     buildClock();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitDigits);
     fitDigits();
-    TV_SAVER_IMAGES.forEach(src => { const i = new Image(); i.src = src; });
+    ytInit();
   }
 
   function tickClock() {
@@ -2077,22 +2117,8 @@ const ScreenSaver = (() => {
 
   function nextImage() {
     if (!root || !visible) return;
-    index = (index + 1) % TV_SAVER_IMAGES.length;
-    const next = index % 2 ? imgB : imgA, old = index % 2 ? imgA : imgB;
-    const start = () => {
-      if (!visible) return;
-      next.el.style.zIndex = 2; old.el.style.zIndex = 1;
-      next.el.classList.remove('on', 'ken'); void next.el.offsetWidth;
-      next.el.classList.add('on', 'ken');
-      if (recQ.length) showRec(recQ.shift()); else hideRec();
-      fillRecs();
-      clearTimeout(old.kt);
-      old.kt = setTimeout(() => {
-        if (old.el.style.zIndex !== '1') return;
-        old.el.style.transition = 'none'; old.el.classList.remove('on', 'ken'); void old.el.offsetWidth; old.el.style.transition = '';
-      }, 2500);
-    };
-    setSlide(next, TV_SAVER_IMAGES[index]).then(start);
+    if (recQ.length) showRec(recQ.shift()); else hideRec();
+    fillRecs();
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
   }
 
@@ -2106,6 +2132,7 @@ const ScreenSaver = (() => {
       d.strip.style.transition = 'none';
       d.strip.style.transform = `translateY(${-(d.pos * DH)}em)`;
     });
+    ytStop();
     root.classList.add('leaving');
     root.classList.remove('show');
     document.body.classList.remove('saver-on');
@@ -2120,13 +2147,7 @@ const ScreenSaver = (() => {
     visible = true; lastHM = '';
     clearDigitTimers();
     digits.forEach(d => { d.val = -1; d.pos = MID; });
-    if (!already) {
-      index = 0;
-      root.style.setProperty('--kd', (interval() / 1000 + 6) + 's');
-      [imgA, imgB].forEach(x => { clearTimeout(x.kt); x.el.style.zIndex = ''; x.el.classList.remove('on', 'ken'); });
-      setSlide(imgB, TV_SAVER_IMAGES[1]);
-      setSlide(imgA, TV_SAVER_IMAGES[0]).then(() => { if (!visible) return; void imgA.el.offsetWidth; imgA.el.classList.add('on', 'ken'); });
-    }
+    if (!already) ytPlay();
     root.classList.toggle('hide-clock', !store.get('saverClock', true));
     fitDigits();
     root.classList.remove('leaving');
