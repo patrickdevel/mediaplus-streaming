@@ -2253,7 +2253,7 @@ const ScreenSaver = (() => {
   }
 
   function show(force) {
-    if (!force && (!store.get('saverOn', true) || playing())) return schedule();
+    if (!force && (!store.get('saverOn', true) || playing() || appWin)) return schedule();
     ensure();
     const already = visible;
     visible = true; lastHM = '';
