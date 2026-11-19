@@ -117,6 +117,11 @@ section{margin-bottom:1.4rem}
 .chhead{display:flex;gap:3rem;align-items:center;padding:1rem 1.2rem}
 .chhead img{width:15rem;height:15rem;border-radius:50%;object-fit:cover;background:var(--s1)}
 .chhead h1{font-size:3.4rem;font-weight:700}.chhead p{margin:.6rem 0 1.4rem;max-width:80rem}
+/* Zurück-Button (Kanalseite) */
+.chback{display:inline-flex;align-items:center;gap:.8rem;height:4.4rem;padding:0 1.8rem 0 1.3rem;border-radius:99px;background:var(--s1);font-size:1.4rem;font-weight:600;transition:background .12s,transform .12s}
+.chback svg{width:2.4rem;height:2.4rem}
+.chback:hover{background:var(--s2)}
+.chback:focus{background:#fff;color:var(--bg);transform:scale(1.05)}
 /* Player */
 #pl{position:fixed;inset:0;background:#000;z-index:40;display:none;overflow:hidden}
 #pl.show{display:block}
@@ -186,7 +191,7 @@ function h(tag, props, ...kids) {
 }
 const store = { get(k, d) { try { const v = localStorage.getItem('yt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem('yt:' + k, JSON.stringify(v)); } catch {} } };
 let tt; const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); };
-const S = { tab:'home', last:null, col:null, colFor:null, tok:0, q:'', draft:'', tgt:null, playing:null };
+const S = { tab:'home', last:null, col:null, colFor:null, tok:0, q:'', draft:'', tgt:null, playing:null, chanBack:null };
 const PL = { cur:0, dur:0, st:-1, hide:0, captions:false };
 const cache = new Map();
 
@@ -228,7 +233,8 @@ const slim = v => ({ videoId:v.videoId, title:v.title, author:{ name:v.author &&
 const card = v => h('button', { class:'card', type:'button', 'data-f':true, onclick:() => play(v) },
   h('div', { class:'th' }, h('img', { src:'https://i.ytimg.com/vi/' + v.videoId + '/hqdefault.jpg', alt:'', loading:'lazy' }), v.isLive ? h('i', { class:'b live' }, 'LIVE') : v.duration && v.duration.raw ? h('i', { class:'b' }, v.duration.raw) : null),
   h('div', { class:'tx' }, h('div', { class:'ti' }, v.title), h('div', { class:'me' }, [v.author && v.author.name, views(v.views && v.views.count), ago(v.publishedTime)].filter(Boolean).join(' • '))));
-const channelCard = c => h('button', { class:'channel', type:'button', 'data-f':true, onclick:() => openChannel(c) },
+/* NEU: onClick übergibt die Quelle (die geklickte Kanalkachel) für spätere Fokus-Wiederherstellung */
+const channelCard = c => h('button', { class:'channel', type:'button', 'data-f':true, onclick:(e) => openChannel(c, e.currentTarget) },
   h('img', { src:c.avatar || '', alt:'' }), h('div', { style:'min-width:0' }, h('b', {}, c.channelName || c.handle || 'Kanal'), h('span', {}, [c.handle, c.subs].filter(Boolean).join(' • ') || 'Kanal'), c.description ? h('span', { class:'cd' }, c.description) : null));
 const apiErr = e => h('div', { class:'msg' }, e.message === 'http401' ? 'Falscher Zugriffscode.' : 'YouTube lässt sich gerade nicht laden. ' + (e.message || ''), h('br'), h('button', { class:'btn pri', type:'button', 'data-f':true, onclick:() => setTab('home') }, 'Erneut versuchen'));
 
@@ -272,14 +278,28 @@ function renderSearch() {
   setTimeout(() => setQ(S.q), 0);
   return h('div', { class:'sg' }, left, res);
 }
-async function openChannel(ch) {
+/* NEU: openChannel speichert vorherigen Screen in S.chanBack; rendert Zurück-Button oben links */
+async function openChannel(ch, srcEl) {
   S.tok++; S.tgt = null;
-  const c = $('#content'); c.scrollTop = 0;
+  const c = $('#content');
+  if (!S.chanBack) {
+    S.chanBack = {
+      nodes: Array.from(c.childNodes),
+      src: srcEl || (document.activeElement && document.activeElement.closest && document.activeElement.closest('.channel')) || null,
+      tab: S.tab,
+      q: S.q
+    };
+  }
+  c.scrollTop = 0;
+  const backBtn = h('button', { class:'chback', type:'button', 'data-f':true, onclick: backFromChannel, 'aria-label':'Zurück zur Suche' }, svg(IC.back), h('span', {}, 'Zurück'));
   const grid = h('div', { class:'grid' }, h('div', { class:'msg' }, 'Videos des Kanals werden geladen …'));
-  c.replaceChildren(h('div', {}, h('div', { class:'chhead' }, ch.avatar ? h('img', { src:ch.avatar, alt:'' }) : null,
-    h('div', {}, h('h1', {}, ch.channelName || ch.handle || 'Kanal'), h('div', { class:'me' }, [ch.handle, ch.subs].filter(Boolean).join(' • ')), h('p', { class:'me', style:'white-space:normal' }, ch.description || ''),
-    h('button', { class:'btn pri', type:'button', 'data-f':true, onclick:() => { if (ch.url) window.open(ch.url, '_blank'); } }, 'Auf YouTube öffnen'))),
+  c.replaceChildren(h('div', {},
+    h('div', { style:'padding:1.4rem 1.2rem .4rem' }, backBtn),
+    h('div', { class:'chhead' }, ch.avatar ? h('img', { src:ch.avatar, alt:'' }) : null,
+      h('div', {}, h('h1', {}, ch.channelName || ch.handle || 'Kanal'), h('div', { class:'me' }, [ch.handle, ch.subs].filter(Boolean).join(' • ')), h('p', { class:'me', style:'white-space:normal' }, ch.description || ''),
+      h('button', { class:'btn pri', type:'button', 'data-f':true, onclick:() => { if (ch.url) window.open(ch.url, '_blank'); } }, 'Auf YouTube öffnen'))),
     h('h2', { style:'margin:2rem 0 .5rem 1.2rem' }, 'Videos'), grid));
+  requestAnimationFrame(() => focusEl($('.chback')));
   try {
     let list = [];
     if (ch.channelId) { try { list = (await api('ch:' + ch.channelId)).videos; } catch {} }
@@ -288,12 +308,25 @@ async function openChannel(ch) {
     grid.replaceChildren(...(list.length ? list.map(card) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')]));
   } catch (e) { grid.replaceChildren(apiErr(e)); }
 }
+/* NEU: zurück zur Suche — vorherigen Screen wiederherstellen, Fokus auf die Quell-Kachel */
+function backFromChannel() {
+  const b = S.chanBack; S.chanBack = null; S.tok++;
+  const c = $('#content');
+  if (b && b.nodes && b.nodes.length) {
+    c.replaceChildren(...b.nodes);
+    c.scrollTop = 0;
+    if (b.src && b.src.isConnected) { focusEl(b.src); return; }
+    const first = $('.channel, .card', c); if (first) { focusEl(first); return; }
+  }
+  setTab(b && b.tab ? b.tab : 'search');
+}
 function renderHist() {
   const l = store.get('hist', []);
   if (!l.length) return h('div', { class:'msg' }, 'Hier erscheinen die Videos, die du angesehen hast.');
   return h('section', {}, h('h2', {}, 'Verlauf'), h('div', { class:'grid' }, l.map(card)), h('div', { class:'row', style:'padding-left:1.2rem' }, h('button', { class:'btn', type:'button', 'data-f':true, onclick:() => { store.set('hist', []); setTab('hist'); toast('Verlauf gelöscht'); } }, 'Verlauf löschen')));
 }
 function setTab(t) {
+  S.chanBack = null;  /* NEU: zurück-Navigation invalidieren */
   S.tab = t; S.tok++; $$('#nav .nv').forEach(n => n.classList.toggle('active', n.dataset.tab === t));
   const c = $('#content'); c.scrollTop = 0; S.tgt = null;
   if (t === 'home') { c.replaceChildren(); renderHome(); } else c.replaceChildren(t === 'search' ? renderSearch() : renderHist());
@@ -385,9 +418,22 @@ window.addEventListener('message', ev => {
   document.dispatchEvent(new KeyboardEvent('keydown', { key:d.key, keyCode:d.keyCode, which:d.keyCode, bubbles:true, cancelable:true }));
 });
 
-/* ===== Fernbedienung (wie uhr.html) ===== */
-function vis(el) { if (el.disabled || el.hidden) return false; const r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4) return false; const sc = el.closest('.sc'); if (sc) { const b = sc.getBoundingClientRect(); if (r.bottom <= b.top || r.top >= b.bottom) return false; } return true; }
-function focusEl(el) { if (!el) return; el.focus({ preventScroll:true }); if (el.closest('.sc, .shelf')) el.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' }); }
+/* ===== Fernbedienung ===== */
+/* WICHTIG: nur prüfen, ob ein Element überhaupt dargestellt wird –
+   NICHT, ob es gerade im sichtbaren Ausschnitt des Scroll-Containers liegt.
+   Sonst sind alle Zeilen unterhalb des Falzes für die Fernbedienung
+   unerreichbar (Mausrad umgeht vis(), darum ging es dort). */
+function vis(el) {
+  if (!el || el.disabled || el.hidden) return false;
+  if (el.closest('[hidden]')) return false;
+  const r = el.getBoundingClientRect();
+  return r.width >= 4 && r.height >= 4;
+}
+function focusEl(el) {
+  if (!el) return;
+  el.focus({ preventScroll:true });
+  el.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' });
+}
 const initial = () => $('#nav .nv.active') || $('#nav .nv');
 function move(dir) {
   let cur = document.activeElement; if (!cur || !cur.matches || !cur.matches('[data-f]')) cur = null;
@@ -414,13 +460,17 @@ document.addEventListener('keydown', ev => {
   const k = ev.key, c = ev.keyCode;
   if (k === 'Enter' || c === 13 || k === ' ') { const a = document.activeElement; if (a && a !== document.body && a.matches && a.matches('button,[data-f],[tabindex],a[href],input,select,[role=button]') && a.click) { ev.preventDefault(); a.click(); return; } }
   if (S.tgt && k === 'Backspace' && S.tgt.get()) { ev.preventDefault(); S.tgt.set(S.tgt.get().slice(0, -1)); return; }
-  if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || k === 'Backspace') { if (goBack()) ev.preventDefault(); else { try { parent.postMessage({ type:'mp-app-exit' }, '*'); } catch {} } return; }
+  if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || k === 'Backspace') {
+    /* NEU: auf Kanalseite zuerst zurück zur Suche */
+    if (S.chanBack) { ev.preventDefault(); return backFromChannel(); }
+    if (goBack()) ev.preventDefault(); else { try { parent.postMessage({ type:'mp-app-exit' }, '*'); } catch {} }
+    return;
+  }
   if (S.tgt && k.length === 1 && /[\p{L}\p{N}\-.:\/_@?=]/u.test(k)) { ev.preventDefault(); S.tgt.set(S.tgt.get() + k.toLowerCase()); return; }
   const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
   if (dir) { ev.preventDefault(); return move(dir); }
 });
 document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('[data-f]') && !e.target.matches('#nav .nv')) S.last = e.target; });
-const kill = ev => { if (ev.cancelable) ev.preventDefault(); ev.stopImmediatePropagation(); };
 ['contextmenu','dragstart'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 (() => { const w = () => { ['pointerdown','keydown','click'].forEach(t => document.removeEventListener(t, w, true)); try { const el = document.documentElement, fn = el.requestFullscreen || el.webkitRequestFullscreen; if (fn && !document.fullscreenElement) Promise.resolve(fn.call(el)).catch(() => {}); } catch {} }; ['pointerdown','keydown','click'].forEach(t => document.addEventListener(t, w, true)); })();
 
