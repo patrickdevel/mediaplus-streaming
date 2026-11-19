@@ -61,6 +61,11 @@ section{margin-bottom:1.4rem}
 .res .card:focus .th{box-shadow:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(29rem,1fr));gap:1.6rem;padding:1.4rem 1.2rem}
 .grid .card{width:auto}
+.channels{display:grid;grid-template-columns:repeat(auto-fill,minmax(28rem,1fr));gap:1.2rem;padding:1.2rem}
+.channel{display:flex;align-items:center;gap:1.2rem;min-height:9rem;padding:1.2rem 1.4rem;border-radius:1.2rem;background:var(--s1);text-align:left;transition:transform .14s,background .14s}
+.channel:focus{background:#fff;color:var(--bg);transform:scale(1.03)}
+.channel img{width:6rem;height:6rem;border-radius:50%;object-fit:cover;background:var(--s2)}
+.channel b{display:block;font-size:1.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.channel span{display:block;color:var(--tx2);font-size:1.2rem;margin-top:.35rem}.channel:focus span{color:#555}
 
 /* Suche + Tastatur */
 .sg{display:grid;grid-template-columns:38rem 1fr;gap:3rem;height:calc(100vh - 7rem)}
@@ -89,11 +94,17 @@ section{margin-bottom:1.4rem}
 #pl{position:fixed;inset:0;background:#000;z-index:40;display:none}
 #pl.show{display:block}
 #fr{width:100%;height:100%;border:0;pointer-events:none;display:block}
+#pback{position:absolute;left:3rem;top:2.2rem;z-index:3;opacity:.88}
+#pback:focus{opacity:1;background:#fff;color:#000}
+#pback svg{width:2.2rem;height:2.2rem;margin-right:.7rem}
 #pb{position:absolute;left:0;right:0;bottom:0;padding:9rem 5rem 4rem;background:linear-gradient(transparent,rgba(0,0,0,.88));opacity:0;transition:opacity .25s}
 #pb.show{opacity:1}
 #pt{font-size:2.6rem;font-weight:500;display:flex;align-items:center;gap:1.6rem}
 #pt svg{width:4rem;height:4rem;flex:none}
 #pc{color:var(--tx2);font-size:1.5rem;margin:.4rem 0 1.8rem 5.6rem}
+#pcontrols{display:flex;gap:1rem;margin:0 0 1.8rem 5.6rem;flex-wrap:wrap}
+#pcontrols .btn{min-width:7rem;height:4.4rem}
+#pcontrols .btn.on{background:#fff;color:#000}
 .bar{height:.55rem;border-radius:9px;background:rgba(255,255,255,.3)}
 .bar i{display:block;height:100%;width:0;border-radius:9px;background:var(--red)}
 #ptm{display:flex;justify-content:space-between;font-size:1.3rem;color:var(--tx2);margin-top:.8rem;font-variant-numeric:tabular-nums}
@@ -106,7 +117,13 @@ section{margin-bottom:1.4rem}
 <nav id="nav"></nav>
 <div id="content" class="sc"></div>
 <div id="pl"><iframe id="fr" allow="autoplay; encrypted-media; fullscreen" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe>
-  <div id="pb"><div id="pt"></div><div id="pc"></div><div class="bar"><i id="pg"></i></div><div id="ptm"><span id="p1">0:00</span><span id="p2">0:00</span></div></div></div>
+  <button id="pback" class="btn" type="button" data-f="true" aria-label="Zurück" onclick="closePl()">‹&nbsp; Zurück</button>
+  <div id="pb"><div id="pt"></div><div id="pc"></div><div id="pcontrols">
+    <button id="pprev" class="btn" type="button" data-f="true">−10 s</button>
+    <button id="pplay" class="btn pri" type="button" data-f="true">Pause</button>
+    <button id="pnext" class="btn" type="button" data-f="true">+10 s</button>
+    <button id="pcapt" class="btn" type="button" data-f="true">Untertitel: Aus</button>
+  </div><div class="bar"><i id="pg"></i></div><div id="ptm"><span id="p1">0:00</span><span id="p2">0:00</span></div></div></div>
 <div id="toast"></div>
 <script>
 (() => {
@@ -121,7 +138,7 @@ function h(tag, props, ...kids) {
 const store = { get(k, d) { try { const v = localStorage.getItem('yt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem('yt:' + k, JSON.stringify(v)); } catch {} } };
 let tt; const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); };
 const S = { tab:'home', last:null, col:null, colFor:null, tok:0, q:'', draft:'', tgt:null, playing:null };
-const PL = { cur:0, dur:0, st:-1, hide:0 };
+const PL = { cur:0, dur:0, st:-1, hide:0, captions:false };
 const cache = new Map();
 
 /* ===== Icons / Logo ===== */
@@ -154,12 +171,16 @@ async function api(q) {
   if (cache.has(q)) return cache.get(q);
   const r = await fetch('/api/yt?q=' + encodeURIComponent(q), { headers:{ 'x-key':sessionStorage.getItem('key') || '' } });
   if (!r.ok) throw new Error('http' + r.status);
-  const a = ((await r.json()).result || []).filter(v => v.videoId && v.title); cache.set(q, a); return a;
+  const data = await r.json();
+  const a = { videos:(data.result || []).filter(v => v.videoId && v.title), channels:(data.channels || []).filter(v => v.channelId && (v.channelName || v.handle)) };
+  cache.set(q, a); return a;
 }
 const slim = v => ({ videoId:v.videoId, title:v.title, author:{ name:v.author && v.author.name }, views:{ count:v.views && v.views.count }, publishedTime:v.publishedTime, duration:{ raw:v.duration && v.duration.raw }, isLive:v.isLive });
 const card = v => h('button', { class:'card', type:'button', 'data-f':true, onclick:() => play(v) },
   h('div', { class:'th' }, h('img', { src:'https://i.ytimg.com/vi/' + v.videoId + '/hqdefault.jpg', alt:'', loading:'lazy' }), v.isLive ? h('i', { class:'b live' }, 'LIVE') : v.duration && v.duration.raw ? h('i', { class:'b' }, v.duration.raw) : null),
   h('div', { class:'tx' }, h('div', { class:'ti' }, v.title), h('div', { class:'me' }, [v.author && v.author.name, views(v.views && v.views.count), ago(v.publishedTime)].filter(Boolean).join(' • '))));
+const channelCard = c => h('button', { class:'channel', type:'button', 'data-f':true, onclick:() => openChannel(c) },
+  h('img', { src:c.avatar || '', alt:'' }), h('div', {}, h('b', {}, c.channelName || c.handle || 'Kanal'), h('span', {}, c.handle || 'Kanalseite öffnen')));
 const apiErr = e => h('div', { class:'msg' }, e.message === 'http401' ? 'Falscher Zugriffscode.' : 'YouTube lässt sich gerade nicht laden. Bitte später erneut versuchen.', h('br'), h('button', { class:'btn pri', type:'button', 'data-f':true, onclick:() => setTab('home') }, 'Erneut versuchen'));
 
 /* ===== Tastatur ===== */
@@ -181,7 +202,7 @@ async function renderHome() {
   const secs = SHELVES.map(([t]) => { const sh = h('div', { class:'shelf' }, [1, 2, 3, 4, 5].map(() => h('div', { class:'card sk' }, h('div', { class:'th' }), h('div', { class:'ti' }, '\u00a0')))); return [h('section', {}, h('h2', {}, t), sh), sh]; });
   c.replaceChildren(...secs.map(s => s[0]));
   for (let i = 0; i < SHELVES.length; i++) {
-    try { const r = await api(SHELVES[i][1]); if (tok !== S.tok) return; secs[i][1].replaceChildren(...(r.length ? r.slice(0, 12).map(card) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')])); }
+    try { const r = await api(SHELVES[i][1]); if (tok !== S.tok) return; secs[i][1].replaceChildren(...(r.videos.length ? r.videos.slice(0, 12).map(card) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')])); }
     catch (e) { if (tok !== S.tok) return; c.replaceChildren(apiErr(e)); return; }
   }
 }
@@ -189,8 +210,11 @@ function setQ(v) { S.q = v; field('qv', v, 'Suchen'); }
 async function doSearch() {
   const q = S.q.trim(); if (!q) return; const res = $('#res'), tok = ++S.tok; res.replaceChildren(h('div', { class:'msg' }, 'Suche läuft …'));
   try { const r = await api(q); if (tok !== S.tok) return;
-    if (!r.length) { res.replaceChildren(h('div', { class:'msg' }, 'Keine Treffer für „' + q + '“.')); return; }
-    res.replaceChildren(...r.map(card)); focusEl($('.card', res));
+    if (!r.videos.length && !r.channels.length) { res.replaceChildren(h('div', { class:'msg' }, 'Keine Treffer für „' + q + '“.')); return; }
+    const parts = [];
+    if (r.channels.length) parts.push(h('h2', {}, 'Kanäle'), h('div', { class:'channels' }, r.channels.slice(0, 12).map(channelCard)));
+    if (r.videos.length) parts.push(h('h2', {}, r.videos.length + ' Videos'), ...r.videos.map(card));
+    res.replaceChildren(...parts); focusEl($('.channel,.card', res));
   } catch (e) { if (tok === S.tok) res.replaceChildren(apiErr(e)); }
 }
 function renderSearch() {
@@ -199,6 +223,20 @@ function renderSearch() {
   const res = h('div', { class:'res sc', id:'res' }, h('div', { class:'msg' }, 'Gib einen Suchbegriff ein und wähle „Suchen“.'));
   setTimeout(() => setQ(S.q), 0);
   return h('div', { class:'sg' }, left, res);
+}
+async function openChannel(ch) {
+  S.tok++; S.tgt = null;
+  const c = $('#content'); c.scrollTop = 0;
+  const host = h('div', { class:'set' }, h('h1', {}, ch.channelName || ch.handle || 'Kanal'), h('p', {}, ch.description || 'YouTube-Kanal'),
+    h('button', { class:'btn pri', type:'button', 'data-f':true, onclick:() => { if (ch.url) window.open(ch.url, '_blank'); } }, 'Auf YouTube öffnen'),
+    h('h2', { style:'margin:3rem 0 .5rem 0' }, 'Videos'), h('div', { class:'grid' }, h('div', { class:'msg' }, 'Videos des Kanals werden geladen …')));
+  c.replaceChildren(host);
+  try {
+    const r = await api(ch.channelName || ch.handle);
+    const own = r.videos.filter(v => v.author && v.author.id && ch.channelId && v.author.id === ch.channelId);
+    const list = own.length ? own : r.videos;
+    const grid = $('.grid', host); grid.replaceChildren(...(list.length ? list.map(card) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')]));
+  } catch (e) { $('.grid', host).replaceChildren(apiErr(e)); }
 }
 function renderHist() {
   const l = store.get('hist', []);
@@ -216,19 +254,24 @@ const cmd = (f, a = []) => { try { $('#fr').contentWindow.postMessage(JSON.strin
 const listen = () => { try { $('#fr').contentWindow.postMessage(JSON.stringify({ event:'listening', id:1, channel:'widget' }), '*'); } catch {} };
 $('#fr').addEventListener('load', () => { if (S.playing) { listen(); setTimeout(listen, 800); setTimeout(listen, 2200); } });
 function showBar() { $('#pb').classList.add('show'); clearTimeout(PL.hide); PL.hide = setTimeout(() => { if (PL.st !== 2) $('#pb').classList.remove('show'); }, 4000); }
-function upd() { $('#pg').style.width = (PL.dur ? Math.min(100, PL.cur / PL.dur * 100) : 0) + '%'; $('#p1').textContent = fmtT(PL.cur); $('#p2').textContent = fmtT(PL.dur); const pt = $('#pt svg'); if (pt) pt.firstChild.setAttribute('d', PL.st === 2 ? 'M8 5v14l11-7z' : 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); }
+function upd() { $('#pg').style.width = (PL.dur ? Math.min(100, PL.cur / PL.dur * 100) : 0) + '%'; $('#p1').textContent = fmtT(PL.cur); $('#p2').textContent = fmtT(PL.dur); const pt = $('#pt svg'); if (pt) pt.firstChild.setAttribute('d', PL.st === 2 ? 'M8 5v14l11-7z' : 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); const pb = $('#pplay'); if (pb) pb.textContent = PL.st === 1 ? 'Pause' : 'Wiedergabe'; const cb = $('#pcapt'); if (cb) { cb.textContent = 'Untertitel: ' + (PL.captions ? 'Ein' : 'Aus'); cb.classList.toggle('on', PL.captions); } }
 function play(v) {
   const hs = store.get('hist', []).filter(x => x.videoId !== v.videoId); hs.unshift(slim(v)); store.set('hist', hs.slice(0, 40));
-  S.playing = v; PL.cur = PL.dur = 0; PL.st = -1;
+  S.playing = v; PL.cur = PL.dur = 0; PL.st = -1; PL.captions = false;
   $('#pt').replaceChildren(svg('M6 19h4V5H6v14zm8-14v14h4V5h-4z'), v.title); $('#pc').textContent = (v.author && v.author.name) || ''; upd();
-  $('#fr').src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&controls=0&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&enablejsapi=1&hl=de';
-  $('#pl').classList.add('show'); showBar(); if (document.activeElement) document.activeElement.blur(); window.focus();
+  $('#fr').src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&controls=0&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&enablejsapi=1&cc_load_policy=0&hl=de';
+  $('#pl').classList.add('show'); showBar(); upd(); if (document.activeElement) document.activeElement.blur(); focusEl($('#pback')); window.focus();
 }
 function closePl() { S.playing = null; $('#fr').src = 'about:blank'; $('#pl').classList.remove('show'); S.last && S.last.isConnected ? focusEl(S.last) : focusEl(initial()); }
 const toggle = () => { cmd(PL.st === 1 ? 'pauseVideo' : 'playVideo'); PL.st = PL.st === 1 ? 2 : 1; upd(); showBar(); };
 const seek = d => { PL.cur = Math.max(0, Math.min(PL.dur || 1e9, PL.cur + d)); cmd('seekTo', [PL.cur, true]); upd(); showBar(); };
+const captions = () => { PL.captions = !PL.captions; if (PL.captions) { cmd('loadModule', ['captions']); cmd('setOption', ['captions', 'track', { languageCode:'de' }]); } else cmd('unloadModule', ['captions']); upd(); showBar(); };
+$('#pprev').onclick = () => seek(-10); $('#pnext').onclick = () => seek(10); $('#pplay').onclick = toggle; $('#pcapt').onclick = captions;
 function playerKey(ev) {
-  const k = ev.key, c = ev.keyCode; ev.preventDefault();
+  const k = ev.key, c = ev.keyCode, a = document.activeElement, buttons = [$('#pback'), $('#pprev'), $('#pplay'), $('#pnext'), $('#pcapt')].filter(Boolean);
+  if ((k === 'Enter' || k === ' ') && a && buttons.includes(a)) { ev.preventDefault(); a.click(); return; }
+  if ((k === 'ArrowLeft' || k === 'ArrowRight') && a && buttons.includes(a)) { ev.preventDefault(); const i = buttons.indexOf(a); focusEl(buttons[(i + (k === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length]); showBar(); return; }
+  ev.preventDefault();
   if (k === 'Enter' || k === ' ' || k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause' || [13, 32, 179, 10252, 415, 19].includes(c)) return toggle();
   if (k === 'ArrowRight' || k === 'MediaFastForward' || c === 39 || c === 417) return seek(10);
   if (k === 'ArrowLeft' || k === 'MediaRewind' || c === 37 || c === 412) return seek(-10);
