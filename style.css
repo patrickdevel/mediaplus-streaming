@@ -1531,8 +1531,8 @@ body.home:not(.home-ap) .hfirst .happs .arow{opacity:0;transition:opacity .25s}
 
 
 /* ===== Home: Hinweis über dem Dock + Titel-only im Dock-Fokus ===== */
-.hfirst .happs .hswipe{position:absolute;left:0;right:0;bottom:100%;margin-bottom:1.2rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;pointer-events:none;color:rgba(255,255,255,.55);transition:opacity .3s ease}
-.hswipe svg{width:2.6rem;height:2.6rem;display:block}
+.hfirst .happs .hswipe{position:absolute;left:0;right:0;bottom:100%;margin-bottom:.6rem;display:flex;flex-direction:column;align-items:center;gap:.35rem;pointer-events:none;color:rgba(255,255,255,.55);transition:opacity .3s ease}
+.hswipe svg{width:3.6rem;height:1.8rem;display:block}
 .hswipe span{font-size:1.15rem;font-weight:500;letter-spacing:.02em;color:rgba(210,210,214,.7)}
 body.home:not(.home-ap) .hswipe{opacity:0}
 
@@ -1548,3 +1548,12 @@ body.home.home-ap .hero .hin h2.mq.mq-on{margin:0;padding:0;max-width:100%;font-
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;text-overflow:ellipsis;-webkit-mask-image:none;mask-image:none}
 body.home.home-ap .hero .hin h2 .mq-in,
 body.home.home-ap .hero .hin h2.mq.mq-on .mq-in{display:inline;white-space:normal;animation:none!important;transform:none!important}
+
+/* App-Name beim Hover */
+.atn{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:0 .7rem .6rem;background:linear-gradient(to bottom,rgba(0,0,0,.12),rgba(0,0,0,.5));opacity:0;transition:opacity .25s ease;pointer-events:none}
+.atile:hover .atn,.atile:focus .atn{opacity:1}
+.atm{max-width:100%;overflow:hidden;font-size:1.05rem;font-weight:600;line-height:1.3;text-align:center}
+.atile .atm span{display:inline-block;white-space:nowrap;max-width:none;overflow:visible;text-overflow:clip;padding:0 .9rem;color:#fff}
+.atm.scroll{width:100%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+.atile:hover .atm.scroll span,.atile:focus .atm.scroll span{animation:atmscroll var(--t,4s) linear .4s infinite alternate}
+@keyframes atmscroll{to{transform:translateX(var(--d,0))}}
