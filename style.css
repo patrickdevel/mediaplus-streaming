@@ -1584,3 +1584,17 @@ body.home.home-ap .hero .hin h2.mq.mq-on .mq-in{display:inline;white-space:norma
 .aovl-res .xtile,.aovl-res .card.compact{background:rgba(255,255,255,.08);-webkit-backdrop-filter:blur(1.6rem);backdrop-filter:blur(1.6rem);border:1px solid rgba(210,210,216,.18);border-radius:1.4rem;padding:.8rem;color:#fff}
 .aovl-res .xtile:focus-visible,.aovl-res .card.compact:focus-visible,.aovl-res a:focus{outline:0;box-shadow:0 0 0 .3rem #fff;background:rgba(255,255,255,.18)}
 .aovl-res .card.compact{margin:0}
+
+/* ===== App-Suche: Blur wie die Uhr-Pill am Homescreen + Erscheinen-Animation ===== */
+.aovl{opacity:1!important;transition:none;pointer-events:auto}
+.aovl-bg{opacity:0;background:rgba(10,10,14,.22);-webkit-backdrop-filter:blur(3rem) saturate(1.5)!important;backdrop-filter:blur(3rem) saturate(1.5)!important;transition:opacity .45s ease}
+.aovl.on .aovl-bg{opacity:1}
+.aovl-pill,.aovl-res{color:#fff;background:rgba(10,10,14,.22);-webkit-backdrop-filter:blur(3rem) saturate(1.5)!important;backdrop-filter:blur(3rem) saturate(1.5)!important;border:1px solid rgba(255,255,255,.38);box-shadow:0 0 1.8rem rgba(255,255,255,.28),0 0 5rem rgba(255,255,255,.1),inset 0 0 1.6rem rgba(255,255,255,.1)}
+.aovl-pill{opacity:0;transform:translateY(-3rem) scale(.6);transform-origin:100% 0;transition:opacity .35s ease,transform .55s cubic-bezier(.2,1.1,.3,1),width .55s cubic-bezier(.2,.9,.2,1);width:12rem}
+.aovl.on .aovl-pill{opacity:1;transform:none;width:46rem}
+.aovl-res{opacity:0;transform:translateY(-2rem) scale(.94);transform-origin:100% 0;transition:opacity .4s ease .12s,transform .6s cubic-bezier(.2,.9,.2,1) .12s}
+.aovl.on .aovl-res{opacity:1;transform:none}
+.aovl-res .xtile,.aovl-res .card.compact{animation:aovlIn .5s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i,0)*50ms)}
+.aovl-res .xtile:nth-child(2),.aovl-vids .card:nth-child(2){--i:1}.aovl-res .xtile:nth-child(3),.aovl-vids .card:nth-child(3){--i:2}.aovl-res .xtile:nth-child(4),.aovl-vids .card:nth-child(4){--i:3}.aovl-vids .card:nth-child(n+5){--i:4}
+@keyframes aovlIn{from{opacity:0;transform:translateY(1.6rem) scale(.96)}to{opacity:1;transform:none}}
+.aovl:not(.on) .aovl-pill,.aovl:not(.on) .aovl-res{transition-duration:.25s,.25s,.25s;transition-delay:0s}
