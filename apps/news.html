@@ -532,7 +532,7 @@ document.addEventListener('keydown', ev => {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const k = ev.key, c = ev.keyCode;
 
-  if (k === 'Enter' || c === 13 || k === ' ') { const a = document.activeElement; if (a && a !== document.body && a.matches && a.matches('button,[data-f],[tabindex]') && a.click) { ev.preventDefault(); a.click(); return; } }
+  if (k === 'Enter' || c === 13 || k === ' ') { const a = document.activeElement; if (a && a !== document.body && a.matches && a.matches('button,[data-f],[tabindex],a[href],input,select,[role=button]') && a.click) { ev.preventDefault(); a.click(); return; } }
 
   if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || k === 'Backspace') {
     if (goBack()) ev.preventDefault();
@@ -599,6 +599,15 @@ renderSide();
 render();
 focusEl(initial());
 loadFeed('start');
+})();
+/* Systemtasten (Lautstärke, Sprachsuche, Einstellungen, Menü) NICHT abfangen; Tastatursuche -> Host */
+(() => {
+  const SYS = /^(AudioVolume(Up|Down|Mute)|Volume(Up|Down|Mute)|VoiceAssist|LaunchAssistant|Assistant|VoiceDial|Settings|Menu|ContextMenu|Info|Help)$/;
+  const SYSC = [173,174,175,447,448,449,231,93,82,457];
+  ['keydown','keyup','keypress'].forEach(t => window.addEventListener(t, ev => {
+    if (SYS.test(ev.key) || SYSC.includes(ev.keyCode)) { ev.stopImmediatePropagation(); return; }
+    if (t === 'keydown' && (ev.key === 'BrowserSearch' || ev.key === 'Search' || ev.keyCode === 170)) { ev.preventDefault(); ev.stopImmediatePropagation(); try { parent.postMessage({ type:'mp-app-search' }, '*'); } catch {} }
+  }, true));
 })();
 </script>
 </body>
