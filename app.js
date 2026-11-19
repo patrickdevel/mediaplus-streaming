@@ -290,7 +290,7 @@ function groupShows(items, q) {
   const m = new Map(), nq = norm(q), words = nq.split(' ').filter(Boolean);
   for (const e of items) {
     if (!e.topic) continue;
-    const k = (e.channel || '') + '|' + e.topic, x = m.get(k) || { topic:e.topic, ch:chanOf(e.channel), n:0, nt:norm(e.topic) };
+    const k = (e.channel || '') + '|' + e.topic, x = m.get(k) || { topic:e.topic, ch:chanOf(e.channel), n:0, nt:norm(e.topic), e };
     x.n++; m.set(k, x);
   }
   let l = Array.from(m.values());
@@ -299,8 +299,14 @@ function groupShows(items, q) {
   return l.sort((a, b) => rank(a) - rank(b) || b.n - a.n).slice(0, 14);
 }
 function ShowTile(x) {
-  return h('a', { class:'xtile', href:'#/show/' + (x.ch.id || '_') + '/' + encodeURIComponent(x.topic) },
-    Avatar(x.ch), h('b', {}, x.topic), h('span', { class:'sub' }, x.ch.name + ' · Sendung'));
+  const a = h('a', { class:'shtile', href:'#/show/' + (x.ch.id || '_') + '/' + encodeURIComponent(x.topic), style:`--c:${x.ch.color}` }, h('b', {}, x.topic));
+  if (x.e && store.get('thumbs', true)) realThumbUrl(x.e).then(src => {
+    if (!src || !a.isConnected && false) return;
+    const im = new Image(); im.alt = ''; im.className = 'shimg';
+    im.onload = () => { a.prepend(im); requestAnimationFrame(() => im.classList.add('on')); };
+    im.src = secure(src.replace('{width}', '640'));
+  });
+  return a;
 }
 function ShowsRow(slot, load, q) {
   load().then(r => {
@@ -427,13 +433,14 @@ function Logo(a) {
 }
 const warmed = new Set();
 function warm(u) { if (!u || warmed.has(u)) return; warmed.add(u); try { const o = new URL(u).origin; const p = document.createElement('link'); p.rel = 'preconnect'; p.href = o; p.crossOrigin = ''; document.head.append(p); const f = document.createElement('link'); f.rel = 'prefetch'; f.href = u; document.head.append(f); } catch {} }
+const selSnd = new Audio('selectpitched.mp3'); selSnd.preload = 'auto';
 function appTile(a, onOpen) {
   const lg = Logo(a), nm = h('span', {}, a.name), box = h('div', { class:'atm' }, nm);
   lg.append(h('div', { class:'atn' }, box));
   const b = h('button', { class:'atile', type:'button', 'aria-label':a.name }, lg);
   const measure = () => { const d = nm.scrollWidth - box.clientWidth; box.classList.toggle('scroll', d > 1); box.style.setProperty('--d', -d + 'px'); box.style.setProperty('--t', Math.max(2, d / 30) + 's'); };
   b.addEventListener('mouseenter', measure); b.addEventListener('focus', measure);
-  b.onclick = () => onOpen(a, b);
+  b.onclick = () => { try { selSnd.currentTime = 0; selSnd.play().catch(() => {}); } catch {} onOpen(a, b); };
   if (a.installslite) { b.addEventListener('focus', () => warm(a.installslite)); b.addEventListener('mouseover', () => warm(a.installslite)); warm(a.installslite); }
   return b;
 }
