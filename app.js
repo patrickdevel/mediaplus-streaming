@@ -163,27 +163,29 @@ function pump() {
     const t = thumbQueue.pop();
     if (!t.isConnected) continue;
     thumbActive++;
-    grabFrame(t._e).then(cv => { if (t.isConnected) t.prepend(cv); }).catch(() => {}).finally(() => { thumbActive--; pump(); });
+    grabFrame(t._e, t.classList.contains('hbg')).then(cv => { if (t.isConnected) t.prepend(cv); }).catch(() => {}).finally(() => { thumbActive--; pump(); });
   }
 }
-function grabFrame(e) {
+function grabFrame(e, hq) {
   return new Promise((res, rej) => {
-    const src = e.url_video_low || e.url_video;
+    const src = hq ? (e.url_video_hd || e.url_video || e.url_video_low) : (e.url_video || e.url_video_low);
+    const CW = hq ? 1280 : 640, CH = hq ? 720 : 360;
     if (!src || /\.m3u8/i.test(src)) return rej();
     const v = document.createElement('video');
     v.muted = true; v.preload = 'metadata'; v.playsInline = true;
     let fin = false;
     const end = cv => { if (fin) return; fin = true; clearTimeout(to); v.removeAttribute('src'); v.load(); cv ? res(cv) : rej(); };
-    const to = setTimeout(() => end(null), 9000);
+    const to = setTimeout(() => end(null), hq ? 20000 : 12000);
     v.addEventListener('error', () => end(null));
     v.addEventListener('loadedmetadata', () => { const d = v.duration; v.currentTime = isFinite(d) ? Math.min(d * 0.12, 60) : 1; });
     v.addEventListener('seeked', () => {
       try {
         const w = v.videoWidth, hh = v.videoHeight;
         if (!w) return end(null);
-        const cv = document.createElement('canvas'); cv.width = 480; cv.height = 270;
-        const s = Math.max(480 / w, 270 / hh);
-        cv.getContext('2d').drawImage(v, (480 - w * s) / 2, (270 - hh * s) / 2, w * s, hh * s);
+        const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+        const s = Math.max(CW / w, CH / hh), cx = cv.getContext('2d');
+        cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+        cx.drawImage(v, (CW - w * s) / 2, (CH - hh * s) / 2, w * s, hh * s);
         cv.className = 'frame'; end(cv);
       } catch { end(null); }
     });
@@ -1812,7 +1814,8 @@ const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-s
 const ScreenSaver = (() => {
   let root = null, imgA = null, imgB = null, clockEl = null, dateEl = null, timer = 0, slideTimer = 0, index = 0, visible = false;
   let digits = [], lastHM = '', digitTimers = [];
-  let recQ = [], recCur = null, recBusy = false, recEl = null, hintEl = null;
+  let recQ = [], recCur = null, recBusy = false, recEl = null, hintEl = null, blackEl = null, blackTimer = 0, black = false;
+  const BLACK_AFTER = 30 * 60000;
   const recSeen = new Set();
   const HINT = 'Taste oder Bewegung zum Fortfahren';
   async function fillRecs() {
@@ -1843,7 +1846,7 @@ const ScreenSaver = (() => {
   /* Vorschaubild schon im Hintergrund holen, sobald eine Empfehlung in der Warteschlange liegt */
   function frameOf(e) {
     let p = recFr.get(e.id);
-    if (!p) { p = grabFrame(e); recFr.set(e.id, p); p.then(cv => { p.cv = cv; }, () => {}); }
+    if (!p) { p = grabFrame(e, true); recFr.set(e.id, p); p.then(cv => { p.cv = cv; }, () => {}); }
     return p;
   }
   const setPos = () => order.forEach((c, i) => { c.classList.remove('p0', 'p1', 'p2'); c.classList.add('p' + i); });
@@ -1865,7 +1868,6 @@ const ScreenSaver = (() => {
       clearTimeout(recGone);
       recGone = setTimeout(() => { if (!recEl.classList.contains('on')) { clearStack(); placeBlur(); } }, 900);
     }
-    if (hintEl) hintEl.textContent = HINT;
   }
   function fillCard(card, e) {
     const th = h('div', { class:'srec-th' });
@@ -1908,14 +1910,19 @@ const ScreenSaver = (() => {
     recEl.classList.add('on');
     if (root) root.classList.add('rec-on');
     placeBlur();
-    if (hintEl) hintEl.textContent = 'Play zum Starten · andere Taste zum Beenden';
   }
   function playRec() {
     if (!visible || !recCur) return false;
     const e = recCur; cache.set(e.id, e); hide(); location.hash = '#/watch/' + encodeURIComponent(e.id); return true;
   }
   const isPlayKey = ev => ev.key === 'MediaPlayPause' || ev.key === 'MediaPlay' || ev.key === 'Enter' || ev.key === ' ' || [179, 415, 10252, 13].includes(ev.keyCode);
+  const goBlack = () => {
+    if (!visible || black) return;
+    black = true; clearTimeout(slideTimer); hideRec();
+    if (root) root.classList.add('black');
+  };
   const onKey = ev => {
+    if (visible && black) { ev.preventDefault(); ev.stopImmediatePropagation(); hide(); return; }
     if (visible && recCur && isPlayKey(ev)) { ev.preventDefault(); ev.stopImmediatePropagation(); playRec(); return; }
     activity();
   };
@@ -2061,7 +2068,7 @@ const ScreenSaver = (() => {
       h('div', { class:'saver-bg' }, imgA.el, imgB.el),
       h('div', { class:'saver-overlay' }),
       clockWrap, recEl = h('div', { class:'srec' }, ...(order = [0, 1, 2].map(i => h('div', { class:'srec-c p' + i })))),
-      hintEl = h('div', { class:'saver-hint' }, HINT));
+      blackEl = h('div', { class:'saver-black' }));
     document.body.append(root);
     if (window.ResizeObserver) { recRO = new ResizeObserver(placeBlur); recRO.observe(recEl); }
     buildClock();
@@ -2076,7 +2083,7 @@ const ScreenSaver = (() => {
   }
 
   function nextImage() {
-    if (!root || !visible) return;
+    if (!root || !visible || black) return;
     index = (index + 1) % TV_SAVER_IMAGES.length;
     const next = index % 2 ? imgB : imgA, old = index % 2 ? imgA : imgB;
     const start = () => {
@@ -2098,7 +2105,7 @@ const ScreenSaver = (() => {
 
   function hide() {
     if (!visible) return;
-    visible = false; hideRec();
+    visible = false; black = false; clearTimeout(blackTimer); hideRec();
     clearTimeout(slideTimer);
     clearDigitTimers();
     /* Ziffern-Animationen sofort stoppen – kein Scroll beim Beenden */
@@ -2109,7 +2116,7 @@ const ScreenSaver = (() => {
     root.classList.add('leaving');
     root.classList.remove('show');
     document.body.classList.remove('saver-on');
-    setTimeout(() => { if (root) root.classList.remove('leaving'); }, 900);
+    setTimeout(() => { if (root) { root.classList.remove('leaving'); if (!visible) root.classList.remove('black'); } }, 1000);
     schedule();
   }
 
@@ -2121,6 +2128,8 @@ const ScreenSaver = (() => {
     clearDigitTimers();
     digits.forEach(d => { d.val = -1; d.pos = MID; });
     if (!already) {
+      black = false; if (root) root.classList.remove('black');
+      clearTimeout(blackTimer); blackTimer = setTimeout(goBlack, BLACK_AFTER);
       index = 0;
       root.style.setProperty('--kd', (interval() / 1000 + 6) + 's');
       [imgA, imgB].forEach(x => { clearTimeout(x.kt); x.el.style.zIndex = ''; x.el.classList.remove('on', 'ken'); });
@@ -2136,7 +2145,7 @@ const ScreenSaver = (() => {
       setTimeout(() => rollTime(true, true), already ? 40 : 180);
     });
     clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
-    fillRecs().then(() => setTimeout(() => { if (visible && !recCur && recQ.length) showRec(recQ.shift()); }, 2500));
+    fillRecs().then(() => setTimeout(() => { if (visible && !black && !recCur && recQ.length) showRec(recQ.shift()); }, 2500));
   }
 
   function schedule() { clearTimeout(timer); if (store.get('saverOn', true)) timer = setTimeout(show, delay()); }
