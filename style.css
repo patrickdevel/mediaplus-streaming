@@ -1528,3 +1528,22 @@ body.home:not(.home-ap) .hfirst .happs .arow{opacity:0;transition:opacity .25s}
 :root[data-theme="dark"] .astore .akeys button:focus{background:#fff!important;color:#111!important}
 :root[data-theme="dark"] .astore .aback{background:rgba(255,255,255,.14)!important;color:#f2f2f2}
 :root[data-theme="dark"] .astore .aback:focus{background:#fff!important;color:#111}
+
+
+/* ===== Home: Hinweis über dem Dock + Titel-only im Dock-Fokus ===== */
+.hfirst .happs .hswipe{position:absolute;left:0;right:0;bottom:100%;margin-bottom:1.2rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;pointer-events:none;color:rgba(255,255,255,.55);transition:opacity .3s ease}
+.hswipe svg{width:2.6rem;height:2.6rem;display:block}
+.hswipe span{font-size:1.15rem;font-weight:500;letter-spacing:.02em;color:rgba(210,210,214,.7)}
+body.home:not(.home-ap) .hswipe{opacity:0}
+
+/* Dock fokussiert: nur kleiner Titel oben links (max. 2 Zeilen, kein Scrollen) */
+body.home.home-ap .hero .hin{position:absolute;top:3.4rem;left:calc(var(--pad) + 2rem);right:auto;bottom:auto;padding:0;max-width:44rem}
+body.home.home-ap .hero .hin .hbadge,
+body.home.home-ap .hero .hin p,
+body.home.home-ap .hero .hin .hact{display:none}
+body.home.home-ap .hero .hin h2,
+body.home.home-ap .hero .hin h2.mq,
+body.home.home-ap .hero .hin h2.mq.mq-on{margin:0;padding:0;max-width:100%;font-size:2.2rem;line-height:1.2;letter-spacing:-.01em;text-wrap:wrap;white-space:normal;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;text-overflow:ellipsis;-webkit-mask-image:none;mask-image:none}
+body.home.home-ap .hero .hin h2 .mq-in,
+body.home.home-ap .hero .hin h2.mq.mq-on .mq-in{display:inline;white-space:normal;animation:none!important;transform:none!important}
