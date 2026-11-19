@@ -219,7 +219,7 @@ const fmtT = s => { s = Math.max(0, Math.floor(s || 0)); const hh = Math.floor(s
 async function api(q) {
   if (cache.has(q)) return cache.get(q);
   const r = await fetch(q.startsWith('ch:') ? '/api/yt?channel=' + encodeURIComponent(q.slice(3)) : '/api/yt?q=' + encodeURIComponent(q), { headers:{ 'x-key':sessionStorage.getItem('key') || '' } });
-  if (!r.ok) throw new Error('http' + r.status);
+  if (!r.ok) { let m = ''; try { m = (await r.json()).error || ''; } catch {} throw new Error(r.status === 401 ? 'http401' : 'API ' + r.status + (m ? ': ' + m : '')); }
   const data = await r.json();
   const a = { videos:(data.result || []).filter(v => v.videoId && v.title), channels:(data.channels || []).filter(v => v.channelId && (v.channelName || v.handle)) };
   cache.set(q, a); return a;
@@ -230,7 +230,7 @@ const card = v => h('button', { class:'card', type:'button', 'data-f':true, oncl
   h('div', { class:'tx' }, h('div', { class:'ti' }, v.title), h('div', { class:'me' }, [v.author && v.author.name, views(v.views && v.views.count), ago(v.publishedTime)].filter(Boolean).join(' • '))));
 const channelCard = c => h('button', { class:'channel', type:'button', 'data-f':true, onclick:() => openChannel(c) },
   h('img', { src:c.avatar || '', alt:'' }), h('div', { style:'min-width:0' }, h('b', {}, c.channelName || c.handle || 'Kanal'), h('span', {}, [c.handle, c.subs].filter(Boolean).join(' • ') || 'Kanal'), c.description ? h('span', { class:'cd' }, c.description) : null));
-const apiErr = e => h('div', { class:'msg' }, e.message === 'http401' ? 'Falscher Zugriffscode.' : 'YouTube lässt sich gerade nicht laden. Bitte später erneut versuchen.', h('br'), h('button', { class:'btn pri', type:'button', 'data-f':true, onclick:() => setTab('home') }, 'Erneut versuchen'));
+const apiErr = e => h('div', { class:'msg' }, e.message === 'http401' ? 'Falscher Zugriffscode.' : 'YouTube lässt sich gerade nicht laden. ' + (e.message || ''), h('br'), h('button', { class:'btn pri', type:'button', 'data-f':true, onclick:() => setTab('home') }, 'Erneut versuchen'));
 
 /* ===== Tastatur ===== */
 const CH = 'abcdefghijklmnopqrstuvwxyzäöüß1234567890-.:/_@?=';
