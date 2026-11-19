@@ -290,7 +290,7 @@ function groupShows(items, q) {
   const m = new Map(), nq = norm(q), words = nq.split(' ').filter(Boolean);
   for (const e of items) {
     if (!e.topic) continue;
-    const k = (e.channel || '') + '|' + e.topic, x = m.get(k) || { topic:e.topic, ch:chanOf(e.channel), n:0, nt:norm(e.topic), e };
+    const k = (e.channel || '') + '|' + e.topic, x = m.get(k) || { topic:e.topic, ch:chanOf(e.channel), n:0, nt:norm(e.topic) };
     x.n++; m.set(k, x);
   }
   let l = Array.from(m.values());
@@ -299,14 +299,8 @@ function groupShows(items, q) {
   return l.sort((a, b) => rank(a) - rank(b) || b.n - a.n).slice(0, 14);
 }
 function ShowTile(x) {
-  const a = h('a', { class:'shtile', href:'#/show/' + (x.ch.id || '_') + '/' + encodeURIComponent(x.topic), style:`--c:${x.ch.color}` }, h('b', {}, x.topic));
-  if (x.e && store.get('thumbs', true)) realThumbUrl(x.e).then(src => {
-    if (!src || !a.isConnected && false) return;
-    const im = new Image(); im.alt = ''; im.className = 'shimg';
-    im.onload = () => { a.prepend(im); requestAnimationFrame(() => im.classList.add('on')); };
-    im.src = secure(src.replace('{width}', '640'));
-  });
-  return a;
+  return h('a', { class:'xtile', href:'#/show/' + (x.ch.id || '_') + '/' + encodeURIComponent(x.topic) },
+    Avatar(x.ch), h('b', {}, x.topic), h('span', { class:'sub' }, x.ch.name + ' · Sendung'));
 }
 function ShowsRow(slot, load, q) {
   load().then(r => {
@@ -738,10 +732,110 @@ function launchApp(a, from) {
   const t0 = Date.now();
   zoomOpen(from, () => win.classList.add('full'));
   const reveal = () => { sp.classList.add('out'); try { fr.focus(); fr.contentWindow.focus(); } catch {} };
-  fr.addEventListener('load', () => { try { fr.contentWindow.addEventListener('keydown', ev => { const k = ev.key, c = ev.keyCode; if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { ev.preventDefault(); goHomeNow(); } }, true); } catch {} });
+  fr.addEventListener('load', () => hookFrameKeys(fr));
   fr.onload = () => setTimeout(reveal, Math.max(0, 640 - (Date.now() - t0)));
   setTimeout(reveal, 8000);
 }
+
+/* ===== Tasten-Klassen: Systemtasten bleiben beim System, OK wird normalisiert ===== */
+const keyIsVol = (k, c) => /^(AudioVolume(Up|Down|Mute)|Volume(Up|Down|Mute))$/.test(k) || [173, 174, 175, 447, 448, 449].includes(c);
+const keyIsSys = (k, c) => keyIsVol(k, c) || /^(VoiceAssist|LaunchAssistant|Assistant|VoiceDial|Settings|Menu|ContextMenu|Info|Help)$/.test(k) || [231, 93, 82, 457].includes(c);
+const keyIsSearch = (k, c) => k === 'BrowserSearch' || k === 'Search' || c === 170 || c === 84 && false;
+const keyIsOk = (k, c) => k === 'Enter' || c === 13 || k === 'Select' || k === 'OK' || k === 'Accept' || [23, 29443, 65376].includes(c);
+window.addEventListener('message', ev => {
+  const d = ev.data; if (!d || !appWin || !appWin._frame || ev.source !== appWin._frame.contentWindow) return;
+  if (d.type === 'mp-app-search') openAppSearch();
+});
+function hookFrameKeys(fr) {
+  try {
+    fr.contentWindow.addEventListener('keydown', ev => {
+      const k = ev.key, c = ev.keyCode;
+      if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { ev.preventDefault(); goHomeNow(); return; }
+      if (keyIsSearch(k, c)) { ev.preventDefault(); ev.stopImmediatePropagation(); openAppSearch(); return; }
+      if (keyIsSys(k, c)) { ev.stopImmediatePropagation(); return; } /* App darf diese Tasten nicht abfangen, kein preventDefault -> System bekommt sie */
+      if (k !== 'Enter' && c !== 13 && keyIsOk(k, c)) { ev.preventDefault(); ev.stopImmediatePropagation(); try { fr.contentWindow.postMessage({ type:'mp-key', key:'Enter', keyCode:13 }, '*'); } catch {} }
+    }, true);
+    ['keyup', 'keypress'].forEach(t => fr.contentWindow.addEventListener(t, ev => { if (keyIsSys(ev.key, ev.keyCode)) ev.stopImmediatePropagation(); }, true));
+  } catch {}
+}
+
+/* ===== Suche aus der App heraus: App live verblurrt, Such-Pill oben rechts ===== */
+let appSearch = null;
+function openAppSearch(text) {
+  if (appSearch) { if (text != null && appSearch._set) appSearch._set(text); return; }
+  if (!appWin || dlgEl) return;
+  const inp = h('input', { class:'aovl-inp', type:'search', placeholder:'Suchen …', 'aria-label':'Suche', autocomplete:'off', autocorrect:'off', spellcheck:'false' });
+  const pill = h('div', { class:'aovl-pill' }, icon('search'), inp);
+  const out = h('div', { class:'aovl-res' });
+  const bg = h('div', { class:'aovl-bg' });
+  const el = h('div', { class:'aovl', role:'dialog', 'aria-label':'Suche' }, bg, pill, out);
+  document.body.append(el); appSearch = el;
+  requestAnimationFrame(() => el.classList.add('on'));
+  let t = 0, tok = 0;
+  const q = () => inp.value.trim();
+  const leave = async (target) => {
+    if (el._asking) return; el._asking = true;
+    const ok = await askConfirm('Die App wird verlassen. Fortfahren?', 'Verlassen');
+    el._asking = false;
+    if (!ok) { (el.contains(document.activeElement) ? document.activeElement : inp).focus(); return; }
+    const w = appWin; closeAppSearch(true);
+    if (w) { appWin = null; w.classList.remove('full'); setTimeout(() => w.remove(), 400); if (history.state && history.state.mpApp) history.back(); }
+    setTimeout(() => { location.hash = target; }, 160);
+  };
+  const run = async () => {
+    const text = q(), my = ++tok;
+    if (!text) { out.replaceChildren(); return; }
+    try {
+      const r = await search({ text, size:12 });
+      if (my !== tok || !appSearch) return;
+      const shows = groupShows(r.items, text).slice(0, 6), vids = r.items.slice(0, 6);
+      const nodes = [];
+      if (shows.length) nodes.push(h('h2', { class:'rowh' }, 'Sendungen'), h('div', { class:'aovl-shows' }, shows.map(ShowTile)));
+      if (vids.length) nodes.push(h('h2', { class:'rowh' }, 'Videos'), h('div', { class:'aovl-vids' }, vids.map(e => Card(e, { compact:true }))));
+      if (!nodes.length) nodes.push(h('p', { class:'aovl-none' }, 'Keine Ergebnisse'));
+      out.replaceChildren(...nodes);
+    } catch { if (my === tok) out.replaceChildren(h('p', { class:'aovl-none' }, 'Suche nicht möglich')); }
+  };
+  inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 280); });
+  el.addEventListener('click', ev => {
+    const a = ev.target.closest && ev.target.closest('a[href^="#/"]');
+    if (!a) return; ev.preventDefault(); ev.stopPropagation(); leave(a.getAttribute('href'));
+  }, true);
+  const items = () => [inp, ...out.querySelectorAll('a[href^="#/"]')];
+  el._key = ev => {
+    if (dlgEl) return;
+    const k = ev.key, c = ev.keyCode;
+    if (keyIsSys(k, c)) { ev.stopPropagation(); return; }
+    if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { closeAppSearch(true); return; }
+    ev.stopPropagation();
+    const typing = document.activeElement === inp;
+    if (k === 'Escape' || k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || (k === 'Backspace' && !(typing && inp.value))) { ev.preventDefault(); closeAppSearch(); return; }
+    if (keyIsOk(k, c)) {
+      if (typing) { ev.preventDefault(); leave(q() ? '#/search/' + encodeURIComponent(q()) : '#/search'); }
+      else if (document.activeElement && document.activeElement.click) { ev.preventDefault(); document.activeElement.click(); }
+      return;
+    }
+    const dir = { ArrowUp:-1, ArrowDown:1, ArrowLeft:-1, ArrowRight:1 }[k] || ({ 38:-1, 40:1, 37:-1, 39:1 })[c];
+    if (dir) {
+      const horiz = k === 'ArrowLeft' || k === 'ArrowRight' || c === 37 || c === 39;
+      if (typing && horiz) return;
+      ev.preventDefault();
+      const l = items(), i = Math.max(0, l.indexOf(document.activeElement)), n = Math.min(l.length - 1, Math.max(0, i + dir));
+      if (l[n]) { l[n].focus(); if (n > 0) l[n].scrollIntoView({ block:'nearest', inline:'nearest' }); }
+    }
+  };
+  el._set = v => { inp.value = v; clearTimeout(t); run(); try { inp.focus(); } catch {} };
+  window.addEventListener('keydown', el._key, true);
+  inp.focus();
+  if (text) el._set(text);
+}
+function closeAppSearch(silent) {
+  const el = appSearch; if (!el) return; appSearch = null;
+  window.removeEventListener('keydown', el._key, true);
+  el.classList.remove('on'); setTimeout(() => el.remove(), 300);
+  if (!silent && appWin) { try { appWin._frame.focus(); appWin._frame.contentWindow.focus(); } catch {} }
+}
+
 async function askCloseApp() {
   if (!appWin || appWin._asking) return; appWin._asking = true;
   const ok = store.get('askclose', true) ? await askConfirm('App wirklich schließen?', 'Schließen') : true;
@@ -2451,6 +2545,7 @@ function goBack() {
 
 function goHomeNow() {
   if (typeof dlgEl !== 'undefined' && dlgEl) { try { (dlgEl._cancel || closeDlg)(); closeDlg(); } catch {} }
+  if (appSearch) closeAppSearch(true);
   if (appWin) closeApp();
   if (layerEl && layerEl._close) layerEl._close(true);
   document.querySelectorAll('.astore,.aset').forEach(e => e._close && e._close(true));
@@ -2476,9 +2571,12 @@ function tvKey(ev) {
   if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { ev.preventDefault(); goHomeNow(); return; }
   /* App offen: ALLE Tasten (auch Zurück) an die App weiterreichen – die App meldet per mp-app-exit, wenn sie geschlossen werden soll */
   if (appWin && !dlgEl) {
+    if (appSearch || keyIsSys(k, c)) return; /* Lautstärke, Sprachsuche, Einstellungen, Menü bleiben beim System */
     ev.preventDefault();
+    if (keyIsSearch(k, c)) return openAppSearch();
+    const ok = keyIsOk(k, c), fk = ok ? 'Enter' : k, fc = ok ? 13 : c;
     try { appWin._frame.focus(); appWin._frame.contentWindow.focus(); } catch {}
-    try { appWin._frame.contentWindow.postMessage({ type:'mp-key', key:k, keyCode:c }, '*'); } catch {}
+    try { appWin._frame.contentWindow.postMessage({ type:'mp-key', key:fk, keyCode:fc }, '*'); } catch {}
     return;
   }
   if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !/^(input|textarea|select)$/i.test(t.tagName))) {
@@ -2874,6 +2972,14 @@ const PLUS = (() => {
     if (k === 'home') { goHomeNow(); return; }
     if (k === 'menu') { openSide(); return; }
     if (k === 'settings') { openSettings(); return; }
+    /* App offen: Handy-Tasten gehen an die App (OK = Enter), Suche-Overlay hat Vorrang */
+    if (appWin && !dlgEl && !appSearch && ['up','down','left','right','ok','back'].includes(k)) {
+      const M = { up:['ArrowUp',38], down:['ArrowDown',40], left:['ArrowLeft',37], right:['ArrowRight',39], ok:['Enter',13], back:['Escape',27] }[k];
+      try { appWin._frame.focus(); appWin._frame.contentWindow.focus(); } catch {}
+      try { appWin._frame.contentWindow.postMessage({ type:'mp-key', key:M[0], keyCode:M[1] }, '*'); } catch {}
+      return;
+    }
+    if (appSearch && !dlgEl && k === 'ok') { window.dispatchEvent(new KeyboardEvent('keydown', { key:'Enter', keyCode:13, bubbles:true, cancelable:true })); return; }
     document.dispatchEvent(new KeyboardEvent('keydown', { key:'Shift', bubbles:true }));
     const P = TV.player || (cur && cur.player), V = P && P.querySelector('video');
     const a = document.activeElement && document.activeElement !== document.body ? document.activeElement : document.body;
@@ -2923,6 +3029,7 @@ const PLUS = (() => {
       }
       if (d.t === 'hi' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///hi')) { Welcome.show(); return; }
       if (d.t === 'k') { remoteKey(d.v); return; }
+      if (d.t === 'q' && (appWin || appSearch)) { openAppSearch(String(d.v)); return; }
       if (d.t === 'q') location.hash = '#/search/' + encodeURIComponent(d.v);
       else if (d.t === 'w') { if (d.e && d.e.id) cache.set(d.v, d.e); location.hash = '#/watch/' + encodeURIComponent(d.v); }
       toast('Vom Handy: ' + (d.n || d.v));
