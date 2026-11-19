@@ -1479,3 +1479,52 @@ body.home:not(.home-ap) .hfirst .happs .arow{opacity:0;transition:opacity .25s}
   background:linear-gradient(135deg,rgba(210,210,216,.45),rgba(210,210,216,.07) 50%,rgba(210,210,216,.26));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+
+
+/* ===== Screensaver: nach 30 Min. sanft zu Schwarz, kein Hinweistext ===== */
+.saver-hint{display:none!important}
+.saver-black{position:absolute;inset:0;z-index:20;background:#000;opacity:0;pointer-events:none;transition:opacity 6s ease}
+.tv-saver.black .saver-black{opacity:1}
+.tv-saver.black{cursor:none}
+
+/* ===== Dark Mode: Einstellungen + Appstore ===== */
+:root[data-theme="dark"] .aset,:root[data-theme="dark"] .astore{
+ background:radial-gradient(60% 70% at 15% 20%,#16324a 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#1b2a5a 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#0f3b3b 0,transparent 60%),linear-gradient(160deg,#0b1118,#0e141c 55%,#0a1216)}
+:root[data-theme="dark"] .aset::before,:root[data-theme="dark"] .astore::before{background:#1c6aa0;opacity:.28}
+:root[data-theme="dark"] .aset::after,:root[data-theme="dark"] .astore::after{background:#2c3fa8;opacity:.28}
+:root[data-theme="dark"] .aset{color:#f2f2f2}
+:root[data-theme="dark"] .aset h1{color:#7db4f0}
+:root[data-theme="dark"] .aset .sico{background:rgba(255,255,255,.1)}
+:root[data-theme="dark"] .aset .srow{color:#f2f2f2;background:rgba(255,255,255,.08)}
+:root[data-theme="dark"] .aset .srow .v{color:rgba(255,255,255,.55)}
+:root[data-theme="dark"] .aset .srow svg{stroke:#9cc3f5}
+:root[data-theme="dark"] .aset .srow.bk{background:rgba(255,255,255,.05)}
+:root[data-theme="dark"] .aset .srow.dng{color:#ff6b72}
+:root[data-theme="dark"] .aset .srow:focus,:root[data-theme="dark"] .aset .srow:hover{background:rgba(255,255,255,.2);color:#fff;box-shadow:0 1.6vh 4vh rgba(0,0,0,.5),0 0 0 .35vh rgba(255,255,255,.85)}
+:root[data-theme="dark"] .aset .srow.dng:focus{color:#fff;background:#e5484d}
+:root[data-theme="dark"] .aset .tg{background:rgba(255,255,255,.25)}
+:root[data-theme="dark"] .aset .tg.on{background:#30d158}
+
+:root[data-theme="dark"] .astore{--fg:#f2f2f2;--fg-2:#e0e0e0;--fg-3:rgba(255,255,255,.6);--fg-4:rgba(255,255,255,.5);color:#f2f2f2}
+:root[data-theme="dark"] .astore .aside{background:rgba(255,255,255,.05);border-right-color:rgba(255,255,255,.12)}
+:root[data-theme="dark"] .astore .ahead h2{color:#7db4f0}
+:root[data-theme="dark"] .astore .aside .xt{color:#f2f2f2;background:rgba(255,255,255,.08)}
+:root[data-theme="dark"] .astore .aside .xt.on{background:rgba(255,255,255,.2)}
+:root[data-theme="dark"] .astore .aside .xt:focus,:root[data-theme="dark"] .astore .xtile:focus{background:#fff;color:#111}
+:root[data-theme="dark"] .astore .afoot,:root[data-theme="dark"] .astore .aempty,:root[data-theme="dark"] .astore .ash span{color:rgba(255,255,255,.5)}
+:root[data-theme="dark"] .astore .ash h3,:root[data-theme="dark"] .astore .adet h2{color:#fff}
+:root[data-theme="dark"] .astore .adet p{color:#dcdcdc}
+:root[data-theme="dark"] .astore .xtile{background:rgba(255,255,255,.08);color:#f2f2f2}
+:root[data-theme="dark"] .astore .xtile b{color:#f2f2f2}
+:root[data-theme="dark"] .astore .xtile span{color:rgba(255,255,255,.55)}
+:root[data-theme="dark"] .astore .xtile:focus b{color:#111}
+:root[data-theme="dark"] .astore .xtile:focus span{color:rgba(0,0,0,.55)}
+:root[data-theme="dark"] .astore .adet.aglass{background:rgba(255,255,255,.07);box-shadow:0 1.4rem 4rem rgba(0,0,0,.45)}
+:root[data-theme="dark"] .astore .adet .meta span{background:rgba(255,255,255,.14);color:#f2f2f2}
+:root[data-theme="dark"] .astore .abtn{background:rgba(255,255,255,.16)!important;color:#f2f2f2!important}
+:root[data-theme="dark"] .astore .abtn:not(.pri):focus{background:#fff!important;color:#111!important}
+:root[data-theme="dark"] .astore .asq{background:rgba(255,255,255,.12);color:#f2f2f2}
+:root[data-theme="dark"] .astore .akeys button{background:rgba(255,255,255,.1)!important;color:#f2f2f2!important}
+:root[data-theme="dark"] .astore .akeys button:focus{background:#fff!important;color:#111!important}
+:root[data-theme="dark"] .astore .aback{background:rgba(255,255,255,.14)!important;color:#f2f2f2}
+:root[data-theme="dark"] .astore .aback:focus{background:#fff!important;color:#111}
