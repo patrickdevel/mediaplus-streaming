@@ -1539,8 +1539,9 @@ body.home:not(.home-ap) .hswipe{opacity:0}
 /* Dock fokussiert: nur kleiner Titel oben links (max. 2 Zeilen, kein Scrollen) */
 body.home.home-ap .hero .hin{position:absolute;top:3.4rem;left:calc(var(--pad) + 2rem);right:auto;bottom:auto;padding:0;max-width:44rem}
 body.home.home-ap .hero .hin .hbadge,
-body.home.home-ap .hero .hin p,
-body.home.home-ap .hero .hin .hact{display:none}
+body.home.home-ap .hero .hin p{display:none}
+/* Button bleibt fokussierbar (Hochnavigieren), ist aber unsichtbar */
+body.home.home-ap .hero .hin .hact{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;margin:0;padding:0}
 body.home.home-ap .hero .hin h2,
 body.home.home-ap .hero .hin h2.mq,
 body.home.home-ap .hero .hin h2.mq.mq-on{margin:0;padding:0;max-width:100%;font-size:2.2rem;line-height:1.2;letter-spacing:-.01em;text-wrap:wrap;white-space:normal;
