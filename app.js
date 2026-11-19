@@ -166,7 +166,7 @@ function pump() {
     grabFrame(t._e, t.classList.contains('hbg')).then(cv => { if (t.isConnected) t.prepend(cv); }).catch(() => {}).finally(() => { thumbActive--; pump(); });
   }
 }
-function grabFrame(e, hq) {
+function grabVideoFrame(e, hq) {
   return new Promise((res, rej) => {
     const src = hq ? (e.url_video_hd || e.url_video || e.url_video_low) : (e.url_video || e.url_video_low);
     const CW = hq ? 1280 : 640, CH = hq ? 720 : 360;
@@ -191,6 +191,32 @@ function grabFrame(e, hq) {
     });
     v.src = secure(src);
   });
+}
+
+/* Echtes ARD-Vorschaubild (teaserImage) holen, sonst Fallback auf Video-Frame */
+const realThumbCache = new Map();
+function realThumbUrl(e) {
+  const m = /ardmediathek\.de\/.*\/([^\/?#]+)\/?(?:[?#].*)?$/i.exec(e.url_website || '');
+  if (!m) return Promise.resolve(null);
+  const id = m[1];
+  let p = realThumbCache.get(id);
+  if (!p) {
+    const find = o => { if (!o || typeof o !== 'object') return null; if (o.teaserImage && o.teaserImage.src) return o.teaserImage.src; if (o.image && o.image.src) return o.image.src; for (const k in o) { const r = find(o[k]); if (r) return r; } return null; };
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
+    p = fetch('https://api.ardmediathek.de/page-gateway/pages/ard/item/' + id + '?devicetype=pc&embedded=true', { signal:ctl.signal })
+      .then(r => r.ok ? r.json() : null).then(j => j ? find(j) : null).catch(() => null).finally(() => clearTimeout(to));
+    realThumbCache.set(id, p);
+  }
+  return p;
+}
+function grabFrame(e, hq) {
+  return realThumbUrl(e).then(src => new Promise((res, rej) => {
+    if (!src) return rej();
+    const im = new Image(), to = setTimeout(rej, 10000);
+    im.onload = () => { clearTimeout(to); im.className = 'frame'; im.alt = ''; res(im); };
+    im.onerror = () => { clearTimeout(to); rej(); };
+    im.src = secure(src.replace('{width}', hq ? '1280' : '640'));
+  })).catch(() => grabVideoFrame(e, hq));
 }
 
 function Avatar(ch, lg) { return h('span', { class:'avatar' + (lg ? ' lg' : ''), style:`--c:${ch.color}`, title:ch.name }, ch.short); }
