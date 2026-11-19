@@ -212,6 +212,84 @@ section{margin-bottom:2rem}
   pointer-events:none;backdrop-filter:blur(8px)}
 #pcen svg{width:7rem;height:7rem;color:#fff}
 #pl.paused #pcen{display:flex}
+
+/* ============ SETTINGS-DESIGN (dunkel) – Orbs, Pills, Federn-Fokus, Fades ============ */
+:root{--bg:#0b1118;--bg-elev:rgba(14,20,28,.84);--pill:rgba(255,255,255,.08);--pill2:rgba(255,255,255,.2);
+  --s1:rgba(255,255,255,.08);--s2:rgba(255,255,255,.1);--s3:rgba(255,255,255,.18);
+  --ac:#7db4f0;--ring:rgba(255,255,255,.88);--spr:cubic-bezier(.34,1.56,.64,1);--rd:#e5373d;
+  --fk:0 1.6vh 4vh rgba(0,0,0,.55),0 0 0 .35vh var(--ring)}
+@property --mt{syntax:'<length>';inherits:false;initial-value:0px}
+html{background:var(--bg)}
+body{background:radial-gradient(60% 70% at 15% 20%,#16324a 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#1b2a5a 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#0f3b3b 0,transparent 60%),linear-gradient(160deg,#0b1118,#0e141c 55%,#0a1216);animation:fdIn .7s ease}
+body::before,body::after{content:"";position:fixed;width:60vw;height:60vw;border-radius:50%;filter:blur(9vw);opacity:.28;pointer-events:none;z-index:0;animation:drift 16s ease-in-out infinite alternate}
+body::before{background:#1c6aa0;left:-18vw;top:-24vw}
+body::after{background:#2c3fa8;right:-22vw;bottom:-30vw;animation-duration:22s;animation-delay:-7s}
+@keyframes drift{to{transform:translate(14vw,9vw) scale(1.18)}}
+@keyframes fdIn{from{opacity:0}}
+@keyframes up{from{opacity:0;transform:translateY(2.4vh) scale(.96)}}
+@keyframes nudge{to{transform:translateX(.5vh)}}
+@keyframes pop{from{opacity:0;transform:scale(.7)}}
+
+/* Sidebar */
+#nav{background:rgba(255,255,255,.04);-webkit-backdrop-filter:blur(2.4rem);backdrop-filter:blur(2.4rem);border-right:1px solid rgba(255,255,255,.08);
+  transition:width .4s cubic-bezier(.32,.72,0,1),background .3s,box-shadow .3s}
+#nav:focus-within{background:var(--bg-elev);box-shadow:1rem 0 5rem rgba(0,0,0,.6)}
+.nv{border-radius:99px;background:var(--pill);color:#f2f2f2;transition:transform .28s var(--spr),background .2s,box-shadow .25s,color .2s}
+.nv:hover{background:var(--s3)}
+.nv.active{background:var(--pill2)}.nv.active svg{color:var(--ac)}
+.nv:focus{background:var(--pill2);color:#fff;transform:scale(1.045);box-shadow:var(--fk)}
+.nv:focus svg{color:#fff;animation:nudge .6s ease-in-out infinite alternate}
+.nv:active,.chip:active,.btn:active,.key:active,.card:active{transform:scale(.975);transition-duration:.08s}
+#nav:focus-within~#content{opacity:.4}
+
+/* Inhalt */
+#content{z-index:1;--mt:0px;transition:opacity .35s}
+#content.fi{animation:fdIn .45s ease}
+#content.fade{-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--mt),#000 calc(100% - 8vh),transparent);mask-image:linear-gradient(to bottom,transparent 0,#000 var(--mt),#000 calc(100% - 8vh),transparent);transition:opacity .35s,--mt .25s}
+h2{color:var(--ac);font-size:3rem;font-weight:700}
+.grid .card,.res>*,.channel,.chip,.nv,.key,.chback,.chhead,.msg{animation:up .5s cubic-bezier(.2,.9,.2,1) backwards;animation-delay:calc(var(--i,0)*38ms)}
+.key{animation-delay:calc(var(--i,0)*12ms)}
+
+/* Chips */
+.chip{background:var(--pill);border-radius:99px;-webkit-backdrop-filter:blur(1rem);backdrop-filter:blur(1rem);transition:transform .28s var(--spr),background .2s,box-shadow .25s,color .2s}
+.chip.on{background:rgba(125,180,240,.28);color:#fff;box-shadow:inset 0 0 0 .2rem rgba(125,180,240,.75)}
+.chip:focus{background:var(--pill2);color:#fff;transform:scale(1.07);box-shadow:var(--fk)}
+
+/* Karten */
+.card{transition:transform .28s var(--spr)}
+.th{border-radius:2rem;border:1px solid rgba(255,255,255,.06)}
+.card:focus .th{box-shadow:var(--fk)}
+.res .card{border-radius:2.6rem}.res .card .th{border-radius:1.8rem}
+.res .card:focus{background:var(--pill2);box-shadow:var(--fk)}
+.res{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 6vh),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 6vh),transparent)}
+.b{border-radius:99px;padding:.2rem 1rem}
+
+/* Kanäle */
+.channels{gap:.8rem}
+.channel{background:var(--pill);border-radius:3.6rem;color:#f2f2f2;transition:transform .28s var(--spr),background .2s,box-shadow .25s}
+.channel:focus{background:var(--pill2);color:#fff;transform:scale(1.03);box-shadow:var(--fk)}
+.channel:focus span{color:rgba(255,255,255,.72)}
+.chback{background:var(--pill);transition:transform .28s var(--spr),background .2s,box-shadow .25s}
+.chback:focus{background:var(--pill2);color:#fff;transform:scale(1.06);box-shadow:var(--fk)}
+
+/* Suche, Tasten, Buttons */
+.qb{background:var(--pill);border:1px solid rgba(255,255,255,.1);-webkit-backdrop-filter:blur(1rem);backdrop-filter:blur(1rem)}
+.caret{background:var(--ac)}
+.key{background:var(--pill);border-radius:1.6rem;transition:transform .28s var(--spr),background .2s,box-shadow .25s}
+.key:focus{background:var(--pill2);color:#fff;transform:scale(1.12);box-shadow:var(--fk)}
+.key.go,.btn.pri{background:rgba(229,55,61,.9)}
+.key.go:focus,.btn.pri:focus{background:#ff4a50;color:#fff}
+.btn{background:var(--pill);transition:transform .28s var(--spr),background .2s,box-shadow .25s}
+.btn:focus{background:var(--pill2);color:#fff;transform:scale(1.05);box-shadow:var(--fk)}
+#toast{background:rgba(30,40,55,.85);color:#fff;border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(1.6rem);backdrop-filter:blur(1.6rem);transition:opacity .3s,transform .45s var(--spr)}
+
+/* Player */
+#pl.show{animation:fdIn .4s ease}
+#pui{transition:opacity .4s}
+#pbot{background:linear-gradient(transparent,rgba(5,9,14,.92))}
+.pbtn{transition:transform .28s var(--spr),background .2s,box-shadow .25s,color .2s}
+.pbtn:focus{background:var(--pill2);color:#fff;transform:scale(1.1);box-shadow:0 1.4vh 3.6vh rgba(0,0,0,.6),0 0 0 .3vh var(--ring)}
+#pl.paused #pcen{animation:pop .35s cubic-bezier(.2,.9,.2,1)}
 </style>
 </head>
 <body>
@@ -251,6 +329,8 @@ let tt; const toast = m => { const t = $('#toast'); t.textContent = m; t.classLi
 const S = { tab:'home', last:null, col:null, colFor:null, tok:0, q:'', draft:'', tgt:null, playing:null, chanBack:null };
 const PL = { cur:0, dur:0, st:-1, hide:0, captions:false };
 const cache = new Map();
+const fadeIn = c => { c.classList.remove('fi'); void c.offsetWidth; c.classList.add('fi'); };
+const stag = r => r.querySelectorAll('.grid,.chips,.res,.channels,.kb').forEach(p => Array.from(p.children).forEach((e, i) => e.style.setProperty('--i', Math.min(i, 18))));
 
 const ICO = {
   search:'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
@@ -274,6 +354,9 @@ $('#nav').append(logo(), ...NAV.map(([t, l]) => h('button', {
     focusEl(first || initial());
   }
 }, svg(ICO[t]), h('span', {}, l))));
+Array.from($('#nav').children).forEach((e, i) => e.style.setProperty('--i', i + 1));
+{ const c = $('#content'); new MutationObserver(() => stag(c)).observe(c, { childList:true, subtree:true });
+  c.addEventListener('scroll', () => c.style.setProperty('--mt', c.scrollTop > 6 ? '7vh' : '0px'), { passive:true }); }
 
 const U = { detik:['Sekunde','Sekunden'], menit:['Minute','Minuten'], jam:['Stunde','Stunden'], hari:['Tag','Tagen'], minggu:['Woche','Wochen'], bulan:['Monat','Monaten'], tahun:['Jahr','Jahren'], second:['Sekunde','Sekunden'], minute:['Minute','Minuten'], hour:['Stunde','Stunden'], day:['Tag','Tagen'], week:['Woche','Wochen'], month:['Monat','Monaten'], year:['Jahr','Jahren'] };
 const ago = s => { const m = /(\d+)\s*(detik|menit|jam|hari|minggu|bulan|tahun|second|minute|hour|day|week|month|year)/i.exec(s || ''); return m ? 'vor ' + m[1] + ' ' + U[m[2].toLowerCase()][+m[1] !== 1 ? 1 : 0] : (s || ''); };
@@ -312,7 +395,7 @@ function field(id, txt, ph) { const e = $('#' + id); if (!e) return; e.replaceCh
 const CHIPS = [['Alle', 'trending deutschland'], ['Musik', 'musik charts 2026'], ['Gaming', 'gaming deutsch'], ['Nachrichten', 'tagesschau nachrichten'], ['Live', 'live stream deutsch'], ['Technik', 'technik test deutsch'], ['Sport', 'sport highlights'], ['Film', 'film trailer deutsch']];
 async function renderHome(idx = S.chip || 0) {
   S.chip = idx; const tok = S.tok, c = $('#content');
-  const chips = h('div', { class:'chips' }, CHIPS.map(([t], i) => h('button', { class:'chip' + (i === idx ? ' on' : ''), type:'button', 'data-f':true, onclick:() => { S.tok++; renderHome(i).then(() => focusEl($$('.chip')[i])); } }, t)));
+  const chips = h('div', { class:'chips' }, CHIPS.map(([t], i) => h('button', { class:'chip' + (i === idx ? ' on' : ''), type:'button', 'data-f':true, onclick:() => { S.tok++; renderHome(i); focusEl($$('.chip')[i]); } }, t)));
   const grid = h('div', { class:'grid' }, Array.from({ length:12 }, () => h('div', { class:'card sk' }, h('div', { class:'th' }), h('div', { class:'ti' }, '\u00a0'))));
   c.replaceChildren(chips, grid);
   try { const r = await api(CHIPS[idx][1]); if (tok !== S.tok) return; grid.replaceChildren(...(r.videos.length ? r.videos.map(card) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')])); }
@@ -347,14 +430,13 @@ async function openChannel(ch, srcEl) {
       q: S.q
     };
   }
-  c.scrollTop = 0;
+  c.scrollTop = 0; c.classList.add('fade'); fadeIn(c);
   const backBtn = h('button', { class:'chback', type:'button', 'data-f':true, onclick: backFromChannel, 'aria-label':'Zurück zur Suche' }, svg(IC.back), h('span', {}, 'Zurück'));
   const grid = h('div', { class:'grid' }, h('div', { class:'msg' }, 'Videos des Kanals werden geladen …'));
   c.replaceChildren(h('div', {},
     h('div', { style:'padding:1.6rem 1.4rem .4rem' }, backBtn),
     h('div', { class:'chhead' }, ch.avatar ? h('img', { src:ch.avatar, alt:'' }) : null,
-      h('div', {}, h('h1', {}, ch.channelName || ch.handle || 'Kanal'), h('div', { class:'me', style:'font-size:1.4rem' }, [ch.handle, ch.subs].filter(Boolean).join(' • ')), h('p', { class:'me', style:'white-space:normal;font-size:1.4rem' }, ch.description || ''),
-      h('button', { class:'btn pri', type:'button', 'data-f':true, onclick:() => { if (ch.url) window.open(ch.url, '_blank'); } }, 'Auf YouTube öffnen'))),
+      h('div', {}, h('h1', {}, ch.channelName || ch.handle || 'Kanal'), h('div', { class:'me', style:'font-size:1.4rem' }, [ch.handle, ch.subs].filter(Boolean).join(' • ')), h('p', { class:'me', style:'white-space:normal;font-size:1.4rem' }, ch.description || ''))),
     h('h2', { style:'margin:2.4rem 0 1rem 1.6rem' }, 'Videos'), grid));
   requestAnimationFrame(() => focusEl($('.chback')));
   try {
@@ -367,7 +449,8 @@ async function openChannel(ch, srcEl) {
 }
 function backFromChannel() {
   const b = S.chanBack; S.chanBack = null; S.tok++;
-  const c = $('#content');
+  const c = $('#content'), bt = b && b.tab ? b.tab : 'search';
+  S.tgt = bt === 'search' ? { get:() => S.q, set:setQ } : null; c.classList.toggle('fade', bt !== 'search'); fadeIn(c);
   if (b && b.nodes && b.nodes.length) {
     c.replaceChildren(...b.nodes);
     c.scrollTop = 0;
@@ -384,7 +467,7 @@ function renderHist() {
 function setTab(t) {
   S.chanBack = null;
   S.tab = t; S.tok++; $$('#nav .nv').forEach(n => n.classList.toggle('active', n.dataset.tab === t));
-  const c = $('#content'); c.scrollTop = 0; S.tgt = null;
+  const c = $('#content'); c.scrollTop = 0; S.tgt = null; c.classList.toggle('fade', t !== 'search'); fadeIn(c);
   if (t === 'home') { c.replaceChildren(); renderHome(); } else c.replaceChildren(t === 'search' ? renderSearch() : renderHist());
 }
 
@@ -545,7 +628,7 @@ document.addEventListener('focusin', e => { if (e.target.matches && e.target.mat
 ['contextmenu','dragstart'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 (() => { const w = () => { ['pointerdown','keydown','click'].forEach(t => document.removeEventListener(t, w, true)); try { const el = document.documentElement, fn = el.requestFullscreen || el.webkitRequestFullscreen; if (fn && !document.fullscreenElement) Promise.resolve(fn.call(el)).catch(() => {}); } catch {} }; ['pointerdown','keydown','click'].forEach(t => document.addEventListener(t, w, true)); })();
 
-setTab('home'); focusEl(initial());
+setTab('home'); focusEl($('.chip.on') || $('.chip') || initial());
 })();
 /* Systemtasten nicht abfangen; Tastatursuche -> Host */
 (() => {
