@@ -409,7 +409,8 @@ function appTile(a, onOpen) {
 }
 function AppsBar(target) {
   const row = h('div', { class:'arow' });
-  const wrap = h('section', { class:'happs' }, h('h2', { class:'rowh' }, 'Apps'), row);
+  const swipe = h('div', { class:'hswipe', 'aria-hidden':'true' }); swipe.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg><span>Für Vollbild nach oben wischen</span>';
+  const wrap = h('section', { class:'happs' }, swipe, h('h2', { class:'rowh' }, 'Apps'), row);
   const paint = () => row.replaceChildren(appTile({ name:'Apps', logo:APPS_LOGO }, (a, b) => openStore(b)), appTile({ name:'Einstellungen', settings:true }, (a, b) => openSettings(b)), ...installedApps().map(a => appTile(a, (x, b) => launchApp(x, b))));
   paint(); wrap._paint = paint; window._appsPaint = paint;
   target.append(wrap);
