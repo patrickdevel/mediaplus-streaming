@@ -4,6 +4,13 @@
 
 const ORIGINAL_API = 'https://unofficial-youtube-api.vercel.app/youtube/search';
 
+async function search(kind, q) {
+  const response = await fetch(`${ORIGINAL_API}?${kind}=${encodeURIComponent(q)}`);
+  const data = await response.json();
+  if (!response.ok) return [];
+  return Array.isArray(data.result) ? data.result : [];
+}
+
 module.exports = async function handler(req, res) {
   const q = String((req.query && req.query.q) || '').trim();
 
@@ -14,19 +21,12 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const url = `${ORIGINAL_API}?video=${encodeURIComponent(q)}`;
-    const response = await fetch(url);
-    const data = await response.json();
+    const [videos, channels] = await Promise.all([
+      search('video', q),
+      search('channel', q)
+    ]);
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: data.message || 'Die YouTube-Suche ist fehlgeschlagen'
-      });
-    }
-
-    return res.status(200).json({
-      result: Array.isArray(data.result) ? data.result : []
-    });
+    return res.status(200).json({ result: videos, channels });
   } catch (error) {
     console.error('YouTube-Adapter-Fehler:', error);
     return res.status(502).json({
