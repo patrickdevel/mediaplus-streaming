@@ -261,7 +261,7 @@ document.addEventListener('keydown', ev => {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const k = ev.key, c = ev.keyCode, typing = S.tab === 'places' && !!$('#sf');
 
-  if (k === 'Enter' || c === 13 || k === ' ') { const a = document.activeElement; if (a && a !== document.body && a.matches && a.matches('button,[data-f],[tabindex]') && a.click) { ev.preventDefault(); a.click(); return; } }
+  if (k === 'Enter' || c === 13 || k === ' ') { const a = document.activeElement; if (a && a !== document.body && a.matches && a.matches('button,[data-f],[tabindex],a[href],input,select,[role=button]') && a.click) { ev.preventDefault(); a.click(); return; } }
   if (k === 'GoBack' || k === 'BrowserBack' || c === 461 || c === 10009 || k === 'Escape' || (k === 'Backspace' && !typing)) { if (goBack()) ev.preventDefault(); else { try { parent.postMessage({ type:'mp-app-exit' }, '*'); } catch {} } return; }
   if (k === 'Backspace' && typing) { ev.preventDefault(); S.typed = S.typed.slice(0, -1); return paintField(); }
   const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
@@ -279,6 +279,15 @@ const kill = ev => { if (ev.cancelable) ev.preventDefault(); ev.stopImmediatePro
 
 setInterval(() => { if (!document.hidden) load(); }, 600000);
 setTab('hours'); load(); focusEl(initial());
+})();
+/* Systemtasten (Lautstärke, Sprachsuche, Einstellungen, Menü) NICHT abfangen; Tastatursuche -> Host */
+(() => {
+  const SYS = /^(AudioVolume(Up|Down|Mute)|Volume(Up|Down|Mute)|VoiceAssist|LaunchAssistant|Assistant|VoiceDial|Settings|Menu|ContextMenu|Info|Help)$/;
+  const SYSC = [173,174,175,447,448,449,231,93,82,457];
+  ['keydown','keyup','keypress'].forEach(t => window.addEventListener(t, ev => {
+    if (SYS.test(ev.key) || SYSC.includes(ev.keyCode)) { ev.stopImmediatePropagation(); return; }
+    if (t === 'keydown' && (ev.key === 'BrowserSearch' || ev.key === 'Search' || ev.keyCode === 170)) { ev.preventDefault(); ev.stopImmediatePropagation(); try { parent.postMessage({ type:'mp-app-search' }, '*'); } catch {} }
+  }, true));
 })();
 </script>
 </body>
