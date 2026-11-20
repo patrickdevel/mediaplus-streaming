@@ -1745,3 +1745,10 @@ body.home .hero .htrack{transition:transform .8s cubic-bezier(.3,.7,.2,1),filter
 /* Bildschirmschoner: keine Abdunklung (weder Video noch Bilder) */
 .saver-overlay{display:none!important}
 .saver-clock-wrap{text-shadow:0 .2rem 2.4rem rgba(0,0,0,.28)}
+
+/* App-Öffnen aus dem Dock: Icon wächst weich zur App, Hintergrund verblurrt dabei */
+.ablur{transition:backdrop-filter .55s ease,-webkit-backdrop-filter .55s ease,background .55s ease!important}
+.ablur.on{background:rgba(0,0,0,.4)!important;-webkit-backdrop-filter:blur(4.2rem)!important;backdrop-filter:blur(4.2rem)!important}
+.zoomic.shr{transform:scale(.9)}
+.zoomic.go{transition:left .6s cubic-bezier(.32,.72,0,1),top .6s cubic-bezier(.32,.72,0,1),width .6s cubic-bezier(.32,.72,0,1),height .6s cubic-bezier(.32,.72,0,1),border-radius .6s ease,transform .12s,opacity .4s!important}
+.awin{transition:opacity .35s ease!important}
