@@ -1598,3 +1598,39 @@ body.home.home-ap .hero .hin h2.mq.mq-on .mq-in{display:inline;white-space:norma
 .aovl-res .xtile:nth-child(2),.aovl-vids .card:nth-child(2){--i:1}.aovl-res .xtile:nth-child(3),.aovl-vids .card:nth-child(3){--i:2}.aovl-res .xtile:nth-child(4),.aovl-vids .card:nth-child(4){--i:3}.aovl-vids .card:nth-child(n+5){--i:4}
 @keyframes aovlIn{from{opacity:0;transform:translateY(1.6rem) scale(.96)}to{opacity:1;transform:none}}
 .aovl:not(.on) .aovl-pill,.aovl:not(.on) .aovl-res{transition-duration:.25s,.25s,.25s;transition-delay:0s}
+
+
+/* ===== Willkommens-Assistent (Intro, Koppeln, Name) ===== */
+#welcome.wz{background:rgba(0,0,0,.5);overflow:auto}
+#welcome .wz-step{display:flex;flex-direction:column;align-items:center;gap:1.8rem;width:100%;max-width:104rem;text-align:center;color:#fff;animation:wzIn .5s ease both}
+@keyframes wzIn{from{opacity:0;transform:translateY(1.2rem)}}
+#welcome .wz-step h1{display:block;margin:0;font-size:4.2rem;color:#fff}
+#welcome .wz-logo{font-family:'Special Gothic Expanded One',sans-serif;font-size:2.4rem;opacity:.9}
+#welcome .wz-lead{margin:0;font-size:2rem;line-height:1.4;color:rgba(255,255,255,.78);max-width:72rem}
+#welcome .wz-dots{display:flex;gap:.8rem}
+#welcome .wz-dots i{width:1rem;height:1rem;border-radius:50%;background:rgba(255,255,255,.28)}
+#welcome .wz-dots i.on{background:#fff;width:3rem;border-radius:.5rem}
+#welcome .wz-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;width:100%}
+#welcome .wz-card{display:flex;flex-direction:column;gap:.8rem;text-align:left;padding:2.2rem;border-radius:1.6rem;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16)}
+#welcome .wz-card .ic{width:3.4rem;height:3.4rem;margin-bottom:.4rem}
+#welcome .wz-card b{font-size:2rem}
+#welcome .wz-card span{font-size:1.6rem;line-height:1.4;color:rgba(255,255,255,.75)}
+#welcome .wz-pair{display:flex;align-items:center;gap:4rem;text-align:left}
+#welcome .wz-qr{width:24rem;margin:0;flex:none}
+#welcome .wz-how{display:flex;flex-direction:column;gap:1.2rem;font-size:1.8rem;max-width:44rem}
+#welcome .wz-how p{margin:0;display:flex;gap:1.2rem;flex-wrap:wrap;align-items:baseline;line-height:1.4}
+#welcome .wz-how p b{display:inline-grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#fff;color:#000;font-size:1.6rem;flex:none}
+#welcome .wz-code{font-size:3.6rem;font-weight:700;letter-spacing:.14em;font-variant-numeric:tabular-nums}
+#welcome .wz-status{display:flex;align-items:center;gap:1rem;font-size:1.6rem;color:rgba(255,255,255,.7)}
+#welcome .wz-status i{width:1.2rem;height:1.2rem;border-radius:50%;background:#e8a33a;animation:hloadPulse 1.2s infinite}
+#welcome .wz-status.ok{color:#7be28f}
+#welcome .wz-status.ok i{background:#7be28f;animation:none}
+#welcome .wz-row{display:flex;gap:1.4rem}
+#welcome .wz-name{width:100%;max-width:62rem;padding:1.6rem;border-radius:1.6rem;background:rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.18)}
+#welcome .wz-disp{color:#fff;background:rgba(0,0,0,.4);justify-content:center;margin-bottom:1.2rem}
+#welcome .wz-disp.ph span{color:rgba(255,255,255,.4)}
+#welcome .btn{opacity:1;transform:none;height:5rem;padding:0 3rem;font-size:1.8rem;border-radius:1.2rem}
+#welcome .btn:focus{transform:scale(1.07)}
+#welcome .key.go{background:var(--accent,#e8452a);color:#fff}
+#welcome .key.go:focus{background:#fff;color:#000}
+#welcome .btn{transition:transform .14s,background .14s,color .14s,box-shadow .14s}
