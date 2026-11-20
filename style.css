@@ -1772,3 +1772,7 @@ body.home .hero .htrack{transition:transform .8s cubic-bezier(.3,.7,.2,1),filter
 }
 :root:not([data-theme="dark"]) #side{--sbg:rgba(250,250,252,.95);background:rgba(250,250,252,.92);border-color:var(--border-2)}
 #side>.side-logo::after{display:none}
+
+/* Eingeklappt: kein Logo in der Pill, dafür oben etwas Luft */
+#side:not(:focus-within):not(:hover)>.side-logo{display:none}
+#side:not(:focus-within):not(:hover){padding-top:1.4rem}
