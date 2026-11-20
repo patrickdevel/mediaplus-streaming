@@ -1634,3 +1634,33 @@ body.home.home-ap .hero .hin h2.mq.mq-on .mq-in{display:inline;white-space:norma
 #welcome .key.go{background:var(--accent,#e8452a);color:#fff}
 #welcome .key.go:focus{background:#fff;color:#000}
 #welcome .btn{transition:transform .14s,background .14s,color .14s,box-shadow .14s}
+
+
+/* Willkommen: gleicher Look wie der Einstellungs-Screen, keine Scrollleiste */
+#welcome.wz{overflow:hidden;scrollbar-width:none;color:#111;
+ background:radial-gradient(60% 70% at 15% 20%,#8fdcff 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#7fb2ff 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#7fc9c9 0,transparent 60%),linear-gradient(160deg,#76c8ff,#9ec4dc 55%,#6fb3c4)}
+#welcome.wz::-webkit-scrollbar{display:none}
+#welcome .wz-step{color:#111;gap:1.6rem}
+#welcome .wz-step h1{color:#3b78c2;font-size:4.4rem;font-weight:700;letter-spacing:-.01em}
+#welcome .wz-logo{color:#3b5a8a}
+#welcome .wz-lead{color:rgba(0,0,0,.6)}
+#welcome .wz-dots i{background:rgba(0,0,0,.18)}
+#welcome .wz-dots i.on{background:#3b78c2}
+#welcome .wz-card{background:rgba(255,255,255,.32);border:0;border-radius:2.6rem;box-shadow:none}
+#welcome .wz-card .ic{stroke:#3b5a8a;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#welcome .wz-card span{color:rgba(0,0,0,.6)}
+#welcome .wz-how p b{background:#3b78c2;color:#fff}
+#welcome .wz-code{color:#111}
+#welcome .wz-status{color:rgba(0,0,0,.55)}
+#welcome .wz-status.ok{color:#1c8a3c}
+#welcome .wz-status.ok i{background:#34c759}
+#welcome .wz-name{background:rgba(255,255,255,.32);border:0;border-radius:2.6rem}
+#welcome .wz-disp{background:rgba(255,255,255,.55);color:#111;border:0}
+#welcome .wz-disp.ph span{color:rgba(0,0,0,.4)}
+#welcome .key{background:rgba(255,255,255,.55);color:#111}
+#welcome .key:focus{background:#fff;color:#111;box-shadow:0 1.2rem 3rem rgba(0,0,0,.22)}
+#welcome .key.go{background:#3b78c2;color:#fff}
+#welcome .key.go:focus{background:#fff;color:#3b78c2}
+#welcome .btn{background:rgba(255,255,255,.4);color:#111;border:0;border-radius:2.6rem}
+#welcome .btn.primary{background:#3b78c2;color:#fff}
+#welcome .btn:focus,#welcome .btn.primary:focus{background:#fff;color:#111;box-shadow:0 1.2rem 3rem rgba(0,0,0,.22)}
