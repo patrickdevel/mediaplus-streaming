@@ -1726,13 +1726,17 @@ body.home.home-ap .hero .hin h2.mq.mq-on .mq-in{display:inline;white-space:norma
 .aset .sico>div{transition:opacity .15s}
 .aset .sico .sgif{border-radius:inherit;transition:opacity .15s}
 
-/* Karussell: weicher Apple-TV-Übergang + eingefrorener, stark verblurrter Hintergrund beim Runterscrollen */
-body.home .hero .htrack{transition:transform 1.15s cubic-bezier(.45,0,.15,1),filter .4s ease;filter:blur(calc(var(--hp,0)*5.5rem)) brightness(calc(1 - var(--hp,0)*.55)) saturate(calc(1 + var(--hp,0)*.25));will-change:transform,filter}
-.hslide{overflow:hidden;opacity:.3;transition:opacity 1.15s cubic-bezier(.45,0,.15,1)}
-.hslide.on{opacity:1}
-.hslide .hbg{transform:translate3d(6%,0,0);transition:transform 1.5s cubic-bezier(.2,.7,.2,1);scale:calc(1.06 + var(--hp,0)*.14)}
-.hslide.on .hbg{transform:translate3d(0,0,0)}
-@media (prefers-reduced-motion:reduce){body.home .hero .htrack,.hslide,.hslide .hbg{transition-duration:.01s}}
+/* Karussell: normales Swipen, Titel swipt verzögert ein, altes Bild wird überschnitten und kleiner */
+body.home .hero .htrack{transition:transform .8s cubic-bezier(.3,.7,.2,1),filter .4s ease;filter:blur(calc(var(--hp,0)*5.5rem)) brightness(calc(1 - var(--hp,0)*.55))}
+.hslide{overflow:hidden}
+.hslide .hbg{transform:none;transition:transform .8s cubic-bezier(.3,.7,.2,1);scale:calc(1.04 + var(--hp,0)*.14)}
+.hslide.out .hbg{transform:translate3d(32%,0,0) scale(.9)}
+@keyframes hinIn{from{opacity:0;transform:translate3d(6rem,0,0)}to{opacity:1;transform:none}}
+.hslide.on .hin>*{animation:hinIn .75s cubic-bezier(.2,.8,.2,1) .4s backwards}
+.hslide.on .hin>*:nth-child(2){animation-delay:.48s}
+.hslide.on .hin>*:nth-child(3){animation-delay:.56s}
+.hslide.on .hin>*:nth-child(4){animation-delay:.64s}
+@media (prefers-reduced-motion:reduce){body.home .hero .htrack,.hslide .hbg{transition-duration:.01s}.hslide.on .hin>*{animation:none}}
 
 /* Unterhalb des Karussells: kein deckender Hintergrund mehr – das verblurrte Karussell-Bild scheint durch */
 .hcover{background:rgba(10,10,14,.38);background:color-mix(in srgb,var(--bg) 38%,transparent)}
