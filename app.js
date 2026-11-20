@@ -536,20 +536,21 @@ function openSettings(opener) {
   const title = h('h1', {}, 'Einstellungen'), list = h('div', { class:'slist' }), sname = h('small', {}, 'Einstellungen');
   const ico = h('div', { class:'sfl' }, h('div', { class:'sico' }, h('div', {}, h('b', {}, 'Media+'), sname)));
   const sicoEl = ico.firstChild;
-  let gifBlob = null, gifMs = 4000, gifT = 0;
-  const gifLoad = () => gifBlob ? Promise.resolve() : fetch('https://files.catbox.moe/nzkqlo.gif').then(r => r.arrayBuffer()).then(buf => {
+  const GIF = 'https://files.catbox.moe/nzkqlo.gif';
+  let gifUrl = GIF, gifMs = 4000, gifT = 0, gifPre = null;
+  const gifLoad = () => gifPre || (gifPre = fetch(GIF).then(r => r.arrayBuffer()).then(buf => {
     const b = new Uint8Array(buf); let ms = 0;
     for (let i = 0; i < b.length - 7; i++) if (b[i] === 0x21 && b[i + 1] === 0xF9 && b[i + 2] === 4) { ms += ((b[i + 5] << 8) | b[i + 4]) * 10 || 100; i += 7; }
     if (ms > 300) gifMs = Math.min(ms, 15000);
-    gifBlob = new Blob([buf], { type:'image/gif' });
-  }).catch(() => {});
+    gifUrl = URL.createObjectURL(new Blob([buf], { type:'image/gif' }));
+  }).catch(() => {}).then(() => { const p = new Image(); p.src = gifUrl; window.__gifKeep = p; return p.decode ? p.decode().catch(() => {}) : 0; }));
   gifLoad();
-  window.__sico = async () => {
-    await gifLoad(); if (!sicoEl.isConnected) return;
+  window.__sico = () => {
+    if (!sicoEl.isConnected) return;
     clearTimeout(gifT); sicoEl.querySelectorAll('.sgif').forEach(x => x.remove());
-    const url = gifBlob ? URL.createObjectURL(gifBlob) : 'https://files.catbox.moe/nzkqlo.gif?t=' + Date.now(), im = h('img', { class:'sgif', src:url, alt:'' });
+    const im = h('img', { class:'sgif', src:gifUrl, alt:'' });
     sicoEl.append(im); void im.offsetWidth; sicoEl.classList.add('gif');
-    gifT = setTimeout(() => { sicoEl.classList.remove('gif'); setTimeout(() => { im.remove(); if (gifBlob) URL.revokeObjectURL(url); }, 450); }, gifMs);
+    gifT = setTimeout(() => { sicoEl.classList.remove('gif'); setTimeout(() => im.remove(), 250); }, gifMs);
   };
   const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => { try { PLUS.importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
   el.append(h('div', { class:'sin' }, title, ico, list), file);
