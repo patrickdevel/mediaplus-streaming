@@ -2721,7 +2721,7 @@ const Welcome = (() => {
   function s1() {
     const t = store.get('pairTopic') || '';
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
-    const url = base + '?tv=' + t + '#/send';
+    const url = base + '?tv=' + t + '#/remote';
     const box = h('div', { class:'qrbox wz-qr' }, 'QR-Code wird erzeugt …');
     new Promise((res, rej) => {
       if (window.qrcode) return res();
@@ -3040,14 +3040,25 @@ const PLUS = (() => {
   async function sendMsg(d) {
     const t = store.get('tvTopic'); if (!t) throw new Error('no-tv');
     d = { ...d, i:newId() };
-    if (Date.now() > p2pDown) {
-      try { await sendP2P(d); return 'p2p'; }
-      catch (e) { p2pDown = Date.now() + 4000; setTimeout(() => phoneConn().catch(() => {}), 4000); }
-    }
-    const r = await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d) });
-    if (!r.ok) throw new Error(r.status);
-    p2pLast = 'Nur ntfy (' + p2pLast + ')';
-    return 'ntfy';
+    /* Nie auf einen Verbindungsaufbau warten: ist keine offene P2P-Leitung da, geht die Taste sofort über ntfy,
+       die Leitung wird nebenbei neu aufgebaut. Gibt es nach 450 ms kein ack, geht dieselbe Nachricht zusätzlich
+       über ntfy (der TV filtert Doppelte per ID). */
+    const viaNtfy = async () => {
+      const r = await fetch('https://ntfy.sh/' + t, { method:'POST', body:JSON.stringify(d), keepalive:true });
+      if (!r.ok) throw new Error(r.status);
+      p2pLast = 'Nur ntfy (' + p2pLast + ')';
+      return 'ntfy';
+    };
+    const c = phConn;
+    if (!(c && c.open)) { phoneConn().catch(() => {}); return viaNtfy(); }
+    return new Promise((res, rej) => {
+      let done = false, t1 = 0, t2 = 0;
+      const fin = (ok, v) => { if (done) return; done = true; clearTimeout(t1); clearTimeout(t2); ackWait.delete(d.i); ok(v); };
+      ackWait.set(d.i, () => { p2pDown = 0; p2pLast = 'Direkt verbunden (P2P)'; fin(res, 'p2p'); });
+      try { c.send(d); } catch (e) { dropConn(c); phoneConn().catch(() => {}); return viaNtfy().then(v => fin(res, v), er => fin(rej, er)); }
+      t1 = setTimeout(() => { viaNtfy().then(v => fin(res, v), er => { if (!ackWait.has(d.i)) fin(rej, er); }); }, 450);
+      t2 = setTimeout(() => { if (done) return; dropConn(c); phoneConn().catch(() => {}); fin(rej, new Error('no-ack')); }, 3000);
+    });
   }
 
   const sendTv = async d => {
@@ -3189,11 +3200,13 @@ const PLUS = (() => {
       if (!tvErrShown) { tvErrShown = true; toast('P2P-Fehler: ' + ty); setTimeout(() => { tvErrShown = false; }, 30000); }
     });
   }
+  let esLast = 0;
   function listen() {
     const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
     if (es) es.close(); es = new EventSource('https://ntfy.sh/' + t + '/sse');
     es.onerror = () => { if (es && es.readyState === 2) setTimeout(listen, 3000); };
-    es.onmessage = ev => { try {
+    esLast = Date.now();
+    es.onmessage = ev => { esLast = Date.now(); try {
       const m = JSON.parse(ev.data); if (m.event !== 'message') return;
       const d = JSON.parse(m.message);
       handleMsg(d);
@@ -3202,7 +3215,7 @@ const PLUS = (() => {
   function pairPage() {
     document.title = 'Koppeln – Media +';
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
-    const url = base + '?tv=' + store.get('pairTopic') + '#/send';
+    const url = base + '?tv=' + store.get('pairTopic') + '#/remote';
     const box = h('div', { class:'qrbox' }, 'QR-Code wird erzeugt …');
     new Promise((res, rej) => {
       if (window.qrcode) return res();
@@ -3345,7 +3358,7 @@ const PLUS = (() => {
         if ((k === 'ArrowUp' || k === 'ArrowDown') && (ev.target === cur.player || ev.target === document.body)) return eat(() => cur.tune(cur.i + (k === 'ArrowUp' ? 1 : -1)));
       } else if (up || dn) eat(() => scrollBy({ top:(up ? -1 : 1) * innerHeight * .8, behavior:'smooth' }));
     }, true);
-    if (IS_TV) { setInterval(() => { if (store.get('pairTopic') && (!es || es.readyState === 2)) listen(); }, 20000); document.addEventListener('visibilitychange', () => { if (!document.hidden && (!es || es.readyState === 2)) listen(); }); if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); tvServe(); }
+    if (IS_TV) { setInterval(() => { if (store.get('pairTopic') && (!es || es.readyState === 2 || Date.now() - esLast > 75000)) listen(); }, 10000); document.addEventListener('visibilitychange', () => { if (!document.hidden && (!es || es.readyState === 2)) listen(); }); if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); tvServe(); }
     else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); if (store.get('tvTopic')) setTimeout(() => phoneConn().catch(() => {}), 500); document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) phoneConn().catch(() => {}); });
       /* Herzschlag: erkennt tote P2P-Leitungen, bevor die nächste Taste verloren geht */
       setInterval(() => { if (!store.get('tvTopic') || document.hidden) return; sendP2P({ t:'ping' }, 2500).catch(() => {}); }, 5000); }
