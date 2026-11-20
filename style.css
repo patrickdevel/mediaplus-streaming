@@ -1711,3 +1711,7 @@ body.home.home-ap .hero .hin h2.mq.mq-on .mq-in{display:inline;white-space:norma
 :root[data-theme="dark"] #welcome .btn{background:rgba(255,255,255,.16);color:#f2f2f2}
 :root[data-theme="dark"] #welcome .btn.primary{background:#3b78c2;color:#fff}
 :root[data-theme="dark"] #welcome .btn:focus,:root[data-theme="dark"] #welcome .btn.primary:focus{background:#fff;color:#111}
+
+.saver-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#000}
+.tv-saver.vmode .saver-video{display:block}
+.tv-saver.vmode .saver-slide{display:none}
