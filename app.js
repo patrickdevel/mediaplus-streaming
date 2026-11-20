@@ -1171,18 +1171,18 @@ function Hero() {
       idx = ((i % n) + n) % n;
       track.style.transform = `translateX(-${idx * 100}%)`;
       Array.from(dots.children).forEach((d, k) => d.classList.toggle('on', k === idx));
-      slides.forEach((s, k) => s.link.setAttribute('tabindex', k === idx ? '0' : '-1'));
+      slides.forEach((s, k) => { s.link.setAttribute('tabindex', k === idx ? '0' : '-1'); s.el.classList.toggle('on', k === idx); });
       if (prev !== slides[idx] && prev.el.contains(document.activeElement)) slides[idx].link.focus({ preventScroll:true });
     };
     const start = () => {
       clearInterval(timer);
       if (n < 2) return;
-      timer = setInterval(() => { if (!shell.isConnected) return clearInterval(timer); if (!document.hidden) go(idx + 1); }, 6000);
+      timer = setInterval(() => { if (!shell.isConnected) return clearInterval(timer); if (!document.hidden && !(document.body.classList.contains('home') && window.scrollY > 4)) go(idx + 1); }, 6000);
     };
     shell.addEventListener('touchstart', ev => { x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY; }, { passive:true });
     shell.addEventListener('touchend', ev => {
       const dx = ev.changedTouches[0].clientX - x0, dy = ev.changedTouches[0].clientY - y0;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { go(idx + (dx < 0 ? 1 : -1)); start(); }
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) && !(document.body.classList.contains('home') && window.scrollY > 4)) { go(idx + (dx < 0 ? 1 : -1)); start(); }
     }, { passive:true });
     cleanups.push(() => clearInterval(timer));
     go(0); start();
