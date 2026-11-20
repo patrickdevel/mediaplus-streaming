@@ -1172,6 +1172,7 @@ function Hero() {
       track.style.transform = `translateX(-${idx * 100}%)`;
       Array.from(dots.children).forEach((d, k) => d.classList.toggle('on', k === idx));
       slides.forEach((s, k) => { s.link.setAttribute('tabindex', k === idx ? '0' : '-1'); s.el.classList.toggle('on', k === idx); });
+      if (prev !== slides[idx]) { slides.forEach(s => s.el.classList.remove('out')); prev.el.classList.add('out'); clearTimeout(go._t); go._t = setTimeout(() => prev.el.classList.remove('out'), 1000); }
       if (prev !== slides[idx] && prev.el.contains(document.activeElement)) slides[idx].link.focus({ preventScroll:true });
     };
     const start = () => {
