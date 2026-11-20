@@ -1733,3 +1733,7 @@ body.home .hero .htrack{transition:transform 1.15s cubic-bezier(.45,0,.15,1),fil
 .hslide .hbg{transform:translate3d(6%,0,0);transition:transform 1.5s cubic-bezier(.2,.7,.2,1);scale:calc(1.06 + var(--hp,0)*.14)}
 .hslide.on .hbg{transform:translate3d(0,0,0)}
 @media (prefers-reduced-motion:reduce){body.home .hero .htrack,.hslide,.hslide .hbg{transition-duration:.01s}}
+
+/* Unterhalb des Karussells: kein deckender Hintergrund mehr – das verblurrte Karussell-Bild scheint durch */
+.hcover{background:rgba(10,10,14,.38);background:color-mix(in srgb,var(--bg) 38%,transparent)}
+.hcover::before{display:none}
