@@ -1752,3 +1752,9 @@ body.home .hero .htrack{transition:transform .8s cubic-bezier(.3,.7,.2,1),filter
 .zoomic.shr{transform:scale(.9)}
 .zoomic.go{transition:left .6s cubic-bezier(.32,.72,0,1),top .6s cubic-bezier(.32,.72,0,1),width .6s cubic-bezier(.32,.72,0,1),height .6s cubic-bezier(.32,.72,0,1),border-radius .6s ease,transform .12s,opacity .4s!important}
 .awin{transition:opacity .35s ease!important}
+
+/* Cover: gleiche Rundung wie die Apps im Dock */
+.thumb,.card .thumb,.hrow .thumb,.card.compact .thumb{border-radius:var(--r-lg)}
+/* Laufzeit: kein Kasten mehr, nur ein kleiner Fade unten */
+.thumb .dur{left:0;right:0;bottom:0;padding:2.6rem 1.1rem .7rem;text-align:right;background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0));border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;font-size:1.15rem;font-weight:600;letter-spacing:.02em;text-shadow:0 .1rem .5rem rgba(0,0,0,.5);pointer-events:none}
+.thumb:has(.bar) .dur{padding-bottom:1.2rem}
