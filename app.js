@@ -2687,7 +2687,7 @@ const Welcome = (() => {
   function dots() { return h('div', { class:'wz-dots' }, Array.from({ length:STEPS }, (_, i) => h('i', { class:i === step ? 'on' : '' }))); }
   function goto(n) {
     step = Math.max(0, Math.min(STEPS - 1, n));
-    const build = [s0, s1, s2][step];
+    const build = [s1, s0, s2][step];  /* 0 = Fernbedienung koppeln, 1 = Erklärung, 2 = Name */
     stepEl = build();
     el.replaceChildren(stepEl);
     const f = stepEl.querySelector('button.btn.primary, button.go') || stepEl.querySelector('button');
@@ -2702,9 +2702,11 @@ const Welcome = (() => {
         card('tv', 'Mediathek & Live', 'Sendungen der ARD, Livesender und Shorts an einem Ort.'),
         card('search', 'Suchen & Weiterschauen', 'Mit der Bildschirmtastatur suchen. Media+ merkt sich, wo du aufgehört hast.'),
         card('share', 'Handy als Fernbedienung', 'Am Handy tippen oder Videos direkt auf den TV schicken.')),
-      h('button', { class:'btn primary', type:'button', onclick:() => goto(1) }, 'Weiter'));
+      h('div', { class:'wz-row' },
+        h('button', { class:'btn', type:'button', onclick:() => goto(0) }, 'Zurück'),
+        h('button', { class:'btn primary', type:'button', onclick:() => goto(2) }, 'Weiter')));
   }
-  /* Schritt 2: Handy verbinden */
+  /* Schritt 1 (zuerst gezeigt): Handy als Fernbedienung koppeln */
   function s1() {
     const t = store.get('pairTopic') || '';
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
@@ -2719,8 +2721,8 @@ const Welcome = (() => {
     statusEl = h('div', { class:'wz-status' }, h('i', {}), h('span', {}, 'Warte auf Handy …'));
     paintStatus();
     const code = t.slice(2).toUpperCase().replace(/(.{5})(?=.)/g, '$1 ');
-    return h('div', { class:'wz-step' }, dots(), h('h1', {}, 'Handy verbinden'),
-      h('p', { class:'wz-lead' }, 'Mit dem Handy wird Media+ zur Fernbedienung.'),
+    return h('div', { class:'wz-step' }, dots(), h('h1', {}, 'Fernbedienung einrichten'),
+      h('p', { class:'wz-lead' }, 'Verbinde zuerst dein Handy – damit steuerst du Media+, suchst und tippst bequem.'),
       h('div', { class:'wz-pair' }, box,
         h('div', { class:'wz-how' },
           h('p', {}, h('b', {}, '1'), 'QR-Code mit der Handy-Kamera scannen.'),
@@ -2728,8 +2730,7 @@ const Welcome = (() => {
           h('div', { class:'wz-code' }, code),
           statusEl)),
       h('div', { class:'wz-row' },
-        h('button', { class:'btn', type:'button', onclick:() => goto(0) }, 'Zurück'),
-        h('button', { class:'btn primary', type:'button', onclick:() => goto(2) }, connected ? 'Weiter' : 'Später verbinden')));
+        h('button', { class:'btn primary', type:'button', onclick:() => goto(1) }, connected ? 'Weiter' : 'Später verbinden')));
   }
   /* Schritt 3: Name (TV-Tastatur) */
   function s2() {
