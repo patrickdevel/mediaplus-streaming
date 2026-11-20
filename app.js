@@ -3092,9 +3092,37 @@ const PLUS = (() => {
     }).catch(e => { dropConn(c); throw e; });
     p2pDown = 0; p2pLast = 'Direkt verbunden (P2P)';
   }
+  const RELAY = 'wss://relay.patrick4real.workers.dev';
+  let rw = null, rwT = 0, rwTry = 0;
+  function relayPhone() {
+    const t = store.get('tvTopic'); if (!t || !window.WebSocket) return null;
+    if (rw && rw.readyState < 2 && rw._t === t) return rw;
+    try { rw && rw.close(); } catch {}
+    const w = rw = new WebSocket(RELAY + '/?t=' + encodeURIComponent(t)); w._t = t;
+    w.onopen = () => { rwTry = 0; };
+    w.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch { return; } if (d && d.t === 'ack' && ackWait.has(d.i)) ackWait.get(d.i)(); };
+    w.onclose = () => { if (rw === w) { rw = null; clearTimeout(rwT); rwT = setTimeout(relayPhone, Math.min(10000, 800 * (++rwTry))); } };
+    w.onerror = () => { try { w.close(); } catch {} };
+    return w;
+  }
+  setInterval(() => { if (rw && rw.readyState === 1) { try { rw.send('{"t":"ping"}'); } catch {} } }, 40000);
+  addEventListener('online', () => relayPhone());
   async function sendMsg(d) {
     const t = store.get('tvTopic'); if (!t) throw new Error('no-tv');
-    d = { ...d, i:newId() };
+    d = { ...d, i:d.i || newId() };
+    const w = relayPhone();
+    if (w && w.readyState === 1) {
+      try {
+        w.send(JSON.stringify(d));
+        const ok = await new Promise(res => { const to = setTimeout(() => { ackWait.delete(d.i); res(false); }, 700); ackWait.set(d.i, () => { clearTimeout(to); ackWait.delete(d.i); res(true); }); });
+        if (ok) { p2pLast = 'Relay verbunden'; return 'relay'; }
+      } catch {}
+    }
+    return sendMsgP2P(d);
+  }
+  async function sendMsgP2P(d) {
+    const t = store.get('tvTopic'); if (!t) throw new Error('no-tv');
+    d = { ...d, i:d.i || newId() };
     /* Nie auf einen Verbindungsaufbau warten: ist keine offene P2P-Leitung da, geht die Taste sofort über ntfy,
        die Leitung wird nebenbei neu aufgebaut. Gibt es nach 450 ms kein ack, geht dieselbe Nachricht zusätzlich
        über ntfy (der TV filtert Doppelte per ID). */
@@ -3256,7 +3284,20 @@ const PLUS = (() => {
     });
   }
   let esLast = 0;
+  let rws = null, rwsT = 0, rwsTry = 0;
+  function relayTv() {
+    const t = store.get('pairTopic'); if (!t || !window.WebSocket) return;
+    if (rws && rws.readyState < 2 && rws._t === t) return;
+    try { rws && rws.close(); } catch {}
+    const w = rws = new WebSocket(RELAY + '/?t=' + encodeURIComponent(t)); w._t = t;
+    w.onopen = () => { rwsTry = 0; };
+    w.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch { return; } if (!d || d.t === 'ack') return; if (d.i) { try { w.send(JSON.stringify({ t:'ack', i:d.i })); } catch {} } try { handleMsg(d); } catch {} };
+    w.onclose = () => { if (rws === w) { rws = null; clearTimeout(rwsT); rwsT = setTimeout(relayTv, Math.min(15000, 1000 * (++rwsTry))); } };
+    w.onerror = () => { try { w.close(); } catch {} };
+  }
+  setInterval(() => { if (!IS_TV) return; relayTv(); if (rws && rws.readyState === 1) { try { rws.send('{"t":"ping"}'); } catch {} } }, 30000);
   function listen() {
+    relayTv();
     const t = store.get('pairTopic'); if (!t || !window.EventSource) return;
     if (es) es.close(); es = new EventSource('https://ntfy.sh/' + t + '/sse');
     es.onerror = () => { if (es && es.readyState === 2) setTimeout(listen, 3000); };
@@ -3414,7 +3455,7 @@ const PLUS = (() => {
       } else if (up || dn) eat(() => scrollBy({ top:(up ? -1 : 1) * innerHeight * .8, behavior:'smooth' }));
     }, true);
     if (IS_TV) { setInterval(() => { if (store.get('pairTopic') && (!es || es.readyState === 2 || Date.now() - esLast > 75000)) listen(); }, 10000); document.addEventListener('visibilitychange', () => { if (!document.hidden && (!es || es.readyState === 2)) listen(); }); if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); tvServe(); }
-    else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); if (store.get('tvTopic')) setTimeout(() => phoneConn().catch(() => {}), 500); document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) phoneConn().catch(() => {}); });
+    else { const p = new URLSearchParams(location.search).get('tv'); if (p) store.set('tvTopic', p.replace(/[^\w-]/g, '')); if (store.get('tvTopic')) { relayPhone(); setTimeout(() => phoneConn().catch(() => {}), 500); } document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) { relayPhone(); phoneConn().catch(() => {}); } });
       /* Herzschlag: erkennt tote P2P-Leitungen, bevor die nächste Taste verloren geht */
       setInterval(() => { if (!store.get('tvTopic') || document.hidden) return; sendP2P({ t:'ping' }, 2500).catch(() => {}); }, 5000); }
     setTimeout(refreshBadge, 3000); setInterval(refreshBadge, 600000);
