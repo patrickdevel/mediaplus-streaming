@@ -2668,53 +2668,160 @@ $('#side').addEventListener('click', ev => {
    WELCOME – Willkommens-Overlay (Blur + welcome.gif + Weiter)
    ========================================================= */
 const Welcome = (() => {
-  let el = null, btn = null, prevFocus = null, open = false;
-  const KEYS_CLOSE = ['Enter', ' ', 'Escape', 'GoBack', 'BrowserBack'];
+  let el = null, stepEl = null, open = false, step = 0, prevFocus = null, name = '', canClose = false, connected = false, statusEl = null;
+  const STEPS = 3;
+  const BACK = ['GoBack', 'BrowserBack', 'Escape'];
+  const isBack = (k, c) => BACK.includes(k) || c === 461 || c === 10009 || c === 27;
+  const addCh = c => { if (name.length >= 20) return; name += (!name || name.endsWith(' ')) ? c.toUpperCase() : c.toLowerCase(); };
   function ensure() {
     if (el) return;
-    const img = h('img', { src:'welcome.gif', alt:'Willkommen', draggable:'false' });
-    el = h('div', { id:'welcome', role:'dialog', 'aria-modal':'true', 'aria-label':'Willkommen' },
-      img, h('h1', {}, 'Willkommen'));
-    img.addEventListener('error', () => el.classList.add('noimg'));
-    btn = h('button', { class:'btn primary', type:'button', onclick:() => hide() }, 'Weiter');
-    el.append(btn);
+    el = h('div', { id:'welcome', class:'wz', role:'dialog', 'aria-modal':'true', 'aria-label':'Willkommen' });
     document.body.append(el);
+    document.addEventListener('mp-phone', () => { connected = true; paintStatus(); });
+  }
+  function paintStatus() {
+    if (!statusEl) return;
+    statusEl.classList.toggle('ok', connected);
+    statusEl.lastChild.textContent = connected ? 'Handy verbunden' : 'Warte auf Handy …';
+  }
+  function dots() { return h('div', { class:'wz-dots' }, Array.from({ length:STEPS }, (_, i) => h('i', { class:i === step ? 'on' : '' }))); }
+  function goto(n) {
+    step = Math.max(0, Math.min(STEPS - 1, n));
+    const build = [s0, s1, s2][step];
+    stepEl = build();
+    el.replaceChildren(stepEl);
+    const f = stepEl.querySelector('button.btn.primary, button.go') || stepEl.querySelector('button');
+    setTimeout(() => { if (open && f) focusEl(f); }, 60);
+  }
+  /* Schritt 1: Erklärung */
+  function s0() {
+    const card = (ic, t, d) => h('div', { class:'wz-card' }, icon(ic), h('b', {}, t), h('span', {}, d));
+    return h('div', { class:'wz-step' }, dots(), h('div', { class:'wz-logo' }, 'Media+'), h('h1', {}, 'Willkommen'),
+      h('p', { class:'wz-lead' }, 'Fernsehen mit der ARD-Mediathek, Livesendern und Musik – bedient mit der Fernbedienung oder dem Handy.'),
+      h('div', { class:'wz-cards' },
+        card('tv', 'Mediathek & Live', 'Sendungen der ARD, Livesender und Shorts an einem Ort.'),
+        card('search', 'Suchen & Weiterschauen', 'Mit der Bildschirmtastatur suchen. Media+ merkt sich, wo du aufgehört hast.'),
+        card('share', 'Handy als Fernbedienung', 'Am Handy tippen oder Videos direkt auf den TV schicken.')),
+      h('button', { class:'btn primary', type:'button', onclick:() => goto(1) }, 'Weiter'));
+  }
+  /* Schritt 2: Handy verbinden */
+  function s1() {
+    const t = store.get('pairTopic') || '';
+    const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
+    const url = base + '?tv=' + t + '#/send';
+    const box = h('div', { class:'qrbox wz-qr' }, 'QR-Code wird erzeugt …');
+    new Promise((res, rej) => {
+      if (window.qrcode) return res();
+      const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      s.onload = res; s.onerror = rej; document.head.append(s);
+    }).then(() => { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag({ cellSize:6, margin:0 }); })
+      .catch(() => { box.textContent = 'QR-Code nicht verfügbar'; });
+    statusEl = h('div', { class:'wz-status' }, h('i', {}), h('span', {}, 'Warte auf Handy …'));
+    paintStatus();
+    const code = t.slice(2).toUpperCase().replace(/(.{5})(?=.)/g, '$1 ');
+    return h('div', { class:'wz-step' }, dots(), h('h1', {}, 'Handy verbinden'),
+      h('p', { class:'wz-lead' }, 'Mit dem Handy wird Media+ zur Fernbedienung.'),
+      h('div', { class:'wz-pair' }, box,
+        h('div', { class:'wz-how' },
+          h('p', {}, h('b', {}, '1'), 'QR-Code mit der Handy-Kamera scannen.'),
+          h('p', {}, h('b', {}, '2'), 'Oder auf dem Handy ', h('u', {}, 'mobile.html'), ' öffnen und diesen Code eingeben:'),
+          h('div', { class:'wz-code' }, code),
+          statusEl)),
+      h('div', { class:'wz-row' },
+        h('button', { class:'btn', type:'button', onclick:() => goto(0) }, 'Zurück'),
+        h('button', { class:'btn primary', type:'button', onclick:() => goto(2) }, connected ? 'Weiter' : 'Später verbinden')));
+  }
+  /* Schritt 3: Name (TV-Tastatur) */
+  function s2() {
+    const disp = h('div', { class:'sdisp wz-disp' });
+    const draw = () => { disp.classList.toggle('ph', !name); disp.replaceChildren(name ? h('span', { style:'color:inherit' }, name + '▍') : h('span', {}, 'Dein Name')); };
+    const edit = fn => { fn(); draw(); };
+    const key = (l, fn, cls = '') => h('button', { class:'key ' + cls, type:'button', onclick:fn }, l);
+    const kb = h('div', { class:'keys wz-keys' },
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß'.split('').map(c => key(c, () => edit(() => addCh(c)))),
+      key('Leerzeichen', () => edit(() => { if (name && !name.endsWith(' ')) name += ' '; }), 'w3'),
+      key('⌫ Löschen', () => edit(() => { name = name.slice(0, -1); }), 'w2'),
+      key('Fertig', finish, 'w2 go'));
+    s2.draw = draw;
+    const st = h('div', { class:'wz-step' }, dots(), h('h1', {}, 'Wie heißt du?'),
+      h('p', { class:'wz-lead' }, 'Dein Name wird in Media+ gespeichert und später gebraucht.'),
+      h('div', { class:'wz-name' }, disp, kb),
+      h('div', { class:'wz-row' }, h('button', { class:'btn', type:'button', onclick:() => goto(1) }, 'Zurück')));
+    draw();
+    return st;
+  }
+  function finish() {
+    const n = name.trim();
+    if (!n) { toast('Bitte gib deinen Namen ein'); return; }
+    store.set('userName', n);
+    store.set('setupDone', true);
+    store.set('welcomed', true);
+    hide();
+    toast('Hallo, ' + n + '!');
+  }
+  function nav(dir) {
+    const items = [...stepEl.querySelectorAll('button')];
+    const cur = document.activeElement;
+    if (!items.includes(cur)) { focusEl(items[0]); return; }
+    const r = cur.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    let best = null, bs = 1e9;
+    items.forEach(o => {
+      if (o === cur) return;
+      const q = o.getBoundingClientRect(), dx = q.left + q.width / 2 - cx, dy = q.top + q.height / 2 - cy;
+      const prim = dir === 'left' ? -dx : dir === 'right' ? dx : dir === 'up' ? -dy : dy;
+      const sec = (dir === 'left' || dir === 'right') ? Math.abs(dy) : Math.abs(dx);
+      if (prim < 2) return;
+      const s = prim + sec * 2.5;
+      if (s < bs) { bs = s; best = o; }
+    });
+    if (best) focusEl(best);
   }
   function onKey(ev) {
     if (!open) return;
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
     const k = ev.key, c = ev.keyCode;
     ev.preventDefault(); ev.stopImmediatePropagation();
-    if (KEYS_CLOSE.includes(k) || c === 13 || c === 27 || c === 461 || c === 10009) hide();
-    else if (btn && document.activeElement !== btn) btn.focus();
+    if (step === 2) {
+      if (k.length === 1 && /[A-Za-zÄÖÜäöüß]/.test(k)) { addCh(k); s2.draw(); return; }
+      if (k === ' ' && document.activeElement && !document.activeElement.matches('.btn')) { if (name && !name.endsWith(' ')) name += ' '; s2.draw(); return; }
+      if (k === 'Backspace') { name = name.slice(0, -1); s2.draw(); return; }
+    }
+    const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
+    if (dir) { nav(dir); return; }
+    if (keyIsOk(k, c)) { const a = document.activeElement; if (a && stepEl.contains(a)) a.click(); else nav('down'); return; }
+    if (isBack(k, c)) { if (step > 0) goto(step - 1); else if (canClose) hide(); }
   }
   function show() {
     ensure();
     if (open) return;
     open = true;
+    canClose = store.get('setupDone', false) === true;
+    name = store.get('userName', '') || '';
+    connected = false;
     prevFocus = document.activeElement;
-    el.classList.remove('noimg');
-    const im = el.querySelector('img'); if (im) { const src = im.getAttribute('src'); im.removeAttribute('src'); im.setAttribute('src', src); }   /* GIF startet jedes Mal von vorn */
+    goto(0);
     void el.offsetWidth;
     el.classList.add('show');
     document.body.classList.add('welcome-on');
     document.addEventListener('keydown', onKey, true);
-    setTimeout(() => { if (open && btn) btn.focus(); }, 900);
   }
   function hide() {
     if (!open) return;
     open = false;
-    store.set('welcomed', true);
     el.classList.remove('show');
     document.body.classList.remove('welcome-on');
     document.removeEventListener('keydown', onKey, true);
     try { if (prevFocus && prevFocus.isConnected && prevFocus !== document.body) prevFocus.focus(); } catch {}
     prevFocus = null;
   }
-  /* Erststart: erst alles laden lassen, dann nach kurzer Zeit verblurren */
+  /* Erststart: erst nach der Boot-Animation anzeigen */
   function firstRun() {
-    if (store.get('welcomed', false)) return;
-    const go = () => setTimeout(show, 500);
-    if (document.readyState === 'complete') go(); else window.addEventListener('load', go, { once:true });
+    if (store.get('setupDone', false)) return;
+    const wait = setInterval(() => {
+      if (document.readyState !== 'complete' || (window.BOOT && BOOT.active)) return;
+      clearInterval(wait);
+      setTimeout(show, 700);
+    }, 250);
   }
   return { show, hide, firstRun, isOpen:() => open };
 })();
@@ -3019,6 +3126,7 @@ const PLUS = (() => {
     const isDupe = i => { if (!i) return false; if (seenIds.includes(i)) return true; seenIds.push(i); if (seenIds.length > 300) seenIds.shift(); return false; };
     function handleMsg(d) {
       if (!d || isDupe(d.i) || d.t === 'ping') return;
+      document.dispatchEvent(new Event('mp-phone'));
       if (window.BOOT && BOOT.active) { if (d.t === 'skip' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///skip')) BOOT.skip(); return; }
       if (d.t === 'skip' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///skip')) return;
       if (d.t === 'reload' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///reload')) {
@@ -3054,6 +3162,7 @@ const PLUS = (() => {
     const p = tvPeer = new Peer(PID(t));
     p.on('connection', c => {
       tvConns.add(c);
+      document.dispatchEvent(new Event('mp-phone'));
       c.on('data', d => {
         try { if (typeof d === 'string') d = JSON.parse(d); } catch { return; }
         if (!d) return;
