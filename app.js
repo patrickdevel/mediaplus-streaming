@@ -535,6 +535,22 @@ function openSettings(opener) {
   el.style.setProperty('--t', r.top + 'px'); el.style.setProperty('--l', r.left + 'px'); el.style.setProperty('--r', (innerWidth - r.right) + 'px'); el.style.setProperty('--b', (innerHeight - r.bottom) + 'px');
   const title = h('h1', {}, 'Einstellungen'), list = h('div', { class:'slist' }), sname = h('small', {}, 'Einstellungen');
   const ico = h('div', { class:'sfl' }, h('div', { class:'sico' }, h('div', {}, h('b', {}, 'Media+'), sname)));
+  const sicoEl = ico.firstChild;
+  let gifBlob = null, gifMs = 4000, gifT = 0;
+  const gifLoad = () => gifBlob ? Promise.resolve() : fetch('https://github.com/patrickdevel/mediaplus-streaming/blob/main/pictures/snoopy.gif?raw=true').then(r => r.arrayBuffer()).then(buf => {
+    const b = new Uint8Array(buf); let ms = 0;
+    for (let i = 0; i < b.length - 7; i++) if (b[i] === 0x21 && b[i + 1] === 0xF9 && b[i + 2] === 4) { ms += ((b[i + 5] << 8) | b[i + 4]) * 10 || 100; i += 7; }
+    if (ms > 300) gifMs = Math.min(ms, 15000);
+    gifBlob = new Blob([buf], { type:'image/gif' });
+  }).catch(() => {});
+  gifLoad();
+  window.__sico = async () => {
+    await gifLoad(); if (!gifBlob || !sicoEl.isConnected) return;
+    clearTimeout(gifT); sicoEl.querySelectorAll('.sgif').forEach(x => x.remove());
+    const url = URL.createObjectURL(gifBlob), im = h('img', { class:'sgif', src:url, alt:'' });
+    sicoEl.append(im); void im.offsetWidth; sicoEl.classList.add('gif');
+    gifT = setTimeout(() => { sicoEl.classList.remove('gif'); setTimeout(() => { im.remove(); URL.revokeObjectURL(url); }, 450); }, gifMs);
+  };
   const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => { try { PLUS.importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
   el.append(h('div', { class:'sin' }, title, ico, list), file);
   const chev = () => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.innerHTML = '<path d="m9 5 7 7-7 7"/>'; return s; };
@@ -570,7 +586,7 @@ function openSettings(opener) {
       TK('Bildschirmschoner', 'saverOn', true, v => v ? saver() : ScreenSaver.hide()),
       TK('Uhr anzeigen', 'saverClock', true, saver),
       CK('Starten nach', 'saverDelay', [['1 Min.', 1], ['5 Min.', 5], ['10 Min.', 10], ['20 Min.', 20], ['30 Min.', 30]], 5, saver),
-      CK('Motiv', 'saverMode', [['Snoopy', 'snoopy'], ['Bilder', 'images']], 'snoopy', saver),
+      CK('Motiv', 'saverMode', [['Snoopy', 'snoopy'], ['Bilder', 'images']], 'snoopy', v => { saver(); if (v === 'snoopy' && window.__sico) window.__sico(); }),
       TK('Empfehlungen anzeigen', 'saverRecs', true, saver),
       CK('Schwarz nach', 'saverBlack', [['Nie', 0], ['10 Min.', 10], ['20 Min.', 20], ['30 Min.', 30], ['60 Min.', 60]], 30, saver),
       CK('Bildwechsel', 'saverInterval', [['10 s', 10], ['30 s', 30], ['60 s', 60]], 30, saver)]],
@@ -621,7 +637,7 @@ function openSettings(opener) {
   }
   el._close = (force) => {
     if (sub != null && !force) { const k = sub; sub = null; draw('back', k); return; }
-    el.classList.remove('show'); layerEl = null; setTimeout(() => el.remove(), 450);
+    el.classList.remove('show'); layerEl = null; window.__sico = null; clearTimeout(gifT); setTimeout(() => el.remove(), 450);
     if (opener && opener.isConnected) opener.focus({ preventScroll:true });
   };
   el.addEventListener('scroll', ev => { if (ev.target !== list) { ev.target.scrollTop = 0; ev.target.scrollLeft = 0; } }, true);
@@ -1955,13 +1971,19 @@ const ScreenSaver = (() => {
   const blackAfter = () => { const v = Number(store.get('saverBlack', 30)); return isFinite(v) ? v * 60000 : 30 * 60000; };
   const useVideo = () => store.get('saverMode', 'snoopy') !== 'images';
   const recsOn = () => store.get('saverRecs', true) !== false;
+  function prepareStart() {
+    if (!vid) return;
+    let t = 0;
+    if (isFinite(vid.duration) && vid.duration > 40 && Math.random() < .2) t = Math.random() * vid.duration * .7;
+    try { vid.currentTime = t; } catch {}
+  }
   function loadVideo() {
     if (vid) return;
     vid = document.createElement('video');
     vid.className = 'saver-video';
     vid.muted = true; vid.loop = true; vid.playsInline = true; vid.preload = 'auto';
     vid.setAttribute('muted', ''); vid.setAttribute('playsinline', '');
-    const ok = () => { if (vidReady) return; vidReady = true; try { vid.pause(); vid.currentTime = 0; } catch {} if (pendingShow) { pendingShow = false; show(); } };
+    const ok = () => { if (vidReady) return; vidReady = true; try { vid.pause(); } catch {} prepareStart(); if (pendingShow) { pendingShow = false; show(); } };
     vid.addEventListener('canplaythrough', ok, { once:true });
     vid.addEventListener('loadeddata', () => { if (vid.readyState >= 4) ok(); });
     vid.addEventListener('error', () => { vidReady = false; if (pendingShow) { pendingShow = false; show(true); } });
@@ -2259,7 +2281,7 @@ const ScreenSaver = (() => {
     if (!visible) return;
     visible = false; black = false; clearTimeout(blackTimer); hideRec();
     clearTimeout(slideTimer);
-    if (vid) try { vid.pause(); } catch {}
+    if (vid) { try { vid.pause(); } catch {} prepareStart(); }
     clearDigitTimers();
     /* Ziffern-Animationen sofort stoppen – kein Scroll beim Beenden */
     digits.forEach(d => {
@@ -2287,7 +2309,7 @@ const ScreenSaver = (() => {
       clearTimeout(blackTimer); if (blackAfter() > 0) blackTimer = setTimeout(goBlack, blackAfter());
       index = 0;
       root.classList.toggle('vmode', vm && vidReady);
-      if (vm && vidReady) { try { vid.currentTime = 0; const pr = vid.play(); pr && pr.catch && pr.catch(() => {}); } catch {} }
+      if (vm && vidReady) { try { const pr = vid.play(); pr && pr.catch && pr.catch(() => {}); } catch {} }
       root.style.setProperty('--kd', (interval() / 1000 + 6) + 's');
       [imgA, imgB].forEach(x => { clearTimeout(x.kt); x.el.style.zIndex = ''; x.el.classList.remove('on', 'ken'); });
       if (!(vm && vidReady)) {
