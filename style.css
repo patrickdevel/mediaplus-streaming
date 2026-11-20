@@ -1837,3 +1837,10 @@ body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
 }
+
+/* ===== Bildschirmschoner: Uhr-Design „Schmal" (Klasse .clock-slim auf .tv-saver) =====
+   Standard = bisherige große Uhr. Schmal = kleine Uhr oben rechts in der System-Uhrenschrift.
+   Gilt nur, wenn die Uhr an ist (bei .hide-clock wird sie weiterhin komplett ausgeblendet). */
+.tv-saver.clock-slim .saver-clock-wrap{top:2.4rem;right:3.4rem;left:auto;bottom:auto;align-items:flex-end;text-align:right}
+.tv-saver.clock-slim .saver-clock{font-size:2.4rem;letter-spacing:.02em}
+.tv-saver.clock-slim .saver-date{display:none}
