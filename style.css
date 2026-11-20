@@ -1785,3 +1785,41 @@ body.home .hero .htrack{transition:transform .8s cubic-bezier(.3,.7,.2,1),filter
 .hglass .hrow .card .thumb{border-radius:var(--r-tile)}
 .happs .atile,
 .happs .atile .alg{border-radius:var(--r-tile)}
+
+/* ===== Home → Bildschirmschoner: sanfter Übergang (Zoom → Blur → klar → Fill) =====
+   Ablauf:
+   1) Home zoomt leicht rein, Dock bleibt noch kurz stehen
+   2) Home wird schnell unscharf
+   3) Bildschirmschoner blendet unscharf + leicht gezoomt ein und wird klar
+   4) Dock blendet etwas verzögert aus
+   5) Schoner-Bild/Video zoomt auf normales Fill zurück */
+
+/* Home-Hintergrund: Rückweg beim Verlassen des Schoners */
+body.home .hero{transition:transform .7s cubic-bezier(.2,.8,.2,1),filter .5s ease;will-change:transform,filter}
+body.home.saver-on:not(.home-scrolled) .hero{
+  transform:scale(1.07);
+  filter:blur(2.2rem) brightness(.85);
+  transition:transform .9s cubic-bezier(.2,.8,.2,1),filter .45s ease .25s;
+}
+
+/* Dock: etwas verzögert ausblenden (und wieder einblenden) */
+.hfirst .happs{transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .25s,translate .4s ease}
+body.home.saver-on .hfirst .happs{
+  opacity:0;
+  translate:0 1.4rem;
+  transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .55s ease .3s,translate .6s ease .3s;
+}
+
+/* Schoner selbst: startet leicht gezoomt + unscharf, wird verzögert klar */
+body.home:not(.home-scrolled) .tv-saver{transform:scale(1.1);filter:blur(2.4rem)}
+body.home:not(.home-scrolled) .tv-saver.show{
+  transform:none;
+  filter:none;
+  transition:opacity .8s ease .35s,filter 1s cubic-bezier(.2,.7,.2,1) .35s,transform 1.4s cubic-bezier(.2,.8,.2,1) .35s;
+}
+/* Bild/Video zoomt am Ende auf normales Fill zurück */
+body.home:not(.home-scrolled) .tv-saver.show>.saver-bg,
+body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
+  animation:saverSettle 2.4s cubic-bezier(.2,.8,.2,1) .35s both;
+}
+@keyframes saverSettle{from{transform:scale(1.12)}to{transform:scale(1)}}
