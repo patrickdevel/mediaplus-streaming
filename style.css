@@ -1715,3 +1715,9 @@ body.home.home-ap .hero .hin h2.mq.mq-on .mq-in{display:inline;white-space:norma
 .saver-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#000}
 .tv-saver.vmode .saver-video{display:block}
 .tv-saver.vmode .saver-slide{display:none}
+
+.aset .sico{position:relative;overflow:hidden}
+.aset .sico>div{transition:opacity .4s}
+.aset .sico.gif>div{opacity:0}
+.aset .sico .sgif{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s;pointer-events:none}
+.aset .sico.gif .sgif{opacity:1}
