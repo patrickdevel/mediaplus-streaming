@@ -586,6 +586,7 @@ function openSettings(opener) {
     ['Bildschirmschoner', [
       TK('Bildschirmschoner', 'saverOn', true, v => v ? saver() : ScreenSaver.hide()),
       TK('Uhr anzeigen', 'saverClock', true, saver),
+      { ...CK('Uhr-Design', 'saverClockStyle', [['Standard', 'std'], ['Schmal', 'slim']], 'std', saver), when: () => g('saverClock', true) },
       CK('Starten nach', 'saverDelay', [['1 Min.', 1], ['5 Min.', 5], ['10 Min.', 10], ['20 Min.', 20], ['30 Min.', 30]], 5, saver),
       CK('Motiv', 'saverMode', [['Snoopy', 'snoopy'], ['Bilder', 'images']], 'snoopy', v => { saver(); if (v === 'snoopy' && window.__sico) window.__sico(); }),
       TK('Empfehlungen anzeigen', 'saverRecs', true, saver),
@@ -614,7 +615,10 @@ function openSettings(opener) {
   const pop = n => { n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); };
   const row = (label, right, onclick, cls, i) => { const b = h('button', { class:'srow' + (cls ? ' ' + cls : ''), type:'button', style:'--i:' + i }, h('span', {}, label), right); if (onclick) b.onclick = onclick; return b; };
   const label = (it, v) => { const f = it.vals.find(x => same(x[1], v)); return f ? f[0] : it.vals[0][0]; };
+  let cond = [];
+  const sync = () => cond.forEach(c => { const want = !!c.it.when(); if (want && !c.b.isConnected && c.prev && c.prev.isConnected) c.prev.after(c.b); else if (!want && c.b.isConnected) c.b.remove(); });
   function draw(dir, focusIdx) {
+    cond = [];
     list.className = 'slist ' + dir; list.replaceChildren(); list.scrollTop = 0;
     const name = sub == null ? 'Einstellungen' : cats[sub][0];
     title.textContent = name; sname.textContent = name; pop(title); pop(sname);
@@ -625,13 +629,14 @@ function openSettings(opener) {
       cats[sub][1].forEach(it => {
         if (it.t === 'toggle') {
           const tg = h('span', { class:'tg' + (it.get() ? ' on' : '') });
-          list.append(row(it.label, tg, () => { const v = !it.get(); it.set(v); tg.classList.toggle('on', !!it.get()); }, '', i++));
+          list.append(row(it.label, tg, () => { const v = !it.get(); it.set(v); tg.classList.toggle('on', !!it.get()); sync(); }, '', i++));
         } else if (it.t === 'cycle') {
           const v = h('span', { class:'v' }, label(it, it.get()));
-          list.append(row(it.label, v, () => { const cur = it.vals.findIndex(x => same(x[1], it.get())); const nx = it.vals[(cur + 1) % it.vals.length]; it.set(nx[1]); v.textContent = nx[0]; pop(v); }, '', i++));
+          list.append(row(it.label, v, () => { const cur = it.vals.findIndex(x => same(x[1], it.get())); const nx = it.vals[(cur + 1) % it.vals.length]; it.set(nx[1]); v.textContent = nx[0]; pop(v); sync(); }, '', i++));
         } else if (it.t === 'action') list.append(row(it.label, '', () => it.fn(), it.dng ? 'dng' : '', i++));
         else if (it.t === 'link') list.append(row(it.label, chev(), () => { el._close(true); location.hash = it.href; }, '', i++));
         else list.append(row(it.label, h('span', { class:'v' }, it.val()), null, 'inf', i++));
+        if (it.when) { const b = list.lastElementChild; cond.push({ it, b, prev:b.previousElementSibling }); if (!it.when()) b.remove(); }
       });
     }
     const t = list.children[sub == null ? (focusIdx || 0) : Math.min(1, list.children.length - 1)]; if (t) t.focus({ preventScroll:true });
@@ -2320,6 +2325,7 @@ const ScreenSaver = (() => {
       }
     }
     root.classList.toggle('hide-clock', !store.get('saverClock', true));
+    root.classList.toggle('clock-slim', store.get('saverClockStyle', 'std') === 'slim');
     fitDigits();
     root.classList.remove('leaving');
     document.body.classList.add('saver-on');
