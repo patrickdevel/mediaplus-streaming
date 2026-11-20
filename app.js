@@ -735,10 +735,10 @@ function zoomOpen(from, ready) {
   if (lg) z.append(lg.cloneNode(true));
   document.body.append(bl, z); void z.offsetWidth;
   requestAnimationFrame(() => { z.classList.add('shr'); bl.classList.add('on'); });
-  setTimeout(() => { z.classList.remove('shr'); z.classList.add('go'); z.style.cssText = 'left:0;top:0;width:100vw;height:100vh;border-radius:0'; }, 150);
-  setTimeout(() => { ready && ready(); }, 560);
-  setTimeout(() => { z.classList.add('out'); bl.classList.remove('on'); }, 600);
-  setTimeout(() => { z.remove(); bl.remove(); }, 1000);
+  setTimeout(() => { z.classList.remove('shr'); z.classList.add('go'); z.style.cssText = 'left:0;top:0;width:100vw;height:100vh;border-radius:0'; }, 90);
+  setTimeout(() => { ready && ready(); }, 520);
+  setTimeout(() => { z.classList.add('out'); bl.classList.remove('on'); }, 580);
+  setTimeout(() => { z.remove(); bl.remove(); }, 1300);
 }
 function launchApp(a, from) {
   if (appWin) return;
