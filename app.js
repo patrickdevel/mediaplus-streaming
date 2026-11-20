@@ -2684,6 +2684,17 @@ const Welcome = (() => {
     statusEl.classList.toggle('ok', connected);
     statusEl.lastChild.textContent = connected ? 'Handy verbunden' : 'Warte auf Handy …';
   }
+  const WZI = {
+    tv:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+    phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/>',
+    user:'<circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>'
+  };
+  function wzIc(n) {
+    const sv = document.createElementNS(NS, 'svg');
+    sv.setAttribute('class', 'wz-ic'); sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('aria-hidden', 'true');
+    sv.innerHTML = WZI[n];
+    return sv;
+  }
   function dots() { return h('div', { class:'wz-dots' }, Array.from({ length:STEPS }, (_, i) => h('i', { class:i === step ? 'on' : '' }))); }
   function goto(n) {
     step = Math.max(0, Math.min(STEPS - 1, n));
@@ -2696,7 +2707,7 @@ const Welcome = (() => {
   /* Schritt 1: Erklärung */
   function s0() {
     const card = (ic, t, d) => h('div', { class:'wz-card' }, icon(ic), h('b', {}, t), h('span', {}, d));
-    return h('div', { class:'wz-step' }, dots(), h('div', { class:'wz-logo' }, 'Media+'), h('h1', {}, 'Willkommen'),
+    return h('div', { class:'wz-step' }, dots(), h('div', { class:'wz-logo' }, 'Media+'), h('h1', {}, wzIc('tv'), 'Willkommen'),
       h('p', { class:'wz-lead' }, 'Fernsehen mit der ARD-Mediathek, Livesendern und Musik – bedient mit der Fernbedienung oder dem Handy.'),
       h('div', { class:'wz-cards' },
         card('tv', 'Mediathek & Live', 'Sendungen der ARD, Livesender und Shorts an einem Ort.'),
@@ -2718,19 +2729,12 @@ const Welcome = (() => {
       s.onload = res; s.onerror = rej; document.head.append(s);
     }).then(() => { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag({ cellSize:6, margin:0 }); })
       .catch(() => { box.textContent = 'QR-Code nicht verfügbar'; });
-    statusEl = h('div', { class:'wz-status' }, h('i', {}), h('span', {}, 'Warte auf Handy …'));
-    paintStatus();
-    const code = t.slice(2).toUpperCase().replace(/(.{5})(?=.)/g, '$1 ');
-    return h('div', { class:'wz-step' }, dots(), h('h1', {}, 'Fernbedienung einrichten'),
-      h('p', { class:'wz-lead' }, 'Verbinde zuerst dein Handy – damit steuerst du Media+, suchst und tippst bequem.'),
-      h('div', { class:'wz-pair' }, box,
-        h('div', { class:'wz-how' },
-          h('p', {}, h('b', {}, '1'), 'QR-Code mit der Handy-Kamera scannen.'),
-          h('p', {}, h('b', {}, '2'), 'Oder auf dem Handy ', h('u', {}, 'mobile.html'), ' öffnen und diesen Code eingeben:'),
-          h('div', { class:'wz-code' }, code),
-          statusEl)),
+    statusEl = null;
+    return h('div', { class:'wz-step' }, dots(), h('h1', {}, wzIc('phone'), 'Fernbedienung einrichten'),
+      h('p', { class:'wz-lead' }, 'Scanne den QR-Code mit der Handy-Kamera – fertig.'),
+      h('div', { class:'wz-pair' }, box),
       h('div', { class:'wz-row' },
-        h('button', { class:'btn primary', type:'button', onclick:() => goto(1) }, connected ? 'Weiter' : 'Später verbinden')));
+        h('button', { class:'btn primary', type:'button', onclick:() => goto(1) }, 'Weiter')));
   }
   /* Schritt 3: Name (TV-Tastatur) */
   function s2() {
@@ -2744,7 +2748,7 @@ const Welcome = (() => {
       key('⌫ Löschen', () => edit(() => { name = name.slice(0, -1); }), 'w2'),
       key('Fertig', finish, 'w2 go'));
     s2.draw = draw;
-    const st = h('div', { class:'wz-step' }, dots(), h('h1', {}, 'Wie heißt du?'),
+    const st = h('div', { class:'wz-step' }, dots(), h('h1', {}, wzIc('user'), 'Wie heißt du?'),
       h('p', { class:'wz-lead' }, 'Dein Name wird in Media+ gespeichert und später gebraucht.'),
       h('div', { class:'wz-name' }, disp, kb),
       h('div', { class:'wz-row' }, h('button', { class:'btn', type:'button', onclick:() => goto(1) }, 'Zurück')));
@@ -2818,6 +2822,7 @@ const Welcome = (() => {
   /* Erststart: erst nach der Boot-Animation anzeigen */
   function firstRun() {
     if (store.get('setupDone', false)) return;
+    if (!store.get('theme', null)) { store.set('theme', 'dark'); setTheme('dark'); }
     const wait = setInterval(() => {
       if (document.readyState !== 'complete' || (window.BOOT && BOOT.active)) return;
       clearInterval(wait);
