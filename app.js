@@ -3036,6 +3036,10 @@ const PLUS = (() => {
 
   
   /* ---------- Direktverbindung Handy <-> TV (WebRTC über PeerJS, Fallback ntfy) ---------- */
+  const PEER_OPTS = { config: { iceCandidatePoolSize: 4, iceServers: [
+    { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
+    { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }
+  ] } };
   const PEER_SRC = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
   let peerP = null;
   const loadPeer = () => window.Peer ? Promise.resolve() : (peerP || (peerP = new Promise((res, rej) => {
@@ -3056,7 +3060,7 @@ const PLUS = (() => {
     phP = (async () => {
       await loadPeer();
       if (!phPeer || phPeer.destroyed) {
-        const p = phPeer = new Peer();
+        const p = phPeer = new Peer(undefined, PEER_OPTS);
         try {
           await new Promise((res, rej) => { p.once('open', res); p.once('error', rej); setTimeout(() => rej(new Error('peer-timeout')), 8000); });
         } catch (e) { try { p.destroy(); } catch {} if (phPeer === p) phPeer = null; throw e; }
@@ -3227,7 +3231,7 @@ const PLUS = (() => {
       if (!tvPeer.destroyed) { if (tvPeer.disconnected) { try { tvPeer.reconnect(); } catch {} } return; }
       tvPeer = null;
     }
-    const p = tvPeer = new Peer(PID(t));
+    const p = tvPeer = new Peer(PID(t), PEER_OPTS);
     p.on('connection', c => {
       tvConns.add(c);
       document.dispatchEvent(new Event('mp-phone'));
