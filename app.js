@@ -570,6 +570,9 @@ function openSettings(opener) {
       TK('Bildschirmschoner', 'saverOn', true, v => v ? saver() : ScreenSaver.hide()),
       TK('Uhr anzeigen', 'saverClock', true, saver),
       CK('Starten nach', 'saverDelay', [['1 Min.', 1], ['5 Min.', 5], ['10 Min.', 10], ['20 Min.', 20], ['30 Min.', 30]], 5, saver),
+      CK('Motiv', 'saverMode', [['Snoopy', 'snoopy'], ['Bilder', 'images']], 'snoopy', saver),
+      TK('Empfehlungen anzeigen', 'saverRecs', true, saver),
+      CK('Schwarz nach', 'saverBlack', [['Nie', 0], ['10 Min.', 10], ['20 Min.', 20], ['30 Min.', 30], ['60 Min.', 60]], 30, saver),
       CK('Bildwechsel', 'saverInterval', [['10 s', 10], ['30 s', 30], ['60 s', 60]], 30, saver)]],
     ['Apps', [
       I('Installierte Apps', () => String(store.get('apps', []).length)),
@@ -635,7 +638,7 @@ function setSleep(min) {
   sleepEnd = Date.now() + min * 60000;
   sleepT = setTimeout(() => {
     sleepT = 0; sleepEnd = 0; sleepMin = 0;
-    document.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
+    document.querySelectorAll('video:not(.saver-video)').forEach(v => { try { v.pause(); } catch {} });
     ScreenSaver.show(true); toast('Einschlaf-Timer abgelaufen');
   }, min * 60000);
 }
@@ -1947,11 +1950,28 @@ const ScreenSaver = (() => {
   let root = null, imgA = null, imgB = null, clockEl = null, dateEl = null, timer = 0, slideTimer = 0, index = 0, visible = false;
   let digits = [], lastHM = '', digitTimers = [];
   let recQ = [], recCur = null, recBusy = false, recEl = null, hintEl = null, blackEl = null, blackTimer = 0, black = false;
-  const BLACK_AFTER = 30 * 60000;
+  const SNOOPY_URL = 'https://files.catbox.moe/heqbp1.mp4';
+  let vid = null, vidReady = false, pendingShow = false;
+  const blackAfter = () => { const v = Number(store.get('saverBlack', 30)); return isFinite(v) ? v * 60000 : 30 * 60000; };
+  const useVideo = () => store.get('saverMode', 'snoopy') !== 'images';
+  const recsOn = () => store.get('saverRecs', true) !== false;
+  function loadVideo() {
+    if (vid) return;
+    vid = document.createElement('video');
+    vid.className = 'saver-video';
+    vid.muted = true; vid.loop = true; vid.playsInline = true; vid.preload = 'auto';
+    vid.setAttribute('muted', ''); vid.setAttribute('playsinline', '');
+    const ok = () => { if (vidReady) return; vidReady = true; try { vid.pause(); vid.currentTime = 0; } catch {} if (pendingShow) { pendingShow = false; show(); } };
+    vid.addEventListener('canplaythrough', ok, { once:true });
+    vid.addEventListener('loadeddata', () => { if (vid.readyState >= 4) ok(); });
+    vid.addEventListener('error', () => { vidReady = false; if (pendingShow) { pendingShow = false; show(true); } });
+    vid.src = SNOOPY_URL;
+    try { vid.load(); } catch {}
+  }
   const recSeen = new Set();
   const HINT = 'Taste oder Bewegung zum Fortfahren';
   async function fillRecs() {
-    if (recBusy || recQ.length >= 3) return;
+    if (!recsOn() || recBusy || recQ.length >= 3) return;
     recBusy = true;
     const pick = a => a[Math.floor(Math.random() * a.length)];
     const arr = k => { const v = store.get(k, []); return Array.isArray(v) ? v : []; };
@@ -2058,7 +2078,7 @@ const ScreenSaver = (() => {
     if (visible && recCur && isPlayKey(ev)) { ev.preventDefault(); ev.stopImmediatePropagation(); playRec(); return; }
     activity();
   };
-  const playing = () => [...document.querySelectorAll('video')].some(v => !v.paused && !v.ended);
+  const playing = () => [...document.querySelectorAll('video:not(.saver-video)')].some(v => !v.paused && !v.ended);
   const delay = () => Math.max(1, Number(store.get('saverDelay', 5)) || 5) * 60000;
   const interval = () => Math.max(5, Number(store.get('saverInterval', 30)) || 30) * 1000;
   const pad = n => String(n).padStart(2, '0');
@@ -2197,7 +2217,7 @@ const ScreenSaver = (() => {
     dateEl  = h('div', { class:'saver-date' });
     const clockWrap = h('div', { class:'saver-clock-wrap' }, clockEl, dateEl);
     root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
-      h('div', { class:'saver-bg' }, imgA.el, imgB.el),
+      h('div', { class:'saver-bg' }, imgA.el, imgB.el, (loadVideo(), vid)),
       h('div', { class:'saver-overlay' }),
       clockWrap, recEl = h('div', { class:'srec' }, ...(order = [0, 1, 2].map(i => h('div', { class:'srec-c p' + i })))),
       blackEl = h('div', { class:'saver-black' }));
@@ -2215,7 +2235,7 @@ const ScreenSaver = (() => {
   }
 
   function nextImage() {
-    if (!root || !visible || black) return;
+    if (!root || !visible || black || root.classList.contains('vmode')) return;
     index = (index + 1) % TV_SAVER_IMAGES.length;
     const next = index % 2 ? imgB : imgA, old = index % 2 ? imgA : imgB;
     const start = () => {
@@ -2223,7 +2243,7 @@ const ScreenSaver = (() => {
       next.el.style.zIndex = 2; old.el.style.zIndex = 1;
       next.el.classList.remove('on', 'ken'); void next.el.offsetWidth;
       next.el.classList.add('on', 'ken');
-      if (recQ.length) showRec(recQ.shift()); else hideRec();
+      if (recsOn() && recQ.length) showRec(recQ.shift()); else hideRec();
       fillRecs();
       clearTimeout(old.kt);
       old.kt = setTimeout(() => {
@@ -2239,6 +2259,7 @@ const ScreenSaver = (() => {
     if (!visible) return;
     visible = false; black = false; clearTimeout(blackTimer); hideRec();
     clearTimeout(slideTimer);
+    if (vid) try { vid.pause(); } catch {}
     clearDigitTimers();
     /* Ziffern-Animationen sofort stoppen – kein Scroll beim Beenden */
     digits.forEach(d => {
@@ -2255,18 +2276,24 @@ const ScreenSaver = (() => {
   function show(force) {
     if (!force && (!store.get('saverOn', true) || playing() || appWin)) return schedule();
     ensure();
+    const vm = useVideo() && (vidReady || (!force && !visible));
+    if (useVideo() && !vidReady && !force && !visible) { pendingShow = true; return; }
     const already = visible;
     visible = true; lastHM = '';
     clearDigitTimers();
     digits.forEach(d => { d.val = -1; d.pos = MID; });
     if (!already) {
       black = false; if (root) root.classList.remove('black');
-      clearTimeout(blackTimer); blackTimer = setTimeout(goBlack, BLACK_AFTER);
+      clearTimeout(blackTimer); if (blackAfter() > 0) blackTimer = setTimeout(goBlack, blackAfter());
       index = 0;
+      root.classList.toggle('vmode', vm && vidReady);
+      if (vm && vidReady) { try { vid.currentTime = 0; const pr = vid.play(); pr && pr.catch && pr.catch(() => {}); } catch {} }
       root.style.setProperty('--kd', (interval() / 1000 + 6) + 's');
       [imgA, imgB].forEach(x => { clearTimeout(x.kt); x.el.style.zIndex = ''; x.el.classList.remove('on', 'ken'); });
+      if (!(vm && vidReady)) {
       setSlide(imgB, TV_SAVER_IMAGES[1]);
       setSlide(imgA, TV_SAVER_IMAGES[0]).then(() => { if (!visible) return; void imgA.el.offsetWidth; imgA.el.classList.add('on', 'ken'); });
+      }
     }
     root.classList.toggle('hide-clock', !store.get('saverClock', true));
     fitDigits();
@@ -2276,18 +2303,19 @@ const ScreenSaver = (() => {
       root.classList.add('show');
       setTimeout(() => rollTime(true, true), already ? 40 : 180);
     });
-    clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval());
-    fillRecs().then(() => setTimeout(() => { if (visible && !black && !recCur && recQ.length) showRec(recQ.shift()); }, 2500));
+    clearTimeout(slideTimer); if (!root.classList.contains('vmode')) slideTimer = setTimeout(nextImage, interval());
+    fillRecs().then(() => setTimeout(() => { if (visible && !black && !recCur && recsOn() && recQ.length) showRec(recQ.shift()); }, 2500));
   }
 
-  function schedule() { clearTimeout(timer); if (store.get('saverOn', true)) timer = setTimeout(show, delay()); }
+  function schedule() { clearTimeout(timer); pendingShow = false; if (store.get('saverOn', true)) { if (useVideo()) loadVideo(); timer = setTimeout(show, delay()); } }
   function activity() { if (visible) hide(); else schedule(); }
   function start() {
     ensure();
     ['pointerdown', 'click', 'mousemove'].forEach(t => document.addEventListener(t, activity, true));
     document.addEventListener('keydown', onKey, true);
     setTimeout(fillRecs, 20000);
-    document.addEventListener('play', hide, true);
+    document.addEventListener('play', ev => { if (ev.target && ev.target.classList && ev.target.classList.contains('saver-video')) return; hide(); }, true);
+    if (useVideo()) loadVideo();
     setInterval(() => { if (visible) tickClock(); }, 1000);
     schedule();
   }
@@ -2309,7 +2337,7 @@ function armTvFullscreen() {
   setTimeout(enterTvFullscreen, 80);
 }
 function navTick() {
-  if ([...document.querySelectorAll('video')].some(v => !v.paused && !v.ended)) return;
+  if ([...document.querySelectorAll('video:not(.saver-video)')].some(v => !v.paused && !v.ended)) return;
   try { navSnd.currentTime = 0; navSnd.play().catch(() => {}); } catch {}
 }
 const FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex="0"]';
@@ -3081,7 +3109,7 @@ const PLUS = (() => {
   }
   /* Globale Lautstärke: gilt für JEDES Video auf jeder Seite (Player, Vorschau, Shorts, Live) und wird an Apps im Fenster gesendet */
   const gAudio = {
-    vids() { return Array.from(document.querySelectorAll('video')); },
+    vids() { return Array.from(document.querySelectorAll('video:not(.saver-video)')); },
     ref() { const P = TV.player || (cur && cur.player), V = P && P.querySelector('video'); if (V) return V; const l = this.vids(); return l.find(v => !v.paused && !v.ended) || l[0] || null; },
     state() { const r = this.ref(); return r ? { vol:r.volume, muted:r.muted || !r.volume } : { vol:+store.get('vol', 1), muted:!!store.get('gmute', false) }; },
     apply(vol, muted) {
