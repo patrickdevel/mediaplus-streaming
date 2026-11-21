@@ -1883,3 +1883,16 @@ body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
 /* Einheitlicher Kanten-Glow auf jedem App-Symbol (wie bei Einstellungen) */
 .atile .alg::after,.xtile .alg::after,.adet .alg::after,.ahead .alg::after,.asplash .alg::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;
  box-shadow:inset 0 0 0 .12rem rgba(255,255,255,.42),inset 0 0 1.6rem rgba(255,255,255,.28)}
+
+/* Kontrollzentrum: Spotify-Karte (nur Anzeige) unter „Überrasch mich“ */
+.acc .spw{grid-column:1 / -1;max-height:0;margin-top:-1rem;opacity:0;transform:translateY(-.9rem) scale(.93);pointer-events:none;
+  transition:max-height .5s cubic-bezier(.2,.9,.3,1),margin-top .5s cubic-bezier(.2,.9,.3,1),opacity .3s ease,transform .55s cubic-bezier(.2,1.2,.3,1)}
+.acc .spw.on{max-height:7rem;margin-top:0;opacity:1;transform:none;transition-delay:0s,0s,.08s,.08s}
+.acc .spw.nt{transition:none!important}
+.acc .t.sp{cursor:default;width:100%;padding:0 1.4rem 0 1rem}
+.acc .t.sp:hover,.acc .t.sp:focus,.acc.rdy .t.sp:hover{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.26);box-shadow:0 1rem 3rem rgba(0,0,0,.28);transform:none}
+.acc .spc-in{display:flex;align-items:center;gap:.9rem;width:100%;min-width:0;transition:opacity .28s ease,transform .28s ease}
+.acc .spc-in.out{opacity:0;transform:translateX(-1.4rem)}
+.acc .spc-in.pre{transition:none;opacity:0;transform:translateX(1.4rem)}
+.acc .spc-cv{flex:none;width:4.2rem;height:4.2rem;border-radius:1.2rem;object-fit:cover;background:rgba(255,255,255,.14)}
+.acc .sp .tx{flex:1;min-width:0}
