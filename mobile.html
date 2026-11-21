@@ -437,6 +437,63 @@ a.mrow:active,button.mrow:active{transform:scale(.975);background:#fff;box-shado
 :root[data-theme="dark"] .mseg button{color:#f2f2f2}
 :root[data-theme="dark"] .mseg button.on{background:rgba(255,255,255,.22);color:#fff;box-shadow:none}
 
+/* ===== Mehr-Look auch für Shorts, Abos, Gemerkt, Verlauf, Songs, Live-TV ===== */
+:root:has(body.mehr){background:#76c8ff}
+:root[data-theme="dark"]:has(body.mehr){background:#0b1118}
+body.mehr{background:transparent}
+@media(max-width:999px){body.mehr .top{display:none}}
+body.mehr main{position:relative;z-index:1;padding:0 16px calc(48px + env(safe-area-inset-bottom,0px))}
+.mwrap.wide{max-width:1200px}.mwrap.mid{max-width:760px}
+.mglass{gap:14px;padding-top:4px;color:#111;--gl:rgba(255,255,255,.32);--gl-on:#fff;--gl-ink:#111;--gl-ic:#3b5a8a;
+ --fg-3:rgba(0,0,0,.55);--fg-4:rgba(0,0,0,.45);--border:rgba(255,255,255,.5);--border-2:rgba(255,255,255,.7);--bg-3:rgba(255,255,255,.32)}
+:root[data-theme="dark"] .mglass{color:#f2f2f2;--gl:rgba(255,255,255,.08);--gl-on:rgba(255,255,255,.22);--gl-ink:#f2f2f2;--gl-ic:#9cc3f5;
+ --fg-3:rgba(255,255,255,.6);--fg-4:rgba(255,255,255,.45);--border:rgba(255,255,255,.12);--border-2:rgba(255,255,255,.2);--bg-3:rgba(255,255,255,.1)}
+.mglass .card{background:var(--gl);border-radius:28px;padding:10px 10px 14px;animation:mIn .5s cubic-bezier(.2,.9,.2,1) both;transition:transform .28s cubic-bezier(.34,1.56,.64,1),background .2s}
+.mglass .card:active{transform:scale(.975);background:var(--gl-on)}
+.mglass .card .thumb{border-radius:20px;border:0}
+.mglass .card .meta{padding:12px 8px 0}
+.mglass .grid{gap:12px;padding-top:0}
+.mglass .empty{background:var(--gl);border-radius:28px;padding:44px 20px;color:var(--gl-ink)}
+.mglass .empty .ic{color:var(--gl-ic)}
+.mglass .btn,.mglass .chip{height:40px;padding:0 18px;border:0;border-radius:99px;background:var(--gl);color:var(--gl-ink);font-weight:600}
+.mglass .chip{height:34px;padding:0 16px;font-size:14px}
+.mglass .btn:hover,.mglass .chip:hover{background:var(--gl-on);color:var(--gl-ink)}
+.mglass .chip.active{background:var(--gl-on);color:var(--gl-ink);box-shadow:0 2px 10px rgba(10,40,90,.2)}
+.mglass .btn.primary,.mglass .btn.primary:hover{background:#3b78c2;color:#fff}
+.mglass .sinp,.mglass .lvsearch{height:52px;padding:0 20px;margin:0;border:0;border-radius:99px;background:var(--gl);color:var(--gl-ink)}
+.mglass .sinp::placeholder,.mglass .lvsearch::placeholder{color:var(--fg-3)}
+.mglass .ssearch{margin:0;align-items:center}.mglass .ssearch .btn{height:52px}
+.mglass .stabs,.mglass .lvtabs{margin:0;padding:0}
+.mglass .rowh{margin:8px 0 0;padding:0 20px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3)}
+.mglass .slist{gap:8px}
+.mglass .srow{background:var(--gl);border-radius:32px;padding:4px 8px 4px 4px;transition:transform .28s cubic-bezier(.34,1.56,.64,1),background .2s}
+.mglass .srow:active{transform:scale(.98);background:var(--gl-on)}
+.mglass .srow-a:hover{background:transparent}
+.mglass .srow-c{border-radius:50%;width:52px;height:52px}
+.mglass .srow-l{width:44px;height:44px;padding:0;background:transparent}
+.mglass .lvnow{background:var(--gl);border-radius:99px;padding:10px 18px 10px 10px}
+.mglass .lvcard{border:0;background:var(--gl);color:var(--gl-ink);border-radius:24px;transition:transform .28s cubic-bezier(.34,1.56,.64,1),background .2s}
+.mglass .lvcard:active{transform:scale(.97);background:var(--gl-on)}
+.mglass .lvcard.active{background:var(--gl-on);box-shadow:0 0 0 3px #e5484d}
+.mglass .lvtab{border:0;background:var(--gl);color:var(--gl-ink);font-weight:600;height:34px;padding:0 16px}
+.mglass .lvtab.active{background:var(--gl-on);color:var(--gl-ink);box-shadow:0 2px 10px rgba(10,40,90,.2)}
+.mglass .player{border-radius:28px;border:0;box-shadow:0 10px 30px rgba(10,40,90,.25)}
+.mglass .lvgrid{padding-top:0}
+.mglass .newb{margin-left:auto}
+.mglass .msec{padding-top:6px}
+
+/* Shorts im Mehr-Look */
+.sh:not(.tv),.sh:not(.tv) .sh-it,.sh:not(.tv) .sh-v{background:transparent}
+.sh .mbg{position:absolute}
+.sh .sh-feed{position:relative;z-index:1}
+.sh .mh{position:absolute;left:0;right:0;top:0;margin:0;z-index:8;pointer-events:none;min-height:calc(env(safe-area-inset-top,0px) + 66px);padding-bottom:10px}
+.sh .mh::before{display:none}
+.sh .mback{pointer-events:auto;background:rgba(0,0,0,.35)!important;color:#fff!important;box-shadow:none}
+.sh .mh h1{color:#fff!important;text-shadow:0 1px 8px rgba(0,0,0,.55)}
+.sh:not(.tv) .sh-b{border-radius:28px;background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.32)}
+.sh:not(.tv) .sh-b.on{background:#fff;color:#111;border-color:#fff}
+.sh-pp{border-radius:50%}.sh-tag{border-radius:99px}
+
 /* PLUS */
 .seenb{position:absolute;right:.5em;top:.5em;z-index:2;background:rgba(0,0,0,.72);color:#fff;font-size:.8em;padding:.15em .6em;border-radius:99px}
 .newb{background:var(--accent);color:#fff;font-size:.8em;padding:.15em .7em;border-radius:99px;font-weight:600}
@@ -491,7 +548,6 @@ body[data-route="home"] #bnav,body[data-route="shorts"] #bnav{display:grid}
 body[data-route="home"] main{padding-bottom:calc(var(--bn) + 24px)}
 body[data-route="home"] #toast,body[data-route="shorts"] #toast{bottom:calc(var(--bn) + 14px);z-index:80}
 body[data-route="shorts"]{overflow:hidden}
-@media(max-width:999px){html:has(body[data-route="shorts"]),body[data-route="shorts"]{background:#000}}
 .sh{position:fixed;left:0;right:0;top:0;bottom:var(--bn);z-index:60;background:#000;color:#fff}
 .sh-feed{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
 .sh-feed::-webkit-scrollbar{display:none}
@@ -1228,15 +1284,27 @@ function Channel(id) {
   Feed(host, off => search({ channel:ch, min:300, offset:off }));
 }
 
+/* Mehr-Look: Hintergrund + Header mit Zurück-Button (für Abos, Verlauf, Gemerkt, Songs, Live-TV, Shorts) */
+function mehrShell(title) {
+  const sp = document.querySelector('svg symbol') && document.querySelector('svg symbol').parentNode;
+  if (sp && !document.getElementById('i-chev-r')) sp.insertAdjacentHTML('beforeend', '<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>');
+  const head = h('header', { class:'mh' },
+    h('button', { class:'mback', type:'button', 'aria-label':'Zurück', onclick:() => { if (history.length > 1) history.back(); else location.hash = '#/'; } }, icon('left')),
+    h('h1', {}, title));
+  const onScroll = () => head.classList.toggle('stuck', window.scrollY > 6);
+  window.addEventListener('scroll', onScroll, { passive:true });
+  cleanups.push(() => window.removeEventListener('scroll', onScroll));
+  onScroll();
+  return [h('div', { class:'mbg', 'aria-hidden':'true' }, h('i'), h('i')), head];
+}
+
 function Library(tab) {
   const hist = tab !== 'saved';
   document.title = (hist ? 'Verlauf' : 'Gemerkt') + ' – Media +';
   const list = store.get(hist ? 'hist' : 'saved', []);
   const host = h('div');
-  main.append(h('div', { class:'page-h' },
-    h('h1', {}, hist ? 'Verlauf' : 'Gemerkt'),
-    h('span', { class:'grow' }),
-    list.length ? h('button', { class:'btn', onclick:() => { if (confirm((hist ? 'Verlauf' : 'Merkliste') + ' wirklich leeren?')) { store.set(hist ? 'hist' : 'saved', []); route(); } } }, icon('trash'), 'Leeren') : null), host);
+  const clr = list.length ? h('button', { class:'mrow', type:'button', onclick:() => { if (confirm((hist ? 'Verlauf' : 'Merkliste') + ' wirklich leeren?')) { store.set(hist ? 'hist' : 'saved', []); route(); } } }, icon('trash'), h('span', { class:'l' }, 'Leeren')) : '';
+  main.append(...mehrShell(hist ? 'Verlauf' : 'Gemerkt'), h('div', { class:'mwrap mglass wide' }, clr, host));
   StaticList(host, list, hist ? 'Noch nichts angesehen.' : 'Noch nichts gemerkt. Tippe beim Video auf „Merken“.');
 }
 
@@ -1628,20 +1696,21 @@ function Songs(arg) {
   const tok = routeToken, liked = arg === 'liked', q = /^q\//.test(arg) ? arg.slice(2).trim() : '';
   document.title = (liked ? 'Gemerkte Songs' : q || 'Songs') + ' – Media +';
   const likes = SC.likes(), host = h('div', { class:'slist' });
-  const clr = liked && likes.length ? h('button', { class:'btn', type:'button', onclick:() => { if (confirm('Alle gemerkten Songs entfernen?')) { store.set('scLikes', []); route(); } } }, icon('trash'), 'Leeren') : null;
-  main.append(
-    h('div', { class:'page-h' }, h('h1', {}, liked ? 'Gemerkte Songs' : 'Songs'), h('span', { class:'grow' }), clr),
+  const clr = liked && likes.length ? h('button', { class:'mrow', type:'button', onclick:() => { if (confirm('Alle gemerkten Songs entfernen?')) { store.set('scLikes', []); route(); } } }, icon('trash'), h('span', { class:'l' }, 'Leeren')) : '';
+  const wrap = h('div', { class:'mwrap mglass mid' });
+  main.append(...mehrShell(liked ? 'Gemerkte Songs' : 'Songs'), wrap);
+  wrap.append(clr,
     h('div', { class:'stabs' },
       h('a', { class:'chip' + (liked ? '' : ' active'), href:'#/songs' }, icon('search'), 'Suche'),
       h('a', { class:'chip' + (liked ? ' active' : ''), href:'#/songs/liked' }, icon('heart', liked ? 'fill' : ''), 'Gemerkt' + (likes.length ? ' (' + likes.length + ')' : ''))));
   if (liked) {
-    main.append(host);
+    wrap.append(host);
     if (!likes.length) host.append(emptyBox('heart', 'Noch keine Songs gemerkt. Tippe in den Shorts oder beim Song auf das Herz.', h('a', { class:'btn primary', href:'#/songs' }, icon('search'), 'Songs suchen')));
     else likes.forEach(t => host.append(SongRow(t)));
     return;
   }
   const inp = h('input', { class:'sinp', type:'search', placeholder:'Song oder Künstler suchen …', 'aria-label':'Songsuche', enterkeyhint:'search', autocomplete:'off', value:q });
-  main.append(h('form', { class:'ssearch', onsubmit:ev => {
+  wrap.append(h('form', { class:'ssearch', onsubmit:ev => {
     ev.preventDefault(); const v = inp.value.trim(); if (!v) return; inp.blur();
     const target = /^https?:\/\/([\w-]+\.)?soundcloud\.com\//i.test(v) ? '#/song/' + encodeURIComponent(v) : '#/songs/q/' + encodeURIComponent(v);
     if (location.hash === target) route(); else location.hash = target;
@@ -2044,6 +2113,7 @@ function route() {
   const a = parts[0] || '', arg = decodeURIComponent(parts.slice(1).join('/') || '');
   main.replaceChildren(); window.scrollTo(0, 0);
   document.body.dataset.route = a || 'home';
+  document.body.classList.toggle('mehr', ['subs', 'library', 'songs', 'live', 'shorts'].includes(a));
   if (a !== 'search') $('#q').value = '';
   switch (a) {
     case 'watch':   Watch(arg); break;
@@ -2247,7 +2317,7 @@ const PLUS = (() => {
     document.addEventListener('visibilitychange', onVis); window.addEventListener('online', onNet);
     cleanups.push(() => { gen++; clearTimeout(stallT); cur = null; document.removeEventListener('visibilitychange', onVis); window.removeEventListener('online', onNet); if (hls) hls.destroy(); video.pause(); video.removeAttribute('src'); video.load(); });
     player.append(spin);
-    main.append(h('div', { style:'max-width:1200px;margin:0 auto' }, player,
+    main.append(...mehrShell('Live-TV'), h('div', { class:'mwrap mglass wide' }, player,
       h('div', { class:'lvnow' }, nowL, h('div', { style:'min-width:0;flex:1' }, nowT, nowS), badge),
       search, tabs, grid,
       h('p', { style:'color:var(--fg-3);font-size:.85em;margin-top:1.2em' }, 'Zahlentasten 1–9 oder ↑/↓ und CH+/CH− wechseln den Sender.')));
@@ -2271,14 +2341,15 @@ const PLUS = (() => {
     store.set('subNew', ids); markNav();
   }
   function subsPage() {
-    document.title = 'Abos – Media +'; main.append(hd('Abos'));
-    const l = subs(), tok = routeToken;
-    if (!l.length) return main.append(emptyBox('plus', 'Noch keine Abos. Öffne eine Sendung und tippe auf „Abonnieren“.'));
-    l.forEach(s => {
+    document.title = 'Abos – Media +';
+    const l = subs(), tok = routeToken, wrap = h('div', { class:'mwrap mglass wide' });
+    main.append(...mehrShell('Abos'), wrap);
+    if (!l.length) return wrap.append(emptyBox('plus', 'Noch keine Abos. Öffne eine Sendung und tippe auf „Abonnieren“.'));
+    l.forEach((s, k) => {
       const c = chanById(s.ch) || { id:'', name:'ARD', short:'ARD', color:'#666' };
       const nb = h('span', { class:'newb', hidden:true }), grid = h('div', { class:'grid' });
-      main.append(h('div', { class:'page-h', style:'padding:18px 0 8px' }, Avatar(c),
-        h('a', { href:'#/show/' + s.ch + '/' + encodeURIComponent(s.topic) }, h('h2', { style:'margin:0;font-size:1.2em' }, s.topic)), nb), grid);
+      wrap.append(h('section', { class:'msec' },
+        h('a', { class:'mrow', style:'--i:' + k, href:'#/show/' + s.ch + '/' + encodeURIComponent(s.topic) }, Avatar(c), h('span', { class:'l' }, s.topic), nb, icon('chev-r', 'go')), grid));
       latest(s).then(items => {
         if (tok !== routeToken) return;
         items.slice(0, 4).forEach(x => grid.append(Card(x)));
@@ -2963,7 +3034,7 @@ const PLUS = (() => {
     let lastErr, els = [], ci = -1, loading = false, wantNext = false;
     const root = h('div', { class:'sh' + (tv ? ' tv' : '') }), feed = h('div', { class:'sh-feed' });
     const msg = h('div', { class:'sh-msg' }, 'Shorts werden geladen …');
-    root.append(feed, msg); main.append(root);
+    root.append(...(tv ? [] : mehrShell('Shorts')), feed, msg); main.append(root);
     const lab = (a, b) => tv ? b : a;
 
     function build(e) {
