@@ -2443,7 +2443,7 @@ const ScreenSaver = (() => {
   var pk = null;
   const PK_DE = { lake:'See', forest:'Wald', sunset:'Sonnenuntergang', mountains:'Berge', night:'Nacht', city:'Stadt', blue:'Blau', sun:'Sonne', deep:'Tiefer' };
   const pkName = f => f.replace(/^tv-saver-/, '').replace(/\.\w+$/, '').split('-').map(w => PK_DE[w] || w).join(' ');
-  const pkVideo = (cls, muted = true) => { const v = document.createElement('video'); v.className = 'saver-video ' + cls; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'metadata'; v.src = SNOOPY_URL; return v; };
+  const pkVideo = (cls, muted = true) => { const v = document.createElement('video'); v.className = 'saver-video ' + cls; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'metadata'; v.src = SNOOPY_URL + (cls === 'pk-th' ? '#t=1' : ''); return v; };
   function applyChoice(it) {
     clearTimeout(slideTimer);
     if (it.video) {
@@ -4273,7 +4273,7 @@ const PLUS = (() => {
 var optMenu = null;
 function closeOptMenu(refocus = true) {
   const m = optMenu; if (!m) return; optMenu = null;
-  m.el.classList.remove('show'); m.scrim.remove(); setTimeout(() => m.el.remove(), 220);
+  m.el.classList.remove('show'); m.scrim.classList.remove('show'); setTimeout(() => { m.el.remove(); m.scrim.remove(); }, 260);
   if (refocus && m.from && m.from.isConnected) { try { m.from.focus({ preventScroll:true }); } catch {} }
 }
 function optPaint() { optMenu.btns.forEach((b, i) => b.classList.toggle('on', i === optMenu.sel)); }
@@ -4310,13 +4310,13 @@ function openOptMenu(title, items, from) {
   el.style.left = x + 'px'; el.style.top = y + 'px';
   optMenu = { el, scrim, btns, items, sel:0, from };
   optPaint();
-  requestAnimationFrame(() => el.classList.add('show'));
+  requestAnimationFrame(() => { el.classList.add('show'); scrim.classList.add('show'); });
 }
 function openAppOptions(tile) {
   const a = tile && tile._app; if (!a) return;
   const items = [{ label:'Öffnen', icon:'external', fn:() => tile.click() }];
   const k = appKey(a);
-  if (store.get('apps', []).some(x => appKey(x) === k)) items.push({ label:'Deinstallieren', icon:'trash', danger:true, fn:async () => {
+  if (!a.settings && a.name !== 'Apps') items.push({ label:'Deinstallieren', icon:'trash', danger:true, fn:async () => {
     if (!(await askConfirm(a.name + ' deinstallieren?', 'Deinstallieren'))) return;
     store.set('apps', store.get('apps', []).filter(x => appKey(x) !== k));
     store.set('devapps', store.get('devapps', []).filter(x => appKey(x) !== k));
