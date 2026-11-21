@@ -2831,7 +2831,7 @@ const Welcome = (() => {
 const SysCheck = (() => {
   const FLAG = 'mp_syscheck', RELAY_URL = 'wss://relay.patrick4real.workers.dev';
   const TAG = { ok:'[ OK ]', warn:'[WARN]', fail:'[FAIL]', run:'[ .. ]', info:'[ -- ]' };
-  let active = false, launching = false, grace = false;
+  let active = false, launching = false, closing = false, grace = false;
   let root = null, body = null, hint = null, clk = null, clockT = 0, sub = null, tok = 0, mi = 0, menuBtns = [], audio = null;
 
   const flagFresh = () => { try { const t = +localStorage.getItem(FLAG); return t > 0 && Date.now() - t < 120000; } catch { return false; } };
@@ -2916,7 +2916,7 @@ const SysCheck = (() => {
   function onKey(ev) {
     if (!active) { if (grace && ev.type !== 'keydown') swallow(ev); return; }
     swallow(ev);                                   /* nichts geht an die App, kein Navigations-Sound, kein Browser-Piepen */
-    if (ev.type !== 'keydown') return;
+    if (ev.type !== 'keydown' || closing) return;
     const k = kname(ev);
     if (sub) { sub.key(k, ev); return; }
     if (k === 'up') focusItem(mi - 1);
@@ -2926,7 +2926,7 @@ const SysCheck = (() => {
     else if (k === 'back') focusItem(ITEMS.length - 1);
   }
   function runItem(i) {
-    if (!active) return;
+    if (!active || closing) return;
     if (sub) { sub.key('ok', null); return; }
     const it = ITEMS[i]; if (!it) return;
     if (it.id === 'exit') return exit();
@@ -2937,12 +2937,10 @@ const SysCheck = (() => {
   }
   function closeSub() { const s = sub; sub = null; if (s && s.close) s.close(); stopAudio(); if (hint) setHint(); }
   function exit() {
-    if (!active) return;
-    closeSub(); active = false; grace = true; clearInterval(clockT);
-    root.classList.add('out');
-    setTimeout(() => { if (root) root.remove(); root = null; }, 350);
-    setTimeout(() => { grace = false; ['keydown', 'keyup', 'keypress'].forEach(t => window.removeEventListener(t, onKey, true)); }, 400);
-    try { ScreenSaver.schedule(); } catch {}
+    if (!active || closing) return;
+    closing = true; closeSub(); clearInterval(clockT);
+    root.classList.add('off');                      /* alles ausblenden: nur noch Schwarz */
+    setTimeout(() => { clrFlag(); history.replaceState(null, '', location.href.split('#')[0]); location.reload(); }, 3500);
   }
 
   /* ---------- Ausgabe-Helfer ---------- */
