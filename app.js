@@ -597,15 +597,14 @@ function openSettings(opener) {
       TK('Beim Schließen nachfragen', 'askclose', true),
       A('App-Katalog neu laden', async () => { await fetchApps(); window._appsPaint && window._appsPaint(); toast('Katalog aktualisiert'); }),
       A('Alle Apps deinstallieren', async () => { if (await askConfirm('Alle Apps deinstallieren?', 'Deinstallieren')) { store.set('apps', []); window._appsPaint && window._appsPaint(); toast('Apps entfernt'); } }, true)]],
-    ['Spotify', [
-      TK('Karte im Bildschirmschoner', 'saverSpotify', true, saver),
-      I('Status', () => Spotify.connected() ? 'Verbunden' : 'Nicht verbunden'),
-      L('Mit Spotify verbinden', '#/spotify'),
-      A('Spotify trennen', () => { Spotify.disconnect(); toast('Spotify getrennt'); }, true)]],
     ['Zugänglichkeit', [
       L('Audiodeskription', '#/access/ad'), L('Gebärdensprache', '#/access/dgs'), L('Mit Untertitel', '#/access/ut')]],
     ['Kopplung', [
-      IS_TV ? L('Mit Handy koppeln (QR)', '#/pair') : L('An TV senden', '#/send')]],
+      IS_TV ? L('Mit Handy koppeln (QR)', '#/pair') : L('An TV senden', '#/send'),
+      TK('Spotify-Karte im Bildschirmschoner', 'saverSpotify', true, saver),
+      I('Spotify-Status', () => Spotify.connected() ? 'Verbunden' : 'Nicht verbunden'),
+      L('Spotify verbinden', '#/spotify'),
+      A('Spotify trennen', () => { Spotify.disconnect(); toast('Spotify getrennt'); }, true)]],
     ['Daten', [
       A('Exportieren (JSON)', () => PLUS.exportData()),
       A('Importieren …', () => file.click()),
