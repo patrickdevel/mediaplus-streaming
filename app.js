@@ -528,7 +528,7 @@ function openStore(opener) {
 
 /* ===== Einstellungen (nur echte Optionen) ===== */
 (function(){ if (store.get('noanim', false)) document.body.classList.add('noanim'); if (store.get('cursor', false)) document.documentElement.style.cursor = 'auto'; })();
-function openSettings(opener) {
+function openSettings(opener, opts) {
   if (layerEl) return;
   const r = opener ? opener.getBoundingClientRect() : { top:innerHeight * .42, left:innerWidth * .42, right:innerWidth * .58, bottom:innerHeight * .58 };
   const el = h('div', { class:'aset', role:'dialog', 'aria-label':'Einstellungen' });
@@ -688,6 +688,10 @@ function openSettings(opener) {
   el.addEventListener('scroll', ev => { if (ev.target !== list) { ev.target.scrollTop = 0; ev.target.scrollLeft = 0; } }, true);
   list.addEventListener('scroll', () => list.style.setProperty('--mt', list.scrollTop > 6 ? '9vh' : '0px'));
   document.body.append(el); layerEl = el; draw('fwd', 0); list.style.setProperty('--d', '120ms');
+  if (opts && opts.qr) {
+    const k = cats.findIndex(c => c[0] === 'Kopplung'), it = k >= 0 && cats[k][1].find(x => x.t === 'qr' && x.kind === opts.qr);
+    if (it) { sub = k; draw('fwd', 0); showQr(it); }
+  }
   zoomOpen(opener, () => { el.classList.add('show'); const f = list.children[0]; f && f.focus({ preventScroll:true }); });
 }
 
@@ -757,7 +761,7 @@ function openControl(opener) {
   const rnd = (ic, label, fn) => T('rnd', [icon(ic)], () => go(fn), label);
   const row = h('div', { class:'acc-row' },
     rnd('search', 'Suche', () => { location.hash = '#/suche'; }),
-    rnd('phone', IS_TV ? 'Mit Handy koppeln' : 'An TV senden', () => { location.hash = IS_TV ? '#/pair' : '#/send'; }),
+    rnd('phone', IS_TV ? 'Mit Handy koppeln' : 'An TV senden', () => { if (IS_TV) openSettings(opener, { qr:'pair' }); else location.hash = '#/send'; }),
     rnd('grid', 'Apps', () => openStore(opener)),
     rnd('settings', 'Einstellungen', () => openSettings(opener)));
   const cap = h('div', { class:'acc-cap' });
@@ -1947,7 +1951,6 @@ function route() {
     case 'shorts':  PLUS.shorts(); break;
     case 'song':    SongWatch(arg); break;
     case 'songs':   Songs(arg); break;
-    case 'plus':    PLUS.more(); break;
     case 'access':  PLUS.access(arg); break;
     case 'send':    PLUS.sendPage(); break;
     case 'pair':    PLUS.pairPage(); break;
@@ -3179,32 +3182,6 @@ const PLUS = (() => {
     r.style.setProperty('--bright', store.get('bright', 1)); r.classList.toggle('br', store.get('bright', 1) !== 1);
   }
 
-  function more() {
-    document.title = 'Mehr – Media +';
-    const B = (ic, l, fn, on) => h('button', { class:'mopt' + (on ? ' on' : ''), type:'button', onclick:fn }, icon(ic), h('span', {}, l));
-    const L = (ic, l, href) => h('a', { class:'mopt', href }, icon(ic), h('span', {}, l));
-    const SEC = (title, ...items) => h('section', { class:'msec' }, h('h2', { class:'msec-h' }, title), h('div', { class:'mgrid' }, ...items));
-    const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => {
-      try { importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
-
-    const wrap = h('div', { class:'mwrap' },
-      SEC('Entdecken',
-        L('tv', 'Live-TV', '#/live'),
-        L('shorts', 'Shorts', '#/shorts'),
-        L('refresh', 'Überrasch mich', '#/random')),
-      SEC('Zugänglichkeit',
-        L('captions', 'Audiodeskription', '#/access/ad'),
-        L('captions', 'Gebärdensprache', '#/access/dgs'),
-        L('captions', 'Mit Untertitel', '#/access/ut')),
-      SEC('Kopplung Handy ↔ TV',
-        IS_TV ? L('share', 'Mit Handy koppeln (QR)', '#/pair') : L('share', 'An TV senden', '#/send')),
-      SEC('Einstellungen', B('settings', 'Einstellungen öffnen', () => openSettings())),
-      file
-    );
-    main.append(hd('Mehr'), wrap);
-  }
-
-  
   /* ---------- Direktverbindung Handy <-> TV (WebRTC über PeerJS, Fallback ntfy) ---------- */
   const PEER_OPTS = { config: { iceCandidatePoolSize: 4, iceServers: [
     { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
@@ -3523,7 +3500,7 @@ const PLUS = (() => {
   function sendPage() {
     document.title = 'An TV senden – Media +';
     const t = store.get('tvTopic'); main.append(hd('An TV senden'));
-    if (!t) return main.append(emptyBox('share', 'Nicht gekoppelt. Scanne am TV unter „Mehr → Mit Handy koppeln“ den QR-Code.'));
+    if (!t) return main.append(emptyBox('share', 'Nicht gekoppelt. Scanne am TV unter „Einstellungen → Kopplung“ den QR-Code.'));
     const inp = h('input', { class:'pick', type:'search', autocomplete:'off', autocorrect:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'send', style:'width:100%;max-width:40em' });
     const go = () => { const v = inp.value.trim(); if (v) { sendTv({ t:'q', v }); inp.value = ''; } };
     inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
@@ -3587,8 +3564,7 @@ const PLUS = (() => {
       nav('shorts', 'Shorts', '#/shorts'),
       nav('tv', 'Live-TV', '#/live'),
       nav('plus', 'Abos', '#/subs', 'subNew'),
-      nav('refresh', 'Überrasch mich', '#/random'),
-      nav('settings', 'Mehr', '#/plus'));
+      nav('refresh', 'Überrasch mich', '#/random'));
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
       document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend', '<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></symbol>');
@@ -3910,7 +3886,7 @@ const PLUS = (() => {
     more();
   }
 
-  return { shorts, live, subsPage, access, random, more, pairPage, sendPage, sendTv, init, applyLook, exportData, importData };
+  return { shorts, live, subsPage, access, random, pairPage, sendPage, sendTv, init, applyLook, exportData, importData };
 })();
 
 (function init() {
