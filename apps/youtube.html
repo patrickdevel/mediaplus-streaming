@@ -314,6 +314,56 @@ h2{color:var(--ac);font-size:3rem;font-weight:700}
 .chhead .btn.sub{background:rgba(229,55,61,.9)}
 .chhead .btn.sub.on{background:var(--pill2)}
 .channels.big{padding:1.6rem}
+
+/* ===== Autoplay-Schalter, Ende-Screen, Empfehlungen ===== */
+.sw{display:inline-block;width:4.4rem;height:2.4rem;border-radius:99px;background:rgba(255,255,255,.3);position:relative;margin-left:1.2rem;flex:none;transition:background .2s}
+.sw b{position:absolute;top:.3rem;left:.3rem;width:1.8rem;height:1.8rem;border-radius:50%;background:#fff;transition:transform .28s var(--spr)}
+.act .sw{background:var(--ac)}
+.act .sw b{transform:translateX(2rem)}
+#pauto{padding:0 2.2rem}
+#pauto span,#rauto span{white-space:nowrap}
+#rauto{padding:0 2.6rem}
+#phint{text-align:center;font-size:1.25rem;color:rgba(255,255,255,.55);margin-top:.2rem;letter-spacing:.04em}
+
+#pl.recs #pui,#pl.ended #pui{display:none}
+#pl.recs #pclick,#pl.recs #pcen,#pl.ended #pcen{display:none!important}
+#pl.ended #fr{visibility:hidden}
+#pl.recs{background:linear-gradient(160deg,#0b1118,#0e141c 55%,#0a1216)}
+#pl.recs #fr{position:absolute;top:3rem;left:4rem;width:40rem;height:22.5rem;border-radius:1.8rem;box-shadow:0 1.6rem 4rem rgba(0,0,0,.6)}
+#ppost{display:none;position:absolute;top:3rem;left:4rem;width:40rem;height:22.5rem;border-radius:1.8rem;background:#000 center/cover no-repeat;box-shadow:0 1.6rem 4rem rgba(0,0,0,.6)}
+#ppost::after{content:'';position:absolute;inset:0;border-radius:inherit;background:rgba(0,0,0,.5)}
+#ppost::before{content:'\21BB';position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;font-size:7rem;color:#fff}
+#pl.recs.ended #ppost{display:block}
+
+#pend{position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;background:radial-gradient(60% 70% at 50% 35%,#16324a 0,#070b10 75%)}
+#pend.show{display:flex;animation:fdIn .35s ease}
+.pe-in{width:78rem}
+.pe-lab{font-size:2.8rem;font-weight:700;display:flex;align-items:baseline;gap:1.6rem;margin-bottom:2.2rem}
+.pe-lab span{font-size:2rem;color:var(--ac);font-weight:600}
+#pe-card{display:flex;gap:2.6rem;align-items:flex-start}
+#pe-card img{width:32rem;aspect-ratio:16/9;object-fit:cover;border-radius:2rem;flex:none;box-shadow:0 1.6rem 4rem rgba(0,0,0,.6)}
+.pe-tx{min-width:0}
+.pe-tx b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:2.3rem;font-weight:600;line-height:1.3}
+.pe-tx span{display:block;margin-top:.8rem;font-size:1.5rem;color:var(--tx2)}
+.pe-btns{display:flex;gap:1.6rem;margin-top:3rem}
+.pe-bar{height:.6rem;border-radius:9px;background:rgba(255,255,255,.18);margin-top:3rem;overflow:hidden}
+.pe-bar i{display:block;height:100%;width:0;background:var(--rd)}
+
+#prec{position:absolute;inset:0;display:none;flex-direction:column}
+#pl.recs #prec{display:flex}
+.rtop{flex:none;display:flex;gap:3.2rem;padding:3rem 4rem 0}
+#rvid{width:40rem;height:22.5rem;flex:none}
+.rinfo{flex:1;min-width:0;padding-top:.6rem}
+.rinfo b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:2.8rem;font-weight:700;line-height:1.25}
+.rinfo span{display:block;color:var(--tx2);font-size:1.6rem;margin-top:.8rem}
+.rbtns{display:flex;gap:1.4rem;margin-top:2.4rem;flex-wrap:wrap}
+#rscroll{flex:1;min-height:0;overflow-y:auto;padding:0 4rem 4rem}
+#rscroll h2{font-size:2.4rem;margin:1.4rem 0 .2rem 1.6rem}
+.rgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2.4rem 1.8rem;padding:1.4rem 1.6rem 2rem}
+.rgrid .card{width:auto}
+.rgrid .ti{font-size:1.4rem;margin-top:1rem}
+.rgrid .me{font-size:1.2rem}
+.rgrid .msg{grid-column:1/-1}
 </style>
 </head>
 <body>
@@ -332,10 +382,33 @@ h2{color:var(--ac);font-size:3rem;font-weight:700}
         <button id="pvol" class="pbtn" type="button" data-f="true" aria-label="Ton"></button>
         <div id="ptm"><span id="p1">0:00</span> <i>/</i> <span id="p2">0:00</span></div>
         <div class="sp"></div>
+        <button id="pauto" class="pbtn" type="button" data-f="true" aria-label="Autoplay"><span>Autoplay</span><i class="sw"><b></b></i></button>
         <button id="pspd" class="pbtn" type="button" data-f="true" aria-label="Geschwindigkeit">1×</button>
         <button id="pcapt" class="pbtn" type="button" data-f="true" aria-label="Untertitel"></button>
       </div>
+      <div id="phint">Nach unten für Empfehlungen</div>
     </div>
+  </div>
+  <div id="ppost"></div>
+  <div id="pend"><div class="pe-in">
+    <div class="pe-lab">Als Nächstes <span id="pe-cd"></span></div>
+    <div id="pe-card"></div>
+    <div class="pe-btns">
+      <button id="pe-now" class="btn pri" type="button" data-f="true">Jetzt abspielen</button>
+      <button id="pe-cancel" class="btn" type="button" data-f="true">Abbrechen</button>
+    </div>
+    <div class="pe-bar"><i id="pe-bar"></i></div>
+  </div></div>
+  <div id="prec">
+    <div class="rtop"><div id="rvid"></div>
+      <div class="rinfo"><b id="rtt"></b><span id="rau"></span>
+        <div class="rbtns">
+          <button id="rauto" class="btn" type="button" data-f="true" aria-label="Autoplay"><span>Autoplay</span><i class="sw"><b></b></i></button>
+          <button id="rrep" class="btn" type="button" data-f="true"></button>
+        </div>
+      </div>
+    </div>
+    <div id="rscroll"><h2>Empfehlungen</h2><div id="rgrid" class="rgrid"></div></div>
   </div></div>
 <div id="toast"></div>
 <script>
@@ -351,7 +424,7 @@ function h(tag, props, ...kids) {
 const store = { get(k, d) { try { const v = localStorage.getItem('yt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem('yt:' + k, JSON.stringify(v)); } catch {} } };
 let tt; const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); };
 const S = { tab:'home', last:null, col:null, colFor:null, tok:0, q:'', draft:'', tgt:null, playing:null, chanBack:null };
-const PL = { cur:0, dur:0, st:-1, hide:0, captions:false };
+const PL = { cur:0, dur:0, st:-1, hide:0, captions:false, auto:store.get('auto', true), ended:false, recs:false, endOpen:false, lastMsg:0, noEndUntil:0, recList:null, recFor:null };
 const cache = new Map();
 const fadeIn = c => { c.classList.remove('fi'); void c.offsetWidth; c.classList.add('fi'); };
 const stag = r => r.querySelectorAll('.grid,.chips,.res,.channels,.kb').forEach(p => Array.from(p.children).forEach((e, i) => e.style.setProperty('--i', Math.min(i, 18))));
@@ -415,7 +488,7 @@ function toggleSub(ch) {
   store.set('subs', l);
 }
 const contList = () => { const p = prog(); return store.get('hist', []).filter(v => { const x = p[v.videoId]; return x && x.t > 5 && x.d && x.t < x.d - 15; }); };
-const slim = v => ({ videoId:v.videoId, title:v.title, author:{ name:v.author && v.author.name }, views:{ count:v.views && v.views.count }, publishedTime:v.publishedTime, duration:{ raw:v.duration && v.duration.raw }, isLive:v.isLive });
+const slim = v => ({ videoId:v.videoId, title:v.title, author:{ name:v.author && v.author.name, id:v.author && v.author.id }, views:{ count:v.views && v.views.count }, publishedTime:v.publishedTime, duration:{ raw:v.duration && v.duration.raw }, isLive:v.isLive });
 const card = v => h('button', { class:'card', type:'button', 'data-f':true, onclick:() => play(v) },
   h('div', { class:'th' }, h('img', { src:'https://i.ytimg.com/vi/' + v.videoId + '/hqdefault.jpg', alt:'', loading:'lazy' }), v.isLive ? h('i', { class:'b live' }, 'LIVE') : v.duration && v.duration.raw ? h('i', { class:'b' }, v.duration.raw) : null, (() => { const x = prog()[v.videoId]; return x && x.d && x.t > 5 ? h('div', { class:'pb' }, h('i', { style:'width:' + Math.min(100, x.t / x.d * 100) + '%' })) : null; })()),
   h('div', { class:'tx' }, h('div', { class:'ti' }, v.title), h('div', { class:'me' }, [v.author && v.author.name, views(v.views && v.views.count), ago(v.publishedTime)].filter(Boolean).join(' • '))));
@@ -550,27 +623,29 @@ $('#fr').addEventListener('load', () => {
 });
 const uiShown = () => $('#pui').classList.contains('show');
 function hideBar() { $('#pui').classList.remove('show'); const a = document.activeElement; if (a && $('#pl').contains(a)) a.blur(); }
-function showBar() { $('#pui').classList.add('show'); clearTimeout(PL.hide); PL.hide = setTimeout(() => { if (PL.st !== 2 && !PL.drag) hideBar(); }, 4000); }
+function showBar() { if (PL.recs || PL.endOpen || PL.ended) return; $('#pui').classList.add('show'); clearTimeout(PL.hide); PL.hide = setTimeout(() => { if (PL.st !== 2 && !PL.drag) hideBar(); }, 4000); }
 function upd() {
   const f = PL.dur ? Math.min(100, PL.cur / PL.dur * 100) : 0;
   $('#pg').style.width = f + '%'; $('#knob').style.left = f + '%'; $('#pbuf').style.width = Math.min(100, PL.buf * 100) + '%';
   $('#p1').textContent = fmtT(PL.cur); $('#p2').textContent = fmtT(PL.dur);
-  setIc('pplay', PL.st === 2 ? IC.play : IC.pause); $('#pl').classList.toggle('paused', PL.st === 2);
+  setIc('pplay', PL.st === 2 || PL.st === 0 ? IC.play : IC.pause); $('#pl').classList.toggle('paused', PL.st === 2);
   setIc('pvol', PL.muted ? IC.mute : IC.vol); $('#pspd').textContent = String(PL.rate).replace('.', ',') + '×';
   $('#pcapt').classList.toggle('on', PL.captions);
 }
 function play(v) {
   const hs = store.get('hist', []).filter(x => x.videoId !== v.videoId); hs.unshift(slim(v)); store.set('hist', hs.slice(0, 40));
   const pp = prog()[v.videoId], st0 = pp && pp.t > 5 && pp.d && pp.t < pp.d - 15 ? pp.t : 0;
+  resetPl(); PL.lastMsg = Date.now(); PL.noEndUntil = Date.now() + 3000; PL.recList = null; PL.recFor = null; $('#rgrid').replaceChildren(...recSkel());
   S.playing = v; PL.cur = st0; PL.dur = pp && pp.d || 0; PL.buf = 0; PL.st = -1; PL.captions = false; PL.rate = 1; PL.muted = false;
   $('#pt').replaceChildren(h('b', {}, v.title), h('span', {}, (v.author && v.author.name) || ''));
   $('#fr').src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&start=' + st0 + '&controls=0&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&enablejsapi=1&cc_load_policy=0&fs=0&hl=de';
   $('#pl').classList.add('show'); upd(); showBar(); if (document.activeElement) document.activeElement.blur(); focusEl($('#pplay')); window.focus();
   [1500, 3000, 5000].forEach(t => setTimeout(killCaptions, t));
+  setTimeout(() => { if (S.playing === v) recsFor(v).then(l => renderRecGrid(v, l)); }, 2500);
 }
-function closePl() { saveProg(true); S.playing = null; clearTimeout(PL.hide); $('#fr').src = 'about:blank'; $('#pl').classList.remove('show', 'paused'); $('#pui').classList.remove('show'); if (document.fullscreenElement && S.fsPl) { document.exitFullscreen().catch(() => {}); S.fsPl = false; } S.last && S.last.isConnected ? focusEl(S.last) : focusEl(initial()); }
-const toggle = () => { cmd(PL.st === 1 ? 'pauseVideo' : 'playVideo'); PL.st = PL.st === 1 ? 2 : 1; upd(); showBar(); };
-const seek = d => { PL.cur = Math.max(0, Math.min(PL.dur || 1e9, PL.cur + d)); cmd('seekTo', [PL.cur, true]); upd(); showBar(); };
+function closePl() { saveProg(true); S.playing = null; resetPl(); clearTimeout(PL.hide); $('#fr').src = 'about:blank'; $('#pl').classList.remove('show', 'paused'); $('#pui').classList.remove('show'); if (document.fullscreenElement && S.fsPl) { document.exitFullscreen().catch(() => {}); S.fsPl = false; } S.last && S.last.isConnected ? focusEl(S.last) : focusEl(initial()); }
+const toggle = () => { if (PL.ended) return replay(); cmd(PL.st === 1 ? 'pauseVideo' : 'playVideo'); PL.st = PL.st === 1 ? 2 : 1; upd(); showBar(); };
+const seek = d => { if (PL.ended) return; PL.cur = Math.max(0, Math.min(PL.dur || 1e9, PL.cur + d)); cmd('seekTo', [PL.cur, true]); upd(); showBar(); };
 const captions = () => { PL.captions = !PL.captions; if (PL.captions) { cmd('loadModule', ['captions']); cmd('setOption', ['captions', 'track', { languageCode:'de' }]); } else killCaptions(); upd(); showBar(); };
 const mute = () => { PL.muted = !PL.muted; cmd(PL.muted ? 'mute' : 'unMute'); upd(); showBar(); };
 const speed = () => { PL.rate = RATES[(RATES.indexOf(PL.rate) + 1) % RATES.length]; cmd('setPlaybackRate', [PL.rate]); upd(); showBar(); };
@@ -589,22 +664,185 @@ function pmove(dir, a) {
   if (r < 0) return focusEl($('#pplay'));
   const i = R[r].indexOf(a);
   if (dir === 'left' || dir === 'right') { if (r === 1) return seek(dir === 'right' ? 10 : -10); const n = R[r][i + (dir === 'right' ? 1 : -1)]; if (n) focusEl(n); }
-  else { const nr = r + (dir === 'down' ? 1 : -1); if (R[nr]) focusEl(R[nr][0]); }
+  else { const nr = r + (dir === 'down' ? 1 : -1); if (R[nr]) focusEl(R[nr][0]); else if (dir === 'down') return enterRecs(); }
   showBar();
 }
 function playerKey(ev) {
   const k = ev.key, c = ev.keyCode, a = document.activeElement, inUI = uiShown() && a && $('#pl').contains(a) && a.matches('[data-f]');
+  const isBack = k === 'GoBack' || k === 'BrowserBack' || k === 'Escape' || k === 'Backspace' || [461, 10009, 27, 8].includes(c);
+  const dk = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
+  if (PL.endOpen) {
+    ev.preventDefault();
+    if (isBack || dk === 'down' || k === 'MediaStop' || c === 413) return cancelEnd();
+    if (k === 'Enter' || k === ' ' || c === 13 || c === 32) return a && $('#pend').contains(a) && a.matches('button') ? a.click() : endNow();
+    if (dk === 'left' || dk === 'right') focusEl(a && a.id === 'pe-now' ? $('#pe-cancel') : $('#pe-now'));
+    return;
+  }
+  if (PL.recs && isBack) { ev.preventDefault(); return PL.ended ? closePl() : exitRecs(); }
   if (k === 'GoBack' || k === 'BrowserBack' || k === 'Escape' || k === 'Backspace' || k === 'MediaStop' || [461, 10009, 27, 8, 413].includes(c)) { ev.preventDefault(); return closePl(); }
   if (k === 'MediaPlayPause' || k === 'MediaPlay' || k === 'MediaPause' || [179, 10252, 415, 19].includes(c)) { ev.preventDefault(); return toggle(); }
   if (k === 'MediaFastForward' || c === 417) { ev.preventDefault(); return seek(10); }
   if (k === 'MediaRewind' || c === 412) { ev.preventDefault(); return seek(-10); }
+  if (PL.recs && (k === 'Enter' || k === ' ' || c === 13 || c === 32)) { ev.preventDefault(); if (a && a.matches && a.matches('[data-f]') && $('#prec').contains(a)) return a.click(); return toggle(); }
   if (k === 'Enter' || k === ' ' || c === 13 || c === 32) { ev.preventDefault(); if (inUI && a.id !== 'seek') return a.click(); return toggle(); }
   const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
   if (!dir) return; ev.preventDefault();
+  if (PL.recs) return recMove(dir);
   if (inUI) return pmove(dir, a);
   if (dir === 'left') return seek(-10); if (dir === 'right') return seek(10);
   showBar(); focusEl($('#pplay'));
 }
+
+/* ===== AUTOPLAY / VIDEO-ENDE / EMPFEHLUNGEN ===== */
+const STOP = new Set('der die das und oder ein eine einer eines einem einen von mit für auf aus bei nach über unter dem den des ist sind wie was wer ich du wir ihr the and for with from this that your official offiziell video videos full hd 4k new neu'.split(' '));
+const toks = s => (String(s || '').toLowerCase().replace(/[\[(【].*?[\])】]/g, ' ').match(/[\p{L}\p{N}]{3,}/gu) || []).filter(w => !STOP.has(w));
+const RECP = new Map();
+
+function updAuto() {
+  ['pauto', 'rauto'].forEach(id => { const b = $('#' + id); if (b) { b.classList.toggle('act', !!PL.auto); b.setAttribute('aria-pressed', PL.auto ? 'true' : 'false'); } });
+}
+function toggleAuto() {
+  PL.auto = !PL.auto; store.set('auto', PL.auto); updAuto();
+  toast(PL.auto ? 'Autoplay ist an' : 'Autoplay ist aus');
+  if (!PL.recs && !PL.endOpen) showBar();
+}
+
+/* Suchanfragen: aktuelles Video + Kanal + Interessen aus dem Verlauf */
+function recQueries(v) {
+  const t = toks(v.title), a = (v.author && v.author.name) || '';
+  const hs = store.get('hist', []).filter(x => x.videoId !== v.videoId);
+  const qs = [];
+  if (t.length) qs.push(t.slice(0, 5).join(' '));
+  if (a) qs.push((a + ' ' + t.slice(0, 2).join(' ')).trim());
+  const seen = new Set([a]);
+  for (const x of hs.slice(0, 10)) {
+    const n = x.author && x.author.name;
+    if (n && !seen.has(n) && qs.length < 4) { seen.add(n); qs.push((n + ' ' + toks(x.title).slice(0, 2).join(' ')).trim()); }
+  }
+  return qs;
+}
+function buildRecs(v, lists) {
+  const hist = store.get('hist', []), pr = prog(), a = (v.author && v.author.name) || '';
+  const cur = new Set(toks(v.title));
+  const hw = new Map(); hist.slice(0, 10).forEach((x, i) => toks(x.title).forEach(w => hw.set(w, (hw.get(w) || 0) + (10 - i) / 10)));
+  const fav = new Map(); hist.slice(0, 20).forEach(x => { const n = x.author && x.author.name; if (n) fav.set(n, (fav.get(n) || 0) + 1); });
+  const subs = new Set(subsList().map(c => c.channelName));
+  const seen = new Set(hist.map(x => x.videoId));
+  const best = new Map();
+  lists.forEach((l, li) => l.forEach((x, i) => {
+    if (!x || !x.videoId || !x.title || x.videoId === v.videoId) return;
+    const n = (x.author && x.author.name) || '', w = toks(x.title);
+    let s = (1 - i / Math.max(l.length, 1)) * 2 - li * .15;
+    s += Math.min(4, w.filter(t => cur.has(t)).length * 1.2);                         // passt zum aktuellen Video
+    s += Math.min(2, w.reduce((m, t) => m + (hw.get(t) || 0), 0) * .4);               // passt zum Verlauf
+    if (n && n === a) s += 1.5;                                                       // gleicher Kanal
+    if (n && fav.has(n)) s += Math.min(3, fav.get(n)) * .4;                           // oft geschaut
+    if (n && subs.has(n)) s += 1.2;                                                   // abonniert
+    const p = pr[x.videoId];
+    if (p && p.d && p.t >= p.d - 15) s -= 6; else if (seen.has(x.videoId)) s -= 1.5;  // schon gesehen
+    if (x.isLive) s -= .5;
+    const o = best.get(x.videoId); if (!o || o.s < s) best.set(x.videoId, { x, s });
+  }));
+  const sorted = [...best.values()].sort((p, q) => q.s - p.s).map(o => o.x);
+  const cnt = new Map(), top = [], rest = [];
+  for (const x of sorted) {                                                           // max. 3 pro Kanal in den ersten 16
+    const n = (x.author && x.author.name) || '?', c = cnt.get(n) || 0;
+    if (top.length < 16 && c >= 3) rest.push(x); else { cnt.set(n, c + 1); top.push(x); }
+  }
+  return top.concat(rest).slice(0, 28);
+}
+function recsFor(v) {
+  if (RECP.has(v.videoId)) return RECP.get(v.videoId);
+  const jobs = recQueries(v).map(q => api(q).then(r => r.videos, () => []));
+  if (v.author && v.author.id) jobs.push(api('ch:' + v.author.id).then(r => r.videos, () => []));
+  const p = Promise.all(jobs).then(ls => buildRecs(v, ls)).catch(() => []).then(r => { if (!r.length) RECP.delete(v.videoId); return r; });
+  RECP.set(v.videoId, p); if (RECP.size > 20) RECP.delete(RECP.keys().next().value);
+  return p;
+}
+const recSkel = () => Array.from({ length:8 }, () => h('div', { class:'card sk' }, h('div', { class:'th' }), h('div', { class:'ti' }, '\u00a0')));
+function renderRecGrid(v, list) {
+  if (S.playing !== v) return;
+  PL.recList = list; PL.recFor = v.videoId;
+  $('#rgrid').replaceChildren(...(list.length ? list.map(card) : [h('div', { class:'msg' }, 'Keine Empfehlungen gefunden.')]));
+}
+
+/* Empfehlungs-Ansicht (Player-Elemente weg, Video läuft klein weiter) */
+function renderRecHead() {
+  const v = S.playing; if (!v) return;
+  $('#rtt').textContent = v.title; $('#rau').textContent = (v.author && v.author.name) || '';
+  $('#rrep').textContent = PL.ended ? '↻  Wiederholen' : 'Zurück zum Video';
+  updAuto();
+}
+function enterRecs() {
+  if (!S.playing || PL.recs) return;
+  closeEnd(); PL.recs = true; clearTimeout(PL.hide);
+  $('#pl').classList.add('recs'); $('#pui').classList.remove('show');
+  if (document.activeElement) document.activeElement.blur();
+  renderRecHead();
+  focusEl($('#rgrid .card[data-f]') || $('#rrep'));
+  $('#rscroll').scrollTop = 0;
+}
+function exitRecs() {
+  if (!PL.recs) return;
+  PL.recs = false; $('#pl').classList.remove('recs');
+  if (document.activeElement) document.activeElement.blur();
+  showBar(); focusEl($('#pplay'));
+}
+function recMove(dir) {
+  const a = document.activeElement, sc = $('#prec');
+  if (!a || !a.matches || !a.matches('[data-f]') || !sc.contains(a)) return focusEl($('#rgrid .card[data-f]') || $('#rrep'));
+  if (!move(dir, sc) && dir === 'up' && !PL.ended) exitRecs();
+}
+
+/* Video-Ende: Autoplay-Countdown oder direkt Empfehlungen */
+function closeEnd() { clearInterval(PL.endTm); PL.endOpen = false; $('#pend').classList.remove('show'); }
+function resetPl() { closeEnd(); PL.ended = false; PL.recs = false; $('#pl').classList.remove('recs', 'ended'); }
+function endNow() { const n = PL.endNext; closeEnd(); if (n) play(n); }
+function cancelEnd() { closeEnd(); enterRecs(); }
+function showEnd(nx) {
+  PL.endNext = nx; PL.endOpen = true; clearTimeout(PL.hide);
+  $('#pe-card').replaceChildren(
+    h('img', { src:'https://i.ytimg.com/vi/' + nx.videoId + '/hqdefault.jpg', alt:'' }),
+    h('div', { class:'pe-tx' }, h('b', {}, nx.title), h('span', {}, [nx.author && nx.author.name, views(nx.views && nx.views.count)].filter(Boolean).join(' • '))));
+  $('#pend').classList.add('show'); focusEl($('#pe-now'));
+  const T = 8000, t0 = Date.now();
+  const tick = () => {
+    const el = Date.now() - t0;
+    $('#pe-bar').style.width = Math.min(100, el / T * 100) + '%';
+    $('#pe-cd').textContent = 'in ' + Math.max(1, Math.ceil((T - el) / 1000)) + ' s';
+    if (el >= T) endNow();
+  };
+  clearInterval(PL.endTm); PL.endTm = setInterval(tick, 100); tick();
+}
+async function onEnd() {
+  const v = S.playing; if (!v || PL.ended || Date.now() < (PL.noEndUntil || 0)) return;
+  PL.ended = true; PL.st = 0; if (PL.dur) PL.cur = PL.dur;
+  saveProg(true); upd();
+  $('#pl').classList.add('ended'); $('#pl').classList.remove('paused'); $('#pui').classList.remove('show'); clearTimeout(PL.hide);
+  $('#ppost').style.backgroundImage = 'url(https://i.ytimg.com/vi/' + v.videoId + '/hqdefault.jpg)';
+  const list = PL.recFor === v.videoId && PL.recList ? PL.recList : await Promise.race([recsFor(v), new Promise(r => setTimeout(() => r([]), 4000))]);
+  if (S.playing !== v || !PL.ended) return;
+  if (PL.recFor !== v.videoId) renderRecGrid(v, list);
+  if (PL.auto && list[0] && !PL.recs) showEnd(list[0]); else enterRecs();
+}
+function replay() {
+  if (!S.playing) return;
+  closeEnd(); PL.ended = false; PL.noEndUntil = Date.now() + 2500;
+  $('#pl').classList.remove('ended', 'recs'); PL.recs = false;
+  PL.cur = 0; PL.st = 1; cmd('seekTo', [0, true]); cmd('playVideo');
+  upd(); showBar(); focusEl($('#pplay'));
+}
+$('#pauto').onclick = toggleAuto; $('#rauto').onclick = toggleAuto;
+$('#pe-now').onclick = endNow; $('#pe-cancel').onclick = cancelEnd;
+$('#rrep').onclick = () => PL.ended ? replay() : exitRecs();
+$('#pl').addEventListener('wheel', e => {
+  if (!S.playing || PL.endOpen) return;
+  if (!PL.recs && e.deltaY > 0) enterRecs();
+  else if (PL.recs && e.deltaY < 0 && !PL.ended && $('#rscroll').scrollTop <= 0) exitRecs();
+}, { passive:true });
+/* Fallback: Player meldet das Ende manchmal nicht (Zeit bleibt kurz davor stehen) */
+setInterval(() => { if (S.playing && !PL.ended && !PL.drag && PL.st === 1 && PL.dur > 5 && PL.dur - PL.cur < 1.5 && Date.now() - PL.lastMsg > 2000) onEnd(); }, 500);
+updAuto();
 
 /* ===== NACHRICHTEN ===== */
 window.addEventListener('beforeunload', () => saveProg(true));
@@ -613,15 +851,16 @@ window.addEventListener('message', ev => {
   if (typeof d === 'string' && /youtube/.test(ev.origin)) {
     try { const j = JSON.parse(d);
       if (j.event === 'infoDelivery' && j.info) {
-        const i = j.info;
-        if (i.currentTime != null && !PL.drag) PL.cur = i.currentTime;
+        const i = j.info; PL.lastMsg = Date.now();
+        if (i.currentTime != null && !PL.drag && !PL.ended) PL.cur = i.currentTime;
         if (i.duration) PL.dur = i.duration;
-        if (i.playerState != null) PL.st = i.playerState;
+        if (i.playerState != null && !PL.ended) PL.st = i.playerState;
         if (i.videoLoadedFraction != null) PL.buf = i.videoLoadedFraction;
         if (i.muted != null) PL.muted = !!i.muted;
         if (i.playbackRate) PL.rate = i.playbackRate;
-        saveProg(i.playerState === 2 || i.playerState === 0); upd(); if (i.playerState === 2) showBar();
+        saveProg(i.playerState === 2 || i.playerState === 0); upd(); if (i.playerState === 0) onEnd(); else if (i.playerState === 2) showBar();
       }
+      else if (j.event === 'onStateChange') { const st = Number(j.info); if (!isNaN(st)) { if (!PL.ended) PL.st = st; if (st === 0) onEnd(); upd(); } }
       else if (j.event === 'onError') toast('Dieses Video lässt sich hier nicht abspielen');
       else if (j.event === 'onReady' || j.event === 'onApiChange') killCaptions();
     } catch {} return;
@@ -644,10 +883,10 @@ function focusEl(el) {
   el.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' });
 }
 const initial = () => $('#nav .nv.active') || $('#nav .nv');
-function move(dir) {
+function move(dir, scope) {
   let cur = document.activeElement; if (!cur || !cur.matches || !cur.matches('[data-f]')) cur = null;
   if (!cur) return focusEl(S.last && S.last.isConnected && vis(S.last) ? S.last : initial());
-  const all = $$('[data-f]').filter(e => e !== cur && vis(e));
+  const all = $$('[data-f]', scope || document).filter(e => e !== cur && vis(e));
   const c = cur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, hz = dir === 'left' || dir === 'right';
   if (hz || S.colFor !== cur) S.col = null; if (!hz && S.col == null) S.col = cx; const colX = S.col == null ? cx : S.col;
   let best = null, bs = Infinity;
@@ -660,7 +899,8 @@ function move(dir) {
     }
     if (best) break;
   }
-  if (best) { S.colFor = best; focusEl(best); }
+  if (best) { S.colFor = best; focusEl(best); return true; }
+  return false;
 }
 function goBack() { const a = document.activeElement; if (a && a.matches && a.matches('[data-f]') && !a.matches('#nav .nv')) { focusEl(initial()); return true; } return false; }
 document.addEventListener('keydown', ev => {
@@ -678,7 +918,7 @@ document.addEventListener('keydown', ev => {
   const dir = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }[k] || ({ 37:'left', 38:'up', 39:'right', 40:'down' })[c];
   if (dir) { ev.preventDefault(); return move(dir); }
 });
-document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('[data-f]') && !e.target.matches('#nav .nv')) S.last = e.target; });
+document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('[data-f]') && !e.target.matches('#nav .nv') && !e.target.closest('#pl')) S.last = e.target; });
 ['contextmenu','dragstart'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 (() => { const w = () => { ['pointerdown','keydown','click'].forEach(t => document.removeEventListener(t, w, true)); try { const el = document.documentElement, fn = el.requestFullscreen || el.webkitRequestFullscreen; if (fn && !document.fullscreenElement) Promise.resolve(fn.call(el)).catch(() => {}); } catch {} }; ['pointerdown','keydown','click'].forEach(t => document.addEventListener(t, w, true)); })();
 
