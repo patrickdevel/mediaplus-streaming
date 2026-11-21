@@ -211,8 +211,8 @@ html.br body.home .hero .hdots,html.br body.home .hglass{transition:opacity .9s 
     el.classList.add('out');
     var v=au.volume,n=0,fade=setInterval(function(){n++;au.volume=Math.max(0,v*(1-n/9));if(n>=9){clearInterval(fade);au.pause();}},100);
     setTimeout(function(){B.active=false;el.remove();removeEventListener('resize',size);},1200);
-    /* Karussell kurz allein zeigen, dann Dock + Uhr + Drei-Punkte einfahren */
-    setTimeout(function(){tryReveal(0);},3200);
+    /* sofort beim Überblenden: Dock + Uhr + Drei-Punkte einfahren */
+    setTimeout(function(){tryReveal(0);},300);
   }
   /* während des Starts: keine Bedienung am TV */
   ['keydown','keyup','keypress','click','dblclick','pointerdown','pointerup','mousedown','mouseup','touchstart','touchend','wheel','contextmenu'].forEach(function(ev){
