@@ -1867,3 +1867,4 @@ body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
 .sck-full-l.hide{opacity:0}
 .sck-big{font-size:6vh;color:#fff;margin:1.5vh 0;min-height:7vh;font-weight:700}
 .sck-log{color:#cfd3d8;font-size:2.2vh;white-space:pre}
+#sck.off>*{opacity:0;transition:opacity .4s ease}
