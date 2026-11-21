@@ -90,6 +90,7 @@ html.br body.home .hero .hdots,html.br body.home .hglass{transition:opacity .9s 
 <div id="boot" aria-hidden="true"><canvas id="bootcv"></canvas></div>
 <script>
 (function(){
+  var sck=false;try{var f0=+localStorage.getItem('mp_syscheck');sck=f0>0&&Date.now()-f0<120000;}catch(x){}
   var root=document.documentElement;root.classList.add('bi');
   var el=document.getElementById('boot'),cv=document.getElementById('bootcv'),ctx=cv.getContext('2d');
   var B=window.BOOT={active:true,skip:function(){finish();}};
@@ -221,8 +222,12 @@ html.br body.home .hero .hdots,html.br body.home .hglass{transition:opacity .9s 
   }
   function finish(){
     if(done)return;done=true;cancelAnimationFrame(raf);
-    el.classList.add('out');
     var v=au.volume,n=0,fade=setInterval(function(){n++;au.volume=Math.max(0,v*(1-n/9));if(n>=9){clearInterval(fade);au.pause();}},100);
+    /* System Check: Animation blendet nach Schwarz aus, kurze Pause, dann öffnet das BIOS (statt der App) */
+    if(sck){cv.style.transition='opacity .6s ease';cv.style.opacity='0';
+      setTimeout(function(){B.active=false;removeEventListener('resize',size);root.classList.remove('bi');try{SysCheck.resume();}catch(x){}},1800);
+      return;}
+    el.classList.add('out');
     setTimeout(function(){B.active=false;el.remove();removeEventListener('resize',size);},1200);
     /* sofort beim Überblenden: Dock + Uhr + Drei-Punkte einfahren */
     setTimeout(function(){tryReveal(0);},300);
