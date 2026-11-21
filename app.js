@@ -923,7 +923,7 @@ function openControl(opener) {
 }
 
 /* Klick: Icon schrumpft kurz, springt dann federnd auf Vollbild, danach öffnet sich sofort die App */
-function zoomOpen(from, ready) {
+function zoomOpen(from, ready, fade = true) {   /* Blur wird nie abgebaut, sondern als Ganzes ausgefadet */
   if (!from || !from.isConnected) { requestAnimationFrame(() => ready && ready()); return; }
   const r = from.getBoundingClientRect(), lg = from.querySelector('.alg');
   const z = h('div', { class:'zoomic' }), bl = h('div', { class:'ablur' });
@@ -933,7 +933,7 @@ function zoomOpen(from, ready) {
   requestAnimationFrame(() => { z.classList.add('shr'); bl.classList.add('on'); });
   setTimeout(() => { z.classList.remove('shr'); z.classList.add('go'); z.style.cssText = 'left:0;top:0;width:100vw;height:100vh;border-radius:0'; }, 90);
   setTimeout(() => { ready && ready(); }, 520);
-  setTimeout(() => { z.classList.add('out'); bl.classList.remove('on'); }, 580);
+  setTimeout(() => { z.classList.add('out'); if (fade) { bl.style.setProperty('transition', 'opacity .4s ease', 'important'); bl.style.opacity = '0'; } else bl.classList.remove('on'); }, 580);
   setTimeout(() => { z.remove(); bl.remove(); }, 1300);
 }
 function launchApp(a, from) {
@@ -946,7 +946,7 @@ function launchApp(a, from) {
   appWin = win; win._frame = fr; win._from = from;
   history.pushState({ mpApp:1 }, '');
   const t0 = Date.now();
-  zoomOpen(from, () => win.classList.add('full'));
+  zoomOpen(from, () => win.classList.add('full'), true);   /* App: Blur nicht abbauen, sondern als Ganzes ausfaden */
   const reveal = () => { sp.classList.add('out'); try { fr.focus(); fr.contentWindow.focus(); } catch {} };
   fr.addEventListener('load', () => hookFrameKeys(fr));
   fr.onload = () => setTimeout(reveal, Math.max(0, 640 - (Date.now() - t0)));
