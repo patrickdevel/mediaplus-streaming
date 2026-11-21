@@ -1876,3 +1876,10 @@ body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
 .ablur,.ablur.on{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 .ablur{transition:background .45s ease!important}
 .ablur.on{background:rgba(0,0,0,.7)!important}
+
+/* Kein Icon: Bild-Symbol auf neutralem Verlauf */
+.alg.noicon{background:linear-gradient(145deg,#8b93a1 0%,#5b6270 50%,#343842 100%)}
+.alg.noicon svg{width:40%;height:62%;filter:drop-shadow(0 .2rem .5rem rgba(0,0,0,.35))}
+/* Einheitlicher Kanten-Glow auf jedem App-Symbol (wie bei Einstellungen) */
+.atile .alg::after,.xtile .alg::after,.adet .alg::after,.ahead .alg::after,.asplash .alg::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;
+ box-shadow:inset 0 0 0 .12rem rgba(255,255,255,.42),inset 0 0 1.6rem rgba(255,255,255,.28)}
