@@ -1913,24 +1913,26 @@ body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
 .optm-i.on{background:#fff;color:#000}
 .optm-i.danger{color:#ff6b62}.optm-i.danger.on{background:#ff453a;color:#fff}
 
-/* ===== Bildschirmschoner: Motiv-Auswahl ===== */
-.tv-saver .saver-bg{transform-origin:50% 0;transition:transform .7s cubic-bezier(.2,.8,.2,1),border-radius .7s ease,box-shadow .7s ease}
+/* ===== Bildschirmschoner: Motiv-Auswahl (nur left/top/width/height, kein transform auf dem Hintergrund) ===== */
 .tv-saver.pick{background:#0b0b0e}
-.tv-saver.pick .saver-bg{transform:translateY(6vh) scale(.5)!important;border-radius:3.2rem;box-shadow:0 3rem 8rem rgba(0,0,0,.6),0 0 0 .15rem rgba(255,255,255,.14)}
+.tv-saver .saver-bg{transition:opacity .5s ease .35s}
+.tv-saver.pick .saver-bg{opacity:0;transition:opacity .3s ease}
 .tv-saver.pick>*:not(.saver-bg):not(.saver-pick){opacity:0!important;pointer-events:none!important}
-.pk-live{position:absolute;inset:0;z-index:3;overflow:hidden;background:#000}
-.pk-live:empty{display:none}
-.pk-live>*{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:pkFade .35s ease both}
+.saver-pick{position:absolute;left:0;top:0;width:100%;height:100%;z-index:5;pointer-events:none}
+.pk-main{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background:#000;border-radius:0;transition:left .7s cubic-bezier(.2,.8,.2,1),top .7s cubic-bezier(.2,.8,.2,1),width .7s cubic-bezier(.2,.8,.2,1),height .7s cubic-bezier(.2,.8,.2,1),border-radius .7s ease,box-shadow .7s ease}
+.tv-saver.pick .pk-main{left:24vw;top:5vh;width:52vw;height:29.25vw;border-radius:3rem;box-shadow:0 3rem 8rem rgba(0,0,0,.6),0 0 0 .15rem rgba(255,255,255,.16)}
+.pk-main>*{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;display:block;animation:pkFade .35s ease both}
+.tv-saver .pk-main>.saver-video{display:block}
 @keyframes pkFade{from{opacity:0}to{opacity:1}}
-.saver-pick{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:0 4vw 4.5vh;opacity:0;transform:translateY(3rem);pointer-events:none;transition:opacity .5s ease .2s,transform .6s cubic-bezier(.2,.8,.2,1) .2s}
-.tv-saver.pick .saver-pick{opacity:1;transform:none;pointer-events:auto}
-.pk-h{font-size:1.5rem;font-weight:700;padding:0 1.2rem .2rem;letter-spacing:-.01em}
-.pk-row{position:relative;display:flex;gap:1.4rem;overflow-x:auto;overflow-y:hidden;padding:1.6rem 1.2rem 1.4rem;scrollbar-width:none}
+.pk-bottom{position:absolute;left:0;top:62vh;width:100%;height:38vh;opacity:0;transition:opacity .4s ease}
+.tv-saver.pick .pk-bottom{opacity:1;pointer-events:auto;transition:opacity .5s ease .35s}
+.pk-h{font-size:1.5rem;font-weight:700;padding:0 4vw;letter-spacing:-.01em}
+.pk-row{position:relative;overflow-x:auto;overflow-y:hidden;white-space:nowrap;padding:2.4vh 3.2vw 2vh;scrollbar-width:none;scroll-behavior:smooth}
 .pk-row::-webkit-scrollbar{display:none}
-.pk-c{position:relative;flex:0 0 18rem;border:0;background:none;color:#fff;font:inherit;text-align:left;padding:0;cursor:pointer}
-.tv-saver .pk-th{display:block;position:static;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:1.4rem;background:#222;transition:transform .2s ease,box-shadow .2s ease}
+.pk-c{position:relative;display:inline-block;vertical-align:top;white-space:normal;width:30vh;margin-right:2.4vh;border:0;background:none;color:#fff;font:inherit;text-align:left;padding:0;cursor:pointer}
+.tv-saver .pk-th{display:block;position:static;width:30vh;height:16.9vh;object-fit:cover;border-radius:1.4rem;background:#222;transition:transform .2s ease,box-shadow .2s ease}
 .pk-c.on .pk-th{transform:scale(1.07);box-shadow:0 0 0 .3rem #fff,0 1rem 3rem rgba(0,0,0,.5)}
-.pk-n{display:block;margin-top:.9rem;font-size:1.3rem;opacity:.65;padding-left:.3rem}
+.pk-n{display:block;margin-top:1.2vh;font-size:1.3rem;opacity:.65;padding-left:.3rem}
 .pk-c.on .pk-n{opacity:1;font-weight:600}
 .pk-act{position:absolute;top:.7rem;left:.7rem;z-index:2;font-style:normal;font-size:1rem;font-weight:700;padding:.2rem .7rem;border-radius:999px;background:rgba(0,0,0,.65);color:#fff}
-.pk-hint{font-size:1.1rem;opacity:.5;padding:0 1.2rem}
+.pk-hint{font-size:1.1rem;opacity:.5;padding:0 4vw}
