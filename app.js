@@ -2470,69 +2470,52 @@ const ScreenSaver = (() => {
     }
   }
   const st = (el, o) => { Object.assign(el.style, o); return el; };
+  const FILL = { position:'absolute', left:'0', top:'0', width:'100%', height:'100%', objectFit:'cover', display:'block' };
+  const pkItem = i => i === 0 ? { video:true, label:'Snoopy' } : { label:'Fotos', i:index % TV_SAVER_IMAGES.length, src:TV_SAVER_IMAGES[index % TV_SAVER_IMAGES.length] };
   function pkPaint() {
-    const { items, cards, main, row, H } = pk;
-    cards.forEach((c, i) => {
-      const on = i === pk.sel, th = c.firstChild;
-      st(th, { transform:on ? 'scale(1.07)' : 'none', boxShadow:on ? '0 0 0 ' + Math.max(3, H * .004) + 'px #fff,0 10px 30px rgba(0,0,0,.5)' : 'none' });
-      st(c.lastChild.tagName === 'SPAN' ? c.lastChild : c.children[1], { opacity:on ? '1' : '.65', fontWeight:on ? '700' : '500' });
-      const v = c.querySelector('video'); if (v) { if (on) { try { v.play().catch(() => {}); } catch {} } else { try { v.pause(); } catch {} } }
-    });
-    const c = cards[pk.sel];
-    row.scrollLeft = Math.max(0, c.offsetLeft - (row.clientWidth - c.offsetWidth) / 2);
-    const m = pkMedia(items[pk.sel]);
-    st(m, { position:'absolute', left:'0', top:'0', width:'100%', height:'100%', objectFit:'cover', display:'block' });
-    main.replaceChildren(m);
+    const m = pkMedia(pkItem(pk.sel)); st(m, FILL); pk.main.replaceChildren(m);
+    pk.label.textContent = pk.sel === 0 ? 'Snoopy' : 'Fotos';
+    pk.dots.forEach((d, i) => st(d, { width:i === pk.sel ? pk.dw * 2.6 + 'px' : pk.dw + 'px', background:i === pk.sel ? '#fff' : 'rgba(255,255,255,.35)' }));
   }
   function openPicker() {
     if (!visible || pk || black || !root) return;
     hideRec(); Spotify.run(false); clearTimeout(slideTimer); clearTimeout(blackTimer);
     const W = innerWidth, H = innerHeight, fs = Math.round(H * .026);
-    const items = [{ video:true, label:'Snoopy' }, ...TV_SAVER_IMAGES.map((f, i) => ({ src:f, i, label:pkName(f) }))];
-    const cur = root.classList.contains('vmode') ? 0 : 1 + (index % TV_SAVER_IMAGES.length);
-    const ease = 'cubic-bezier(.2,.8,.2,1)', T = '.7s ' + ease;
-    const ov = st(document.createElement('div'), { position:'fixed', left:'0', top:'0', width:'100%', height:'100%', zIndex:'100000', background:'rgba(11,11,14,0)', transition:'background .6s ease', overflow:'hidden', fontFamily:'inherit', color:'#fff' });
+    const cur = root.classList.contains('vmode') ? 0 : 1;
+    const T = '.7s cubic-bezier(.2,.8,.2,1)';
+    let mh = Math.round(H * .76), mw = Math.round(mh * 16 / 9);
+    if (mw > W * .92) { mw = Math.round(W * .92); mh = Math.round(mw * 9 / 16); }
+    const mx = Math.round((W - mw) / 2), my = Math.round(H * .04);
+    const ov = st(document.createElement('div'), { position:'fixed', left:'0', top:'0', width:'100%', height:'100%', zIndex:'100000', background:'rgba(11,11,14,0)', transition:'background .6s ease', overflow:'hidden', color:'#fff', fontFamily:'inherit' });
     const main = st(document.createElement('div'), { position:'absolute', left:'0', top:'0', width:W + 'px', height:H + 'px', overflow:'hidden', background:'#000', borderRadius:'0', boxShadow:'0 0 0 rgba(0,0,0,0)', transition:['left','top','width','height','border-radius','box-shadow'].map(p => p + ' ' + T).join(',') });
-    const cw = Math.round(H * .17 * 16 / 9), ch = Math.round(H * .17);
-    const cards = items.map((it, i) => {
-      let th;
-      if (it.video) th = pkVideo('pk-th', true); else { th = document.createElement('img'); th.src = it.src; th.alt = ''; }
-      st(th, { display:'block', position:'static', width:cw + 'px', height:ch + 'px', objectFit:'cover', borderRadius:Math.round(H * .018) + 'px', background:'#222', transition:'transform .2s ease,box-shadow .2s ease' });
-      const nm = st(document.createElement('span'), { display:'block', marginTop:Math.round(H * .012) + 'px', fontSize:Math.round(fs * .85) + 'px', paddingLeft:'4px', transition:'opacity .2s' }); nm.textContent = it.label;
-      const c = st(document.createElement('div'), { position:'relative', display:'inline-block', verticalAlign:'top', whiteSpace:'normal', width:cw + 'px', marginRight:Math.round(H * .025) + 'px', cursor:'pointer' });
-      c.append(th, nm);
-      if (i === cur) { const b = st(document.createElement('em'), { position:'absolute', left:'8px', top:'8px', fontStyle:'normal', fontSize:Math.round(fs * .7) + 'px', fontWeight:'700', padding:'2px 10px', borderRadius:'999px', background:'rgba(0,0,0,.65)' }); b.textContent = 'Aktiv'; c.append(b); }
-      c.onclick = ev => { ev.stopPropagation(); if (!pk || pk.closing) return; pk.sel = i; pkPaint(); pickKey('ok'); };
-      return c;
-    });
-    const row = st(document.createElement('div'), { overflow:'hidden', whiteSpace:'nowrap', padding:Math.round(H * .03) + 'px ' + Math.round(W * .04) + 'px ' + Math.round(H * .02) + 'px' });
-    row.append(...cards);
-    const hd = st(document.createElement('div'), { fontSize:Math.round(fs * 1.1) + 'px', fontWeight:'700', padding:'0 ' + Math.round(W * .04) + 'px' }); hd.textContent = 'Bildschirmschoner-Motiv';
-    const hint = st(document.createElement('div'), { fontSize:Math.round(fs * .75) + 'px', opacity:'.55', padding:'0 ' + Math.round(W * .04) + 'px' }); hint.textContent = '◀ ▶ auswählen  ·  OK übernehmen  ·  Zurück abbrechen';
-    const bottom = st(document.createElement('div'), { position:'absolute', left:'0', top:Math.round(H * .62) + 'px', width:'100%', opacity:'0', transition:'opacity .5s ease' });
-    bottom.append(hd, row, hint);
-    ov.append(main, bottom);
+    const info = st(document.createElement('div'), { position:'absolute', left:'0', top:(my + mh + Math.round(H * .025)) + 'px', width:'100%', textAlign:'center', opacity:'0', transition:'opacity .5s ease' });
+    const label = st(document.createElement('div'), { fontSize:Math.round(fs * 1.5) + 'px', fontWeight:'700', letterSpacing:'-.01em' });
+    const dw = Math.max(8, Math.round(H * .012));
+    const dotsEl = st(document.createElement('div'), { marginTop:Math.round(H * .018) + 'px', height:dw + 'px', display:'flex', justifyContent:'center', alignItems:'center' });
+    const dots = [0, 1].map(i => { const d = st(document.createElement('i'), { display:'block', height:dw + 'px', borderRadius:dw + 'px', margin:'0 ' + Math.round(dw * .45) + 'px', transition:'width .3s ease,background .3s ease', cursor:'pointer' }); d.onclick = ev => { ev.stopPropagation(); if (pk && !pk.closing) { pk.sel = i; pkPaint(); } }; return d; });
+    dotsEl.append(...dots);
+    const hint = st(document.createElement('div'), { marginTop:Math.round(H * .02) + 'px', fontSize:Math.round(fs * .75) + 'px', opacity:'.5' }); hint.textContent = '◀ ▶ wechseln  ·  OK übernehmen  ·  Zurück abbrechen';
+    info.append(label, dotsEl, hint);
+    main.onclick = ev => { ev.stopPropagation(); if (pk && !pk.closing) closePicker(true); };
+    ov.append(main, info);
     document.body.append(ov);
-    pk = { items, cards, main, row, el:ov, bottom, sel:cur, cur, closing:false, W, H, T };
+    pk = { main, label, dots, dw, el:ov, info, sel:cur, cur, closing:false, W, H };
     pkPaint();
     void ov.offsetWidth;
     setTimeout(() => {
       if (!pk || pk.closing) return;
-      const mh = Math.round(H * .5), mw = Math.round(mh * 16 / 9);
       st(ov, { background:'rgba(11,11,14,1)' });
-      st(main, { left:Math.round((W - mw) / 2) + 'px', top:Math.round(H * .05) + 'px', width:mw + 'px', height:mh + 'px', borderRadius:Math.round(H * .04) + 'px', boxShadow:'0 30px 80px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.16)' });
-      st(bottom, { opacity:'1' });
-      row.scrollLeft = Math.max(0, cards[cur].offsetLeft - (row.clientWidth - cards[cur].offsetWidth) / 2);
+      st(main, { left:mx + 'px', top:my + 'px', width:mw + 'px', height:mh + 'px', borderRadius:Math.round(H * .035) + 'px', boxShadow:'0 30px 80px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.16)' });
+      st(info, { opacity:'1' });
     }, 60);
   }
   function closePicker(apply) {
     if (!pk || pk.closing) return;
     pk.closing = true;
-    const p = pk, it = p.items[p.sel];
-    if (apply && p.sel !== p.cur) applyChoice(it);
-    else if (!apply) { const m = pkMedia(p.items[p.cur]); st(m, { position:'absolute', left:'0', top:'0', width:'100%', height:'100%', objectFit:'cover', display:'block' }); p.main.replaceChildren(m); }
-    p.cards.forEach(c => { const v = c.querySelector('video'); if (v) { try { v.pause(); } catch {} } });
-    st(p.bottom, { opacity:'0' });
+    const p = pk;
+    if (apply && p.sel !== p.cur) applyChoice(pkItem(p.sel));
+    else if (!apply) { const m = pkMedia(pkItem(p.cur)); st(m, FILL); p.main.replaceChildren(m); }
+    st(p.info, { opacity:'0' });
     st(p.main, { left:'0', top:'0', width:p.W + 'px', height:p.H + 'px', borderRadius:'0', boxShadow:'0 0 0 rgba(0,0,0,0)' });
     setTimeout(() => { if (p.el) st(p.el, { background:'rgba(11,11,14,0)' }); }, 500);
     if (visible) {
@@ -2546,7 +2529,7 @@ const ScreenSaver = (() => {
     if (!pk) return false;
     if (pk.closing) return true;
     if (k === 'left' || k === 'up') { if (pk.sel > 0) { pk.sel--; pkPaint(); navTick(); } }
-    else if (k === 'right' || k === 'down') { if (pk.sel < pk.items.length - 1) { pk.sel++; pkPaint(); navTick(); } }
+    else if (k === 'right' || k === 'down') { if (pk.sel < 1) { pk.sel++; pkPaint(); navTick(); } }
     else if (k === 'ok' || k === 'pp') closePicker(true);
     else if (k === 'back' || k === 'home' || k === 'menu' || k === 'settings') closePicker(false);
     return true;
