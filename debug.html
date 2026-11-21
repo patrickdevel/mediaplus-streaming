@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#000000">
+<title>Media+ Developer Utility</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M14 7h4v7h7v4h-7v7h-4v-7H7v-4h7z' fill='white'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000}
+body{color:#cfd3d8;font:16px/1.4 ui-monospace,"Roboto Mono","Courier New",monospace}
+#dev{position:fixed;inset:0;display:flex;flex-direction:column;padding:22px 32px;background:#000}
+.hd{display:flex;gap:24px;align-items:baseline;border-bottom:3px solid #cfd3d8;padding-bottom:10px;letter-spacing:.06em}
+.hd b{color:#fff}
+.hd .st{color:#8a9099}
+.hd .clk{margin-left:auto;color:#8a9099}
+.main{flex:1;min-height:0;display:flex;gap:32px;margin:20px 0}
+.menu{flex:none;width:280px;display:flex;flex-direction:column;gap:4px;border-right:2px solid #3a3f46;padding-right:20px}
+.m{appearance:none;-webkit-appearance:none;background:none;border:0;outline:0;font:inherit;text-align:left;width:100%;padding:7px 12px;color:#cfd3d8;cursor:pointer;border-radius:0}
+.m.ex{margin-top:4px}
+.m.on,.m:focus{background:#e6e9ed;color:#000}
+.m[disabled]{color:#555;cursor:not-allowed}
+.body{flex:1;min-width:0;overflow:auto;padding-right:8px}
+.t{color:#fff;font-weight:700;font-size:21px;margin:0 0 12px;letter-spacing:.04em;text-transform:uppercase}
+.n{color:#cfd3d8;margin:0 0 12px;max-width:72ch}
+.n.dim{color:#8a9099}
+.sec{margin:18px 0 8px;color:#fff;border-bottom:2px dashed #555;padding-bottom:4px;text-transform:uppercase;letter-spacing:.08em;font-size:15px}
+.r{display:flex;gap:16px;padding:2px 0}
+.s{flex:none;width:7.5ch;font-weight:700;color:#8a9099}
+.r[data-st=ok] .s{color:#6fdc8c}
+.r[data-st=warn] .s{color:#ffcc4d}
+.r[data-st=fail] .s{color:#ff5f5f}
+.r[data-st=fail] .v{color:#ff9a9a}
+.r[data-st=run] .s{animation:blink 1s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+.l{flex:none;width:30%;min-width:12ch;color:#aeb4bb}
+.v{flex:1;min-width:0;color:#fff;word-break:break-word}
+form{max-width:640px}
+label{display:block;margin:14px 0 4px;color:#aeb4bb;text-transform:uppercase;letter-spacing:.06em;font-size:13px}
+input,textarea{width:100%;font:inherit;color:#fff;background:#0b0d10;border:2px solid #3a3f46;border-radius:0;padding:8px 10px;outline:0}
+input:focus,textarea:focus{border-color:#e6e9ed;background:#12151a}
+textarea{resize:vertical;min-height:74px}
+input.code{font-size:26px;letter-spacing:.18em;text-transform:uppercase;max-width:14ch;width:14ch;text-align:center}
+.btn{appearance:none;-webkit-appearance:none;font:inherit;background:none;color:#cfd3d8;border:2px solid #cfd3d8;padding:8px 18px;margin:16px 14px 0 0;cursor:pointer;border-radius:0;letter-spacing:.06em}
+.btn:hover:not([disabled]),.btn:focus{background:#e6e9ed;color:#000;outline:0}
+.btn[disabled]{color:#555;border-color:#3a3f46;cursor:not-allowed}
+.btn.dng{border-color:#ff5f5f;color:#ff9a9a}
+.btn.dng:hover,.btn.dng:focus{background:#ff5f5f;color:#000}
+.prev{display:flex;align-items:center;gap:16px;margin-top:14px}
+.prev img{width:72px;height:72px;object-fit:cover;border:2px solid #3a3f46;background:#0b0d10}
+.prev img[hidden]{display:none}
+.app{display:flex;align-items:center;gap:16px;padding:10px 0;border-bottom:1px dashed #3a3f46}
+.app img{width:56px;height:56px;object-fit:cover;border:2px solid #3a3f46;background:#0b0d10;flex:none}
+.app .ph{width:56px;height:56px;border:2px solid #3a3f46;display:grid;place-items:center;color:#8a9099;font-size:22px;flex:none}
+.app .i{flex:1;min-width:0}
+.app .i b{color:#fff;display:block}
+.app .i span{display:block;color:#8a9099;word-break:break-all;font-size:14px}
+.app .btn{margin:0}
+.ft{border-top:3px solid #cfd3d8;padding-top:10px;color:#8a9099;display:flex;gap:28px;flex-wrap:wrap;font-size:14px}
+.log{margin-top:16px}
+@media (max-width:760px){#dev{padding:14px}.main{flex-direction:column;gap:14px}.menu{width:auto;flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:2px solid #3a3f46;padding:0 0 10px}.m{width:auto}.l{width:40%}}
+</style>
+</head>
+<body>
+<div id="dev">
+  <div class="hd"><b>MEDIA+ DEVELOPER UTILITY</b><span class="st">v1.0</span><span class="st" id="conn"></span><span class="clk" id="clk"></span></div>
+  <div class="main"><div class="menu" id="menu"></div><div class="body" id="body"></div></div>
+  <div class="ft"><span>UP/DOWN  Auswählen</span><span>ENTER  Öffnen</span><span>TAB  Felder wechseln</span><span>ESC  Zurück zum Menü</span></div>
+</div>
+<script>
+(function(){
+  'use strict';
+  var RELAY = 'wss://relay.patrick4real.workers.dev';
+  var TAG = { ok:'[ OK ]', warn:'[WARN]', fail:'[FAIL]', run:'[ .. ]', info:'[ -- ]' };
+  var $ = function(id){ return document.getElementById(id); };
+  var S = { ws:null, code:'', want:false, state:'off', apps:[], pend:{}, fails:0, pingT:0, retryT:0, tvName:'' };
+
+  function h(tag, props){
+    var e = document.createElement(tag), i, k, c;
+    for (k in (props || {})) {
+      if (k === 'class') e.className = props[k];
+      else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), props[k]);
+      else e.setAttribute(k, props[k]);
+    }
+    for (i = 2; i < arguments.length; i++) { c = arguments[i]; if (c == null) continue; e.append(c.nodeType ? c : document.createTextNode(c)); }
+    return e;
+  }
+  function row(st, label, val){
+    var s = h('span', { 'class':'s' }), v = h('span', { 'class':'v' }), el = h('div', { 'class':'r' }, s, h('span', { 'class':'l' }, label), v);
+    var set = function(st2, val2){ el.dataset.st = st2; s.textContent = TAG[st2]; if (val2 !== undefined) v.textContent = val2 == null ? '' : String(val2); };
+    set(st, val); set.el = el; return set;
+  }
+
+  /* ---------- Verbindung (Relay) ---------- */
+  function rid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function req(o, tmo){
+    return new Promise(function(res, rej){
+      if (!S.ws || S.ws.readyState !== 1) return rej(new Error('Keine Verbindung zum Relay'));
+      var i = rid(), to = setTimeout(function(){ delete S.pend[i]; rej(new Error('TV antwortet nicht')); }, tmo || 6000);
+      S.pend[i] = function(d){ clearTimeout(to); delete S.pend[i]; res(d); };
+      var m = { t:'dev', s:'pc', i:i }; for (var k in o) m[k] = o[k];
+      try { S.ws.send(JSON.stringify(m)); } catch (e) { clearTimeout(to); delete S.pend[i]; rej(e); }
+    });
+  }
+  function setState(st){ S.state = st; paintConn(); refresh(); }
+  function gotTv(d){
+    S.fails = 0; if (d.name) S.tvName = d.name;
+    if (d.apps) S.apps = d.apps;
+    if (S.state !== 'on') setState('on'); else if (view === 'apps') draw();
+  }
+  function open(){
+    var w = S.ws = new WebSocket(RELAY + '/?t=' + encodeURIComponent('mpdev' + S.code.toLowerCase()));
+    w.onopen = function(){ hello(); };
+    w.onmessage = function(ev){
+      var d; try { d = JSON.parse(ev.data); } catch (e) { return; }
+      if (!d || d.t !== 'dev' || d.s !== 'tv') return;
+      if (d.r && S.pend[d.r]) S.pend[d.r](d);
+    };
+    w.onclose = function(){ if (S.ws === w) { S.ws = null; if (S.want) { setState('lost'); clearTimeout(S.retryT); S.retryT = setTimeout(open, 2000); } } };
+    w.onerror = function(){ try { w.close(); } catch (e) {} };
+  }
+  function hello(){
+    return req({ a:'hello' }, 6000).then(function(d){ gotTv(d); }, function(){ setState(S.want ? 'wait' : 'off'); });
+  }
+  function connect(code){
+    code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length !== 8) return false;
+    disconnect(true); S.code = code; S.want = true; S.fails = 0;
+    try { localStorage.setItem('mpdev_code', code); } catch (e) {}
+    setState('connecting'); open();
+    clearInterval(S.pingT);
+    S.pingT = setInterval(function(){
+      if (!S.want) return;
+      if (!S.ws) return;
+      req({ a:'ping' }, 5000).then(gotTv, function(){ if (++S.fails >= 2 && S.state === 'on') setState('lost'); });
+    }, 8000);
+    return true;
+  }
+  function disconnect(keepCode){
+    S.want = false; clearInterval(S.pingT); clearTimeout(S.retryT);
+    var w = S.ws; S.ws = null; try { w && w.close(); } catch (e) {}
+    S.pend = {}; S.apps = [];
+    if (!keepCode) { S.code = ''; try { localStorage.removeItem('mpdev_code'); } catch (e) {} }
+    setState('off');
+  }
+  var connected = function(){ return S.state === 'on'; };
+
+  /* ---------- Oberfläche ---------- */
+  var ITEMS = [
+    { id:'connect', label:'Mit TV verbinden' },
+    { id:'install', label:'App installieren', need:true },
+    { id:'apps',    label:'Installierte Apps', need:true },
+    { id:'about',   label:'Hilfe' },
+    { id:'off',     label:'Trennen', ex:true }
+  ];
+  var view = 'connect', btns = [], body = $('body');
+
+  function paintConn(){
+    var t = { off:'NICHT VERBUNDEN', connecting:'VERBINDE …', wait:'KEINE ANTWORT VOM TV', on:'VERBUNDEN', lost:'VERBINDUNG VERLOREN' }[S.state];
+    $('conn').textContent = t + (S.state === 'on' && S.tvName ? ' · ' + S.tvName : '');
+  }
+  function refresh(){
+    btns.forEach(function(b, i){ var it = ITEMS[i]; b.disabled = !!(it.need && !connected()); });
+    if ((view === 'install' || view === 'apps') && !connected()) { go('connect'); return; }
+    draw();
+  }
+  function menu(){
+    var m = $('menu');
+    btns = ITEMS.map(function(it){
+      return h('button', { 'class':'m' + (it.ex ? ' ex' : ''), type:'button', onclick:function(){ if (it.id === 'off') { disconnect(); go('connect'); } else go(it.id); } }, it.label);
+    });
+    m.append.apply(m, btns);
+    m.addEventListener('keydown', function(ev){
+      var i = btns.indexOf(document.activeElement); if (i < 0) return;
+      var d = ev.key === 'ArrowDown' ? 1 : ev.key === 'ArrowUp' ? -1 : 0; if (!d) return;
+      ev.preventDefault();
+      for (var n = 1; n <= btns.length; n++) { var j = (i + d * n + btns.length * 2) % btns.length; if (!btns[j].disabled) { btns[j].focus(); break; } }
+    });
+  }
+  function go(id){
+    view = id;
+    btns.forEach(function(b, i){ b.classList.toggle('on', ITEMS[i].id === id); });
+    draw(true);
+  }
+  function draw(first){
+    var fn = { connect:vConnect, install:vInstall, apps:vApps, about:vAbout }[view];
+    if (!fn) return;
+    /* Eingaben im Installieren-Formular nicht wegwerfen, wenn nur der Status wechselt */
+    if (!first && view === 'install' && body.querySelector('form')) return;
+    if (!first && view === 'connect' && body.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;
+    body.replaceChildren(); fn();
+  }
+
+  function vConnect(){
+    body.append(h('div', { 'class':'t' }, 'Mit TV verbinden'),
+      h('p', { 'class':'n' }, 'Am TV: Einstellungen → Info → 5× auf „Netzwerk“ tippen → Entwickleroptionen → Wireless Debugging aktivieren. Dort erscheint der Kopplungscode.'));
+    var inp = h('input', { 'class':'code', type:'text', maxlength:'9', autocomplete:'off', spellcheck:'false', placeholder:'XXXX-XXXX', 'aria-label':'Kopplungscode' });
+    try { inp.value = S.code ? S.code.replace(/(.{4})(?=.)/g, '$1-') : (localStorage.getItem('mpdev_code') || '').replace(/(.{4})(?=.)/g, '$1-'); } catch (e) {}
+    var msg = h('div', { 'class':'log' });
+    var go1 = function(){
+      if (!connect(inp.value)) { msg.replaceChildren(row('fail', 'Kopplungscode', 'Der Code hat 8 Zeichen (Buchstaben/Ziffern).').el); inp.focus(); }
+    };
+    inp.addEventListener('keydown', function(ev){ if (ev.key === 'Enter') { ev.preventDefault(); go1(); } else if (ev.key === 'Escape') btns[0].focus(); });
+    inp.addEventListener('input', function(){
+      var c = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+      inp.value = c.replace(/(.{4})(?=.)/g, '$1-');
+    });
+    body.append(h('label', {}, 'Kopplungscode'), inp,
+      h('div', {}, h('button', { 'class':'btn', type:'button', onclick:go1 }, '[ VERBINDEN ]')));
+    var stl = { off:['info', 'nicht verbunden'], connecting:['run', 'verbinde …'], wait:['fail', 'TV antwortet nicht – Code prüfen und Wireless Debugging am TV aktivieren'], on:['ok', 'verbunden'], lost:['warn', 'Verbindung verloren – versuche erneut …'] }[S.state];
+    body.append(h('div', { 'class':'sec' }, 'Status'), row(stl[0], 'Verbindung', stl[1]).el);
+    if (S.state === 'on') { body.append(row('info', 'Gerät', S.tvName || 'Media+ TV').el, row('info', 'Eigene Apps', S.apps.length).el); }
+    body.append(msg);
+    setTimeout(function(){ if (view === 'connect') inp.focus(); }, 0);
+  }
+
+  function vInstall(){
+    body.append(h('div', { 'class':'t' }, 'App installieren'),
+      h('p', { 'class':'n' }, 'Trage deine App ein. Sie erscheint danach in der App-Leiste am TV. Die URL muss mit http:// oder https:// beginnen (auf einem https-TV am besten https).'));
+    var name = h('input', { type:'text', maxlength:'40', autocomplete:'off', placeholder:'Meine App', required:'required' });
+    var url = h('input', { type:'url', autocomplete:'off', spellcheck:'false', placeholder:'https://meine-app.vercel.app/', required:'required' });
+    var logo = h('input', { type:'url', autocomplete:'off', spellcheck:'false', placeholder:'https://…/logo.png (optional)' });
+    var desc = h('textarea', { maxlength:'200', placeholder:'Kurze Beschreibung (optional)' });
+    var img = h('img', { alt:'', hidden:'hidden' });
+    var prevT = 0;
+    logo.addEventListener('input', function(){
+      clearTimeout(prevT); prevT = setTimeout(function(){ var u = logo.value.trim(); if (/^https?:\/\//i.test(u)) { img.src = u; } else { img.hidden = true; img.removeAttribute('src'); } }, 350);
+    });
+    img.onload = function(){ img.hidden = false; }; img.onerror = function(){ img.hidden = true; };
+    var log = h('div', { 'class':'log' });
+    var send = h('button', { 'class':'btn', type:'submit' }, '[ INSTALLIEREN ]');
+    var form = h('form', { novalidate:'novalidate' },
+      h('label', {}, 'Name *'), name, h('label', {}, 'App-URL *'), url, h('label', {}, 'Bild-URL'), logo,
+      h('div', { 'class':'prev' }, img), h('label', {}, 'Beschreibung'), desc, h('div', {}, send), log);
+    form.addEventListener('keydown', function(ev){ if (ev.key === 'Escape') btns[1].focus(); });
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var o = { name:name.value.trim(), url:url.value.trim(), logo:logo.value.trim(), description:desc.value.trim() };
+      log.replaceChildren();
+      if (!o.name) { log.append(row('fail', 'Name', 'fehlt').el); name.focus(); return; }
+      if (!/^https?:\/\/\S+$/i.test(o.url)) { log.append(row('fail', 'App-URL', 'ungültig – muss mit http:// oder https:// beginnen').el); url.focus(); return; }
+      if (o.logo && !/^https?:\/\/\S+$/i.test(o.logo)) { log.append(row('fail', 'Bild-URL', 'ungültig').el); logo.focus(); return; }
+      if (/^http:\/\//i.test(o.url) && location.protocol === 'https:') log.append(row('warn', 'Hinweis', 'http-Apps werden von einem https-TV evtl. blockiert.').el);
+      var st = row('run', 'Sende an TV', o.name); log.append(st.el); send.disabled = true;
+      req({ a:'install', app:o }, 10000).then(function(d){
+        if (d.ok) { st('ok', '„' + o.name + '“ wurde installiert'); gotTv(d); } else st('fail', d.err || 'TV hat die App abgelehnt');
+      }, function(e){ st('fail', e.message); }).then(function(){ send.disabled = false; });
+    });
+    body.append(form);
+    setTimeout(function(){ if (view === 'install') name.focus(); }, 0);
+  }
+
+  function vApps(){
+    body.append(h('div', { 'class':'t' }, 'Installierte Apps'));
+    var list = h('div'), st = row('run', 'Lade Liste', '');
+    body.append(h('p', { 'class':'n' }, 'Nur Apps, die du über diese Seite installiert hast.'), st.el, list);
+    var paint = function(){
+      list.replaceChildren();
+      if (!S.apps.length) { list.append(h('p', { 'class':'n dim' }, 'Noch keine eigenen Apps installiert.')); return; }
+      S.apps.forEach(function(a){
+        var th = a.logo ? h('img', { src:a.logo, alt:'', referrerpolicy:'no-referrer' }) : h('div', { 'class':'ph' }, (a.name || '?').charAt(0).toUpperCase());
+        if (a.logo) th.onerror = function(){ th.replaceWith(h('div', { 'class':'ph' }, (a.name || '?').charAt(0).toUpperCase())); };
+        var del = h('button', { 'class':'btn dng', type:'button', onclick:function(){
+          if (!confirm('„' + a.name + '“ vom TV deinstallieren?')) return;
+          del.disabled = true; var s2 = row('run', 'Deinstalliere', a.name); list.prepend(s2.el);
+          req({ a:'remove', key:a.key }, 8000).then(function(d){ if (d.ok) { gotTv(d); } else { s2('fail', d.err || 'Fehlgeschlagen'); del.disabled = false; } },
+            function(e){ s2('fail', e.message); del.disabled = false; });
+        } }, '[ DEINSTALLIEREN ]');
+        list.append(h('div', { 'class':'app' }, th, h('div', { 'class':'i' }, h('b', {}, a.name), h('span', {}, a.url), a.description ? h('span', {}, a.description) : null), del));
+      });
+    };
+    req({ a:'list' }, 6000).then(function(d){ S.apps = d.apps || []; st.el.remove(); paint(); }, function(e){ st('fail', e.message); paint(); });
+  }
+
+  function vAbout(){
+    body.append(h('div', { 'class':'t' }, 'Hilfe'),
+      h('div', { 'class':'sec' }, 'So funktioniert es'),
+      h('p', { 'class':'n' }, '1. Am TV in den Einstellungen unter „Info“ fünfmal hintereinander auf „Netzwerk“ tippen. Danach bist du Entwickler.'),
+      h('p', { 'class':'n' }, '2. Unter „Info → Entwickleroptionen“ Wireless Debugging aktivieren und die Rückfrage bestätigen.'),
+      h('p', { 'class':'n' }, '3. Den angezeigten Kopplungscode hier eingeben. Bei jedem erneuten Aktivieren gibt es einen neuen Code.'),
+      h('p', { 'class':'n' }, '4. Unter „App installieren“ Name, App-URL, Bild-URL und Beschreibung eintragen. Unter „Installierte Apps“ kannst du sie wieder entfernen.'),
+      h('div', { 'class':'sec' }, 'Hinweis'),
+      h('p', { 'class':'n dim' }, 'Wer den Kopplungscode kennt, kann Apps auf dem TV installieren. Deaktiviere Wireless Debugging, wenn du es nicht brauchst.'));
+  }
+
+  document.addEventListener('keydown', function(ev){
+    if (ev.key === 'Escape' && !btns.includes(document.activeElement)) { var i = ITEMS.findIndex(function(x){ return x.id === view; }); (btns[i] || btns[0]).focus(); }
+  });
+  var tick = function(){ $('clk').textContent = new Date().toLocaleTimeString('en-GB'); };
+  setInterval(tick, 1000); tick();
+
+  menu(); paintConn(); refresh(); go('connect');
+  try { var saved = localStorage.getItem('mpdev_code'); if (saved && saved.length === 8) { connect(saved); go('connect'); } } catch (e) {}
+})();
+</script>
+</body>
+</html>
