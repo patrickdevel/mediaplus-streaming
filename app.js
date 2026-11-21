@@ -2003,18 +2003,37 @@ const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-s
 const Spotify = (() => {
   let tok = '', exp = 0, now = null, pollT = 0, busy = false, card = null, key = '';
   const connected = () => !!store.get('spRT', '') && !!store.get('spCid', '');
+  let pr = null, tickT = 0, bar = null, inner = null, swapT = 0, lastPoll = 0;
+  const SPI = '<svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true"><defs><mask id="spm"><rect width="24" height="24" fill="#fff"/><path d="M5.6 9.2c4.3-1.2 9.2-.8 13 1.4M6.4 12.7c3.5-.9 7.2-.6 10.3 1.2M7.2 16c2.7-.6 5.4-.4 7.8.9" fill="none" stroke="#000" stroke-width="1.7" stroke-linecap="round"/></mask></defs><circle cx="12" cy="12" r="11" fill="currentColor" mask="url(#spm)"/></svg>';
+  function fill() {
+    const ic = h('span', { class:'sp-ic' }); ic.innerHTML = SPI;
+    inner.replaceChildren(now.cover ? h('img', { class:'sp-cv', src:now.cover, alt:'' }) : h('div', { class:'sp-cv ph' }),
+      h('div', { class:'sp-tx' }, h('div', { class:'sp-l' }, ic, h('span', {}, 'Spotify')), h('div', { class:'sp-t' }, now.title), h('div', { class:'sp-a' }, now.artist)));
+    bar.style.transition = 'none'; bar.style.transform = 'scaleX(0)'; void bar.offsetWidth; bar.style.transition = '';
+    tick();
+  }
+  function tick() {
+    if (!bar || !pr || !pr.dur) return;
+    const el = pr.ms + (Date.now() - pr.at);
+    bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, el / pr.dur)) + ')';
+    if (el > pr.dur + 800 && !busy && Date.now() - lastPoll > 2500) poll();
+  }
   function paint() {
     if (!card) return;
+    if (!inner) { inner = h('div', { class:'sp-in' }); bar = h('i', {}); card.append(inner, h('div', { class:'sp-bar' }, bar)); }
     const ok = now && store.get('saverSpotify', true) !== false;
     if (ok) {
       const k = now.title + '|' + now.artist + '|' + now.cover;
       if (k !== key) {
-        key = k;
-        card.replaceChildren(now.cover ? h('img', { class:'sp-cv', src:now.cover, alt:'' }) : h('div', { class:'sp-cv ph' }),
-          h('div', { class:'sp-tx' }, h('div', { class:'sp-l' }, 'Spotify'), h('div', { class:'sp-t' }, now.title), h('div', { class:'sp-a' }, now.artist)));
+        const first = !key || !card.classList.contains('on');
+        key = k; clearTimeout(swapT);
+        if (first) fill();
+        else { card.classList.add('swap'); swapT = setTimeout(() => { fill(); card.classList.remove('swap'); }, 280); }
       }
-    }
+      if (!tickT) tickT = setInterval(tick, 500);
+    } else { clearInterval(tickT); tickT = 0; }
     card.classList.toggle('on', !!ok);
+    if (!ok) { clearTimeout(swapT); card.classList.remove('swap'); setTimeout(() => { if (!card.classList.contains('on')) key = ''; }, 900); }
   }
   async function token() {
     if (tok && Date.now() < exp - 30000) return tok;
@@ -2028,7 +2047,7 @@ const Spotify = (() => {
     return tok;
   }
   async function poll() {
-    if (busy) return; busy = true;
+    if (busy) return; busy = true; lastPoll = Date.now();
     try {
       const t = await token();
       if (!t) { now = null; return; }
@@ -2040,6 +2059,7 @@ const Spotify = (() => {
       if (!j.is_playing || !it || !it.name) { now = null; return; }
       const imgs = (it.album && it.album.images) || it.images || (it.show && it.show.images) || [];
       now = { title:it.name, artist:(it.artists || []).map(a => a.name).join(', ') || (it.show && it.show.publisher) || '', cover:(imgs[1] || imgs[0] || {}).url || '' };
+      pr = { ms:j.progress_ms || 0, dur:it.duration_ms || 0, at:Date.now() };
     } catch { now = null; }
     finally { busy = false; paint(); }
   }
