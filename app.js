@@ -2386,7 +2386,7 @@ const ScreenSaver = (() => {
   function hide() {
     if (!visible) return;
     visible = false; black = false; clearTimeout(blackTimer); hideRec(); Spotify.run(false);
-    if (pk) { root.classList.remove('pick'); pk.live.remove(); pk.el.remove(); pk = null; }
+    if (pk) { root.classList.remove('pick'); pk.el.remove(); pk = null; }
     clearTimeout(slideTimer);
     if (vid) { try { vid.pause(); } catch {} prepareStart(); }
     clearDigitTimers();
@@ -2439,11 +2439,15 @@ const ScreenSaver = (() => {
   }
 
 
-  /* ===== Motiv-Auswahl (Handy: Hamburger halten): Bild schrumpft, Vorschau-Liste unten, OK übernimmt – Bildschirmschoner bleibt an ===== */
+  /* ===== Motiv-Auswahl (Handy: Hamburger halten): Bild schrumpft zum Fenster, Vorschau-Liste unten, OK übernimmt – Bildschirmschoner bleibt an ===== */
   var pk = null;
   const PK_DE = { lake:'See', forest:'Wald', sunset:'Sonnenuntergang', mountains:'Berge', night:'Nacht', city:'Stadt', blue:'Blau', sun:'Sonne', deep:'Tiefer' };
   const pkName = f => f.replace(/^tv-saver-/, '').replace(/\.\w+$/, '').split('-').map(w => PK_DE[w] || w).join(' ');
-  const pkVideo = (cls, muted = true) => { const v = document.createElement('video'); v.className = 'saver-video ' + cls; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'metadata'; v.src = SNOOPY_URL + (cls === 'pk-th' ? '#t=1' : ''); return v; };
+  const pkVideo = (cls, still) => { const v = document.createElement('video'); v.className = 'saver-video ' + cls; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = still ? 'metadata' : 'auto'; v.src = SNOOPY_URL + (still ? '#t=1' : ''); return v; };
+  const pkMedia = it => {
+    if (it.video) { const v = pkVideo('pk-lv', false); v.autoplay = true; try { const p = v.play(); p && p.catch && p.catch(() => {}); } catch {} return v; }
+    const im = document.createElement('img'); im.src = it.src; im.alt = ''; return im;
+  };
   function applyChoice(it) {
     clearTimeout(slideTimer);
     if (it.video) {
@@ -2459,51 +2463,51 @@ const ScreenSaver = (() => {
       clearTimeout(s.kt); clearTimeout(o.kt);
       o.el.classList.remove('on', 'ken'); o.el.style.zIndex = '';
       s.el.style.zIndex = 2; s.el.classList.remove('on', 'ken');
-      setSlide(s, TV_SAVER_IMAGES[index]).then(() => { if (!visible) return; void s.el.offsetWidth; s.el.classList.add('on', 'ken'); });
+      setSlide(s, TV_SAVER_IMAGES[index]).then(() => {
+        if (!visible) return;
+        s.el.style.transition = 'none'; void s.el.offsetWidth; s.el.classList.add('on', 'ken'); void s.el.offsetWidth; s.el.style.transition = '';
+      });
     }
   }
   function pkPaint(first) {
-    const { items, cards, live, row } = pk;
+    const { items, cards, main, row } = pk;
     cards.forEach((c, i) => {
       const on = i === pk.sel; c.classList.toggle('on', on);
       const v = c.querySelector('video'); if (v) { if (on) { try { v.play().catch(() => {}); } catch {} } else { try { v.pause(); } catch {} } }
     });
     const c = cards[pk.sel];
-    row.scrollTo({ left:c.offsetLeft - (row.clientWidth - c.offsetWidth) / 2, behavior:first ? 'auto' : 'smooth' });
-    const it = items[pk.sel];
-    if (pk.sel === pk.cur) { live.replaceChildren(); return; }
-    let el;
-    if (it.video) { el = pkVideo('pk-lv'); el.preload = 'auto'; el.autoplay = true; el.play && el.play().catch(() => {}); }
-    else { el = document.createElement('img'); el.src = it.src; el.alt = ''; }
-    live.replaceChildren(el);
+    row.scrollLeft = Math.max(0, c.offsetLeft - (row.clientWidth - c.offsetWidth) / 2);
+    main.replaceChildren(pkMedia(items[pk.sel]));
   }
   function openPicker() {
     if (!visible || pk || black || !root) return;
     hideRec(); Spotify.run(false); clearTimeout(slideTimer); clearTimeout(blackTimer);
     const items = [{ video:true, label:'Snoopy' }, ...TV_SAVER_IMAGES.map((f, i) => ({ src:f, i, label:pkName(f) }))];
     const cur = root.classList.contains('vmode') ? 0 : 1 + (index % TV_SAVER_IMAGES.length);
-    const live = h('div', { class:'pk-live' });
-    root.querySelector('.saver-bg').append(live);
+    const main = h('div', { class:'pk-main' });
     const cards = items.map((it, i) => {
       let th;
-      if (it.video) th = pkVideo('pk-th'); else { th = document.createElement('img'); th.className = 'pk-th'; th.src = it.src; th.alt = ''; th.decoding = 'async'; }
+      if (it.video) th = pkVideo('pk-th', true); else { th = document.createElement('img'); th.className = 'pk-th'; th.src = it.src; th.alt = ''; }
       const c = h('button', { class:'pk-c', type:'button' }, th, h('span', { class:'pk-n' }, it.label));
       if (i === cur) c.append(h('em', { class:'pk-act' }, 'Aktiv'));
       c.onclick = ev => { ev.stopPropagation(); if (pk.closing) return; pk.sel = i; pkPaint(); pickKey('ok'); };
       return c;
     });
     const row = h('div', { class:'pk-row' }, ...cards);
-    const el = h('div', { class:'saver-pick' }, h('div', { class:'pk-h' }, 'Bildschirmschoner-Motiv'), row, h('div', { class:'pk-hint' }, '◀ ▶ auswählen  ·  OK übernehmen  ·  Zurück abbrechen'));
+    const bottom = h('div', { class:'pk-bottom' }, h('div', { class:'pk-h' }, 'Bildschirmschoner-Motiv'), row, h('div', { class:'pk-hint' }, '◀ ▶ auswählen  ·  OK übernehmen  ·  Zurück abbrechen'));
+    const el = h('div', { class:'saver-pick' }, main, bottom);
     root.append(el);
-    pk = { items, cards, live, row, el, sel:cur, cur, closing:false };
+    pk = { items, cards, main, row, el, sel:cur, cur, closing:false };
     pkPaint(true);
-    requestAnimationFrame(() => requestAnimationFrame(() => { if (pk) root.classList.add('pick'); }));
+    row.scrollLeft = Math.max(0, cards[cur].offsetLeft - (row.clientWidth - cards[cur].offsetWidth) / 2);
+    setTimeout(() => { if (pk && !pk.closing) root.classList.add('pick'); }, 60);
   }
   function closePicker(apply) {
     if (!pk || pk.closing) return;
     pk.closing = true;
     const p = pk, it = p.items[p.sel];
     if (apply && p.sel !== p.cur) applyChoice(it);
+    else if (!apply) { p.main.replaceChildren(pkMedia(p.items[p.cur])); }
     root.classList.remove('pick');
     p.cards.forEach(c => { const v = c.querySelector('video'); if (v) { try { v.pause(); } catch {} } });
     if (visible) {
@@ -2511,7 +2515,7 @@ const ScreenSaver = (() => {
       if (!root.classList.contains('vmode')) { clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval()); }
       Spotify.run(true);
     }
-    setTimeout(() => { p.live.remove(); p.el.remove(); if (pk === p) pk = null; }, 800);
+    setTimeout(() => { p.el.remove(); if (pk === p) pk = null; }, 1100);
   }
   function pickKey(k) {
     if (!pk) return false;
