@@ -597,6 +597,11 @@ function openSettings(opener) {
       TK('Beim Schließen nachfragen', 'askclose', true),
       A('App-Katalog neu laden', async () => { await fetchApps(); window._appsPaint && window._appsPaint(); toast('Katalog aktualisiert'); }),
       A('Alle Apps deinstallieren', async () => { if (await askConfirm('Alle Apps deinstallieren?', 'Deinstallieren')) { store.set('apps', []); window._appsPaint && window._appsPaint(); toast('Apps entfernt'); } }, true)]],
+    ['Spotify', [
+      TK('Karte im Bildschirmschoner', 'saverSpotify', true, saver),
+      I('Status', () => Spotify.connected() ? 'Verbunden' : 'Nicht verbunden'),
+      L('Mit Spotify verbinden', '#/spotify'),
+      A('Spotify trennen', () => { Spotify.disconnect(); toast('Spotify getrennt'); }, true)]],
     ['Zugänglichkeit', [
       L('Audiodeskription', '#/access/ad'), L('Gebärdensprache', '#/access/dgs'), L('Mit Untertitel', '#/access/ut')]],
     ['Kopplung', [
@@ -1894,6 +1899,7 @@ function route() {
     case 'access':  PLUS.access(arg); break;
     case 'send':    PLUS.sendPage(); break;
     case 'pair':    PLUS.pairPage(); break;
+    case 'spotify': Spotify.page(); break;
     default:        Browse('Neu');
   }
   document.body.classList.remove('overlay');
@@ -1968,6 +1974,87 @@ function showSugg() {
 const TV = { video:null, player:null, pending:true, last:null };
 const navSnd = new Audio('navigate.mp3'); navSnd.preload = 'auto';
 const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-sunset.jpg', 'tv-saver-mountains.jpg', 'tv-saver-night-lake.jpg', 'tv-saver-night-city.jpg', 'tv-saver-night-mountains.jpg', 'tv-saver-blue-night.jpg', 'tv-saver-sun-mountains.jpg', 'tv-saver-deep-forest.jpg'];
+
+/* ===== Spotify: Anzeige im Bildschirmschoner (Login läuft über mobile.html, Token kommt per Kopplung) ===== */
+const Spotify = (() => {
+  let tok = '', exp = 0, now = null, pollT = 0, busy = false, card = null, key = '';
+  const connected = () => !!store.get('spRT', '') && !!store.get('spCid', '');
+  function paint() {
+    if (!card) return;
+    const ok = now && store.get('saverSpotify', true) !== false;
+    if (ok) {
+      const k = now.title + '|' + now.artist + '|' + now.cover;
+      if (k !== key) {
+        key = k;
+        card.replaceChildren(now.cover ? h('img', { class:'sp-cv', src:now.cover, alt:'' }) : h('div', { class:'sp-cv ph' }),
+          h('div', { class:'sp-tx' }, h('div', { class:'sp-l' }, 'Spotify'), h('div', { class:'sp-t' }, now.title), h('div', { class:'sp-a' }, now.artist)));
+      }
+    }
+    card.classList.toggle('on', !!ok);
+  }
+  async function token() {
+    if (tok && Date.now() < exp - 30000) return tok;
+    const rt = store.get('spRT', ''), cid = store.get('spCid', '');
+    if (!rt || !cid) return '';
+    const r = await fetch('https://accounts.spotify.com/api/token', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+      body:new URLSearchParams({ grant_type:'refresh_token', refresh_token:rt, client_id:cid }) });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); if (j.error === 'invalid_grant') disconnect(); return ''; }
+    const j = await r.json(); tok = j.access_token; exp = Date.now() + (j.expires_in || 3600) * 1000;
+    if (j.refresh_token) store.set('spRT', j.refresh_token);
+    return tok;
+  }
+  async function poll() {
+    if (busy) return; busy = true;
+    try {
+      const t = await token();
+      if (!t) { now = null; return; }
+      const r = await fetch('https://api.spotify.com/v1/me/player/currently-playing?additional_types=episode', { headers:{ Authorization:'Bearer ' + t } });
+      if (r.status === 429) return;
+      if (r.status === 401) { tok = ''; exp = 0; now = null; return; }
+      if (r.status !== 200) { now = null; return; }
+      const j = await r.json(), it = j && j.item;
+      if (!j.is_playing || !it || !it.name) { now = null; return; }
+      const imgs = (it.album && it.album.images) || it.images || (it.show && it.show.images) || [];
+      now = { title:it.name, artist:(it.artists || []).map(a => a.name).join(', ') || (it.show && it.show.publisher) || '', cover:(imgs[1] || imgs[0] || {}).url || '' };
+    } catch { now = null; }
+    finally { busy = false; paint(); }
+  }
+  function attach(root) { card = h('div', { class:'sp-card' }); root.append(card); paint(); }
+  function run(on) {
+    clearInterval(pollT); pollT = 0;
+    if (on && connected() && store.get('saverSpotify', true) !== false) { poll(); pollT = setInterval(poll, 5000); }
+    else { now = null; paint(); }
+  }
+  function disconnect() { store.set('spRT', ''); store.set('spCid', ''); tok = ''; exp = 0; now = null; paint(); }
+  function set(d) {
+    if (!d.rt || !d.cid) { disconnect(); toast('Spotify getrennt'); return; }
+    store.set('spRT', d.rt); store.set('spCid', d.cid); tok = ''; exp = 0; toast('Spotify verbunden');
+  }
+  function page() {
+    document.title = 'Spotify – Media +';
+    const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
+    const url = base + '?tv=' + store.get('pairTopic') + '#/spotify';
+    const box = h('div', { class:'qrbox' }, 'QR-Code wird erzeugt …');
+    new Promise((res, rej) => {
+      if (window.qrcode) return res();
+      const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      s.onload = res; s.onerror = rej; document.head.append(s);
+    }).then(() => { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag({ cellSize:6, margin:0 }); })
+      .catch(() => { box.textContent = 'QR-Code nicht verfügbar'; });
+    const st = h('p', { style:'font-size:1.8rem;font-weight:600' });
+    const paintSt = () => { st.textContent = connected() ? '✓ Spotify ist verbunden' : 'Noch nicht verbunden'; };
+    paintSt();
+    const iv = setInterval(() => { if (!st.isConnected) return clearInterval(iv); paintSt(); }, 1000);
+    cleanups.push(() => clearInterval(iv));
+    main.append(h('div', { class:'page-h' }, h('h1', {}, 'Spotify verbinden')),
+      h('p', {}, 'Scanne den Code mit dem Handy, melde dich bei Spotify an – danach erscheint im Bildschirmschoner der aktuelle Titel.'),
+      box, st,
+      h('div', { style:'display:flex;gap:1.2rem;padding-top:1.2rem' },
+        h('button', { class:'btn primary', type:'button', onclick:() => history.back() }, 'Fertig'),
+        h('button', { class:'btn', type:'button', onclick:() => { disconnect(); paintSt(); toast('Spotify getrennt'); } }, 'Trennen')));
+  }
+  return { attach, run, set, page, disconnect, connected };
+})();
 
 const ScreenSaver = (() => {
   let root = null, imgA = null, imgB = null, clockEl = null, dateEl = null, timer = 0, slideTimer = 0, index = 0, visible = false;
@@ -2099,7 +2186,7 @@ const ScreenSaver = (() => {
   const isPlayKey = ev => ev.key === 'MediaPlayPause' || ev.key === 'MediaPlay' || ev.key === 'Enter' || ev.key === ' ' || [179, 415, 10252, 13].includes(ev.keyCode);
   const goBlack = () => {
     if (!visible || black) return;
-    black = true; clearTimeout(slideTimer); hideRec();
+    black = true; clearTimeout(slideTimer); hideRec(); Spotify.run(false);
     if (root) root.classList.add('black');
   };
   const onKey = ev => {
@@ -2256,6 +2343,7 @@ const ScreenSaver = (() => {
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitDigits);
     fitDigits();
     TV_SAVER_IMAGES.forEach(src => { const i = new Image(); i.src = src; });
+    Spotify.attach(root);
   }
 
   function tickClock() {
@@ -2286,7 +2374,7 @@ const ScreenSaver = (() => {
 
   function hide() {
     if (!visible) return;
-    visible = false; black = false; clearTimeout(blackTimer); hideRec();
+    visible = false; black = false; clearTimeout(blackTimer); hideRec(); Spotify.run(false);
     clearTimeout(slideTimer);
     if (vid) { try { vid.pause(); } catch {} prepareStart(); }
     clearDigitTimers();
@@ -2326,6 +2414,7 @@ const ScreenSaver = (() => {
     }
     root.classList.toggle('hide-clock', !store.get('saverClock', true));
     root.classList.toggle('clock-slim', store.get('saverClockStyle', 'std') === 'slim');
+    Spotify.run(true);
     fitDigits();
     root.classList.remove('leaving');
     document.body.classList.add('saver-on');
@@ -3243,6 +3332,7 @@ const PLUS = (() => {
         ScreenSaver.show(true); return;
       }
       if (d.t === 'hi' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///hi')) { Welcome.show(); return; }
+      if (d.t === 'sp') { Spotify.set(d); return; }
       if (d.t === 'k') { remoteKey(d.v); return; }
       if (d.t === 'q' && (appWin || appSearch)) { openAppSearch(String(d.v)); return; }
       if (d.t === 'q') location.hash = '#/search/' + encodeURIComponent(d.v);
