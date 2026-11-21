@@ -2439,7 +2439,7 @@ function navTick() {
   if ([...document.querySelectorAll('video:not(.saver-video)')].some(v => !v.paused && !v.ended)) return;
   try { navSnd.currentTime = 0; navSnd.play().catch(() => {}); } catch {}
 }
-/* Auswählen (OK / Klick auf Buttons, Karten, Einstellungen, Dialog-Optionen): select.ogg. App-Kacheln bleiben still. */
+/* Auswählen (OK / Klick auf Buttons, Karten, App-Kacheln, Einstellungen, Dialog-Optionen): select.ogg */
 function selectTick() {
   if ([...document.querySelectorAll('video:not(.saver-video)')].some(v => !v.paused && !v.ended)) return;
   try { selectSnd.currentTime = 0; selectSnd.play().catch(() => {}); } catch {}
@@ -2447,7 +2447,7 @@ function selectTick() {
 document.addEventListener('click', ev => {
   if (window.BOOT && BOOT.active) return;
   const t = ev.target && ev.target.closest && ev.target.closest('a[href],button,[tabindex="0"],.dopt');
-  if (!t || t.closest('.atile,#sck,#sck-boot') || t.disabled) return;
+  if (!t || t.closest('#sck,#sck-boot') || t.disabled) return;
   if (t.matches('input,textarea,select') && !/^(checkbox|radio|button|submit)$/.test(t.type || '')) return;
   selectTick();
 }, true);
