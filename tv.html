@@ -61,6 +61,15 @@
 <div id="toast" role="status"></div>
 
 <style>
+/* Intro-Choreografie nach dem Boot: erst nur das Karussell, dann kommen Dock (unten) und Uhr + Drei-Punkte (oben) rein */
+html.bi,html.bi body{overflow:hidden}
+html.bi body.home .hclock,html.bi body.home .hmore{opacity:0!important;transform:translateY(-6rem)!important;pointer-events:none!important}
+html.bi body.home .hfirst .happs{opacity:0!important;transform:translateY(calc(100% + 7rem))!important;pointer-events:none!important}
+html.bi body.home .hero .hin,html.bi body.home .hero .hdots,html.bi body.home .hglass{opacity:0!important;pointer-events:none!important}
+html.br body.home .hclock,html.br body.home .hmore{transition:opacity .7s ease .15s,transform .95s cubic-bezier(.2,.8,.2,1) .15s!important}
+html.br body.home .hfirst .happs{transition:transform 1s cubic-bezier(.2,.8,.2,1),opacity .6s ease!important}
+html.br body.home .hero .hin{transition:opacity .9s ease .7s,transform .3s,padding-bottom .6s cubic-bezier(.2,.8,.2,1)!important}
+html.br body.home .hero .hdots,html.br body.home .hglass{transition:opacity .9s ease .7s!important}
 #boot{position:fixed;inset:0;z-index:99999;background:#000;opacity:1;transition:opacity 1.1s ease;cursor:none;touch-action:none}
 #boot.out{opacity:0;pointer-events:none}
 #boot canvas{position:absolute;inset:0;width:100%;height:100%}
@@ -68,6 +77,7 @@
 <div id="boot" aria-hidden="true"><canvas id="bootcv"></canvas></div>
 <script>
 (function(){
+  var root=document.documentElement;root.classList.add('bi');
   var el=document.getElementById('boot'),cv=document.getElementById('bootcv'),ctx=cv.getContext('2d');
   var B=window.BOOT={active:true,skip:function(){finish();}};
   var ANIM=11.6,MAXD=15,done=false,started=false,raf=0,t0=0;
@@ -191,11 +201,18 @@
   frame(0);
   var fp=(document.fonts&&document.fonts.load)?Promise.race([document.fonts.load('700 156px "Space Grotesk"'),new Promise(function(r){setTimeout(r,1500);})]):Promise.resolve();
   fp.then(go,go);
+  function reveal(){root.classList.add('br');root.classList.remove('bi');setTimeout(function(){root.classList.remove('br');},2400);}
+  function tryReveal(n){
+    if(document.body.classList.contains('home')&&!document.querySelector('.hero .hslide')&&n<30)return setTimeout(function(){tryReveal(n+1);},200);
+    reveal();
+  }
   function finish(){
     if(done)return;done=true;cancelAnimationFrame(raf);
     el.classList.add('out');
     var v=au.volume,n=0,fade=setInterval(function(){n++;au.volume=Math.max(0,v*(1-n/9));if(n>=9){clearInterval(fade);au.pause();}},100);
     setTimeout(function(){B.active=false;el.remove();removeEventListener('resize',size);},1200);
+    /* Karussell kurz allein zeigen, dann Dock + Uhr + Drei-Punkte einfahren */
+    setTimeout(function(){tryReveal(0);},3200);
   }
   /* während des Starts: keine Bedienung am TV */
   ['keydown','keyup','keypress','click','dblclick','pointerdown','pointerup','mousedown','mouseup','touchstart','touchend','wheel','contextmenu'].forEach(function(ev){
