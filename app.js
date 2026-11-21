@@ -1030,6 +1030,7 @@ function SearchScreen(q0) {
     const tl = term.toLowerCase();
     if (tl === '///clock') { ScreenSaver.show(true); return; }
     if (tl === '///hi') { Welcome.show(); return; }
+    if (tl === '///systemcheck') { SysCheck.start(); return; }
     if (tl === '///reload') { history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return; }
     resInner.replaceChildren();
     if (term.length < 2) { resInner.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
@@ -2821,6 +2822,378 @@ const Welcome = (() => {
 /* =========================================================
    PLUS
    ========================================================= */
+/* =========================================================
+   SYSTEM CHECK (BIOS) – ausgelöst durch die Suche nach ///systemcheck
+   1) schwarzer Screen + Android-Spinner  2) schwarz  3) Neuladen  4) BIOS-Menü
+   Im BIOS gibt es weder den Navigations-Sound noch Browser-Pieptöne:
+   alle Tasten werden abgefangen (preventDefault) und nie an die App weitergereicht.
+   ========================================================= */
+const SysCheck = (() => {
+  const FLAG = 'mp_syscheck', RELAY_URL = 'wss://relay.patrick4real.workers.dev';
+  const TAG = { ok:'[ OK ]', warn:'[WARN]', fail:'[FAIL]', run:'[ .. ]', info:'[ -- ]' };
+  let active = false, launching = false, grace = false;
+  let root = null, body = null, hint = null, clk = null, clockT = 0, sub = null, tok = 0, mi = 0, menuBtns = [], audio = null;
+
+  const flagFresh = () => { try { const t = +localStorage.getItem(FLAG); return t > 0 && Date.now() - t < 120000; } catch { return false; } };
+  const setFlag = () => { try { localStorage.setItem(FLAG, String(Date.now())); } catch {} };
+  const clrFlag = () => { try { localStorage.removeItem(FLAG); } catch {} };
+  const pauseMedia = () => document.querySelectorAll('video,audio').forEach(m => { try { m.pause(); } catch {} });
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const mb = x => (x / 1048576).toFixed(1) + ' MB';
+  const swallow = ev => { ev.preventDefault(); ev.stopImmediatePropagation(); };
+  const kname = ev => {
+    const k = ev.key, c = ev.keyCode;
+    if (k === 'ArrowUp' || c === 38) return 'up';
+    if (k === 'ArrowDown' || c === 40) return 'down';
+    if (k === 'ArrowLeft' || c === 37) return 'left';
+    if (k === 'ArrowRight' || c === 39) return 'right';
+    if (k === 'Enter' || c === 13 || k === ' ' || c === 32) return 'ok';
+    if (k === 'Escape' || k === 'GoBack' || k === 'BrowserBack' || k === 'Backspace' || c === 27 || c === 461 || c === 10009 || c === 8) return 'back';
+    return '';
+  };
+
+  /* ---------- Phase 1: Spinner → schwarz → Neuladen ---------- */
+  function start() {
+    if (active || launching) return;
+    launching = true; pauseMedia();
+    try { ScreenSaver.hide(); } catch {}
+    const boot = h('div', { id:'sck-boot' });
+    boot.innerHTML = '<svg class="sck-spin" viewBox="25 25 50 50" aria-hidden="true"><circle cx="50" cy="50" r="20"></circle></svg>';
+    document.body.append(boot);
+    ['keydown', 'keyup', 'keypress', 'click', 'pointerdown', 'wheel'].forEach(t => window.addEventListener(t, swallow, true));
+    setTimeout(() => boot.classList.add('off'), 2800);
+    setTimeout(() => { setFlag(); history.replaceState(null, '', location.href.split('#')[0]); location.reload(); }, 4300);
+  }
+  function resume() { if (!flagFresh()) return false; open(); return true; }
+
+  /* ---------- Phase 2: BIOS ---------- */
+  const ITEMS = [
+    { id:'sys',  label:'System Information', desc:'Shows device, browser, screen, memory and pairing details.', run:sysInfo },
+    { id:'auto', label:'Run All Auto Tests', desc:'Runs the system, storage, codec, network and performance tests one after another and shows a summary.', run:autoTests },
+    { id:'disp', label:'Display Test', desc:'Full-screen colors, gradients, color bars, grid and checkerboard. Look for dead pixels, banding and color errors.', run:displayTest },
+    { id:'aud',  label:'Audio Test', desc:'Plays test tones on the left, right or both speakers.', run:audioTest },
+    { id:'rem',  label:'Remote Control Test', desc:'Shows every button press with key name and key code. Works with the phone remote, too.', run:remoteTest },
+    { id:'net',  label:'Network Test', desc:'Checks the internet connection, latency and the phone relay (WebSocket).', run:networkTest },
+    { id:'cod',  label:'Codec Support', desc:'Lists the video and audio formats this TV browser can decode.', run:codecTest },
+    { id:'sto',  label:'Storage Test', desc:'Tests localStorage, sessionStorage and IndexedDB and shows the used space.', run:storageTest },
+    { id:'perf', label:'Performance Test', desc:'Measures CPU speed and the real frame rate for two seconds.', run:perfTest },
+    { id:'restart', label:'Restart Media+', desc:'Reloads Media+ completely, including the start animation.' },
+    { id:'exit', label:'Exit', desc:'Leaves the System Check and returns to Media+.' }
+  ];
+  const HINT_MAIN = ['UP/DOWN  Select', 'OK  Run / Enter', 'LEFT/RIGHT  Scroll results', 'BACK  Jump to Exit'];
+  const setHint = list => hint.replaceChildren(...(list || HINT_MAIN).map(t => h('span', {}, t)));
+
+  function open() {
+    if (active) return;
+    active = true; launching = false; clrFlag(); pauseMedia();
+    try { ScreenSaver.hide(); } catch {}
+    const b = document.getElementById('boot'); if (b) b.remove();
+    const sp = document.getElementById('sck-boot'); if (sp) sp.remove();
+    build();
+    ['keydown', 'keyup', 'keypress'].forEach(t => window.addEventListener(t, onKey, true));
+    clockT = setInterval(tick, 1000); tick();
+    focusItem(0);
+  }
+  function build() {
+    clk = h('span', { class:'sck-clk' });
+    const hd = h('div', { class:'sck-hd' }, h('b', {}, 'MEDIA+ SYSTEM CHECK UTILITY'), h('span', {}, 'v1.0'), clk);
+    menuBtns = ITEMS.map((it, i) => h('button', { class:'sck-m' + (it.id === 'exit' || it.id === 'restart' ? ' ex' : ''), type:'button', tabindex:'0', onclick:() => runItem(i), onmouseenter:() => { if (!sub) focusItem(i); } }, it.label));
+    body = h('div', { class:'sck-body' });
+    hint = h('div', { class:'sck-ft' });
+    root = h('div', { id:'sck', role:'application', 'aria-label':'System Check' }, hd, h('div', { class:'sck-main' }, h('div', { class:'sck-menu' }, ...menuBtns), body), hint);
+    document.body.append(root);
+    setHint();
+  }
+  const tick = () => { if (clk) clk.textContent = new Date().toLocaleTimeString('en-GB'); };
+  function stopAudio() { try { audio && audio.close(); } catch {} audio = null; }
+  function focusItem(i) {
+    mi = (i + ITEMS.length) % ITEMS.length; tok++; stopAudio();
+    menuBtns.forEach((b, j) => b.classList.toggle('on', j === mi));
+    try { menuBtns[mi].focus({ preventScroll:true }); } catch {}
+    const it = ITEMS[mi];
+    body.replaceChildren(h('div', { class:'sck-t' }, it.label), h('div', { class:'sck-n' }, it.desc), h('div', { class:'sck-n dim' }, it.id === 'exit' || it.id === 'restart' ? 'Press OK to confirm.' : 'Press OK to run.'));
+  }
+  function onKey(ev) {
+    if (!active) { if (grace && ev.type !== 'keydown') swallow(ev); return; }
+    swallow(ev);                                   /* nichts geht an die App, kein Navigations-Sound, kein Browser-Piepen */
+    if (ev.type !== 'keydown') return;
+    const k = kname(ev);
+    if (sub) { sub.key(k, ev); return; }
+    if (k === 'up') focusItem(mi - 1);
+    else if (k === 'down') focusItem(mi + 1);
+    else if (k === 'left' || k === 'right') body.scrollTop += (k === 'right' ? 1 : -1) * body.clientHeight * .6;
+    else if (k === 'ok') runItem(mi);
+    else if (k === 'back') focusItem(ITEMS.length - 1);
+  }
+  function runItem(i) {
+    if (!active) return;
+    if (sub) { sub.key('ok', null); return; }
+    const it = ITEMS[i]; if (!it) return;
+    if (it.id === 'exit') return exit();
+    if (it.id === 'restart') { clrFlag(); history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return; }
+    const P = fresh(it.label);
+    const err = e => P.row('fail', 'Unexpected error', (e && e.message) || String(e));
+    try { Promise.resolve(it.run(P)).catch(err); } catch (e) { err(e); }
+  }
+  function closeSub() { const s = sub; sub = null; if (s && s.close) s.close(); stopAudio(); if (hint) setHint(); }
+  function exit() {
+    if (!active) return;
+    closeSub(); active = false; grace = true; clearInterval(clockT);
+    root.classList.add('out');
+    setTimeout(() => { if (root) root.remove(); root = null; }, 350);
+    setTimeout(() => { grace = false; ['keydown', 'keyup', 'keypress'].forEach(t => window.removeEventListener(t, onKey, true)); }, 400);
+    try { ScreenSaver.schedule(); } catch {}
+  }
+
+  /* ---------- Ausgabe-Helfer ---------- */
+  function fresh(title) {
+    const my = ++tok, out = h('div', { class:'sck-out' }), cnt = { ok:0, warn:0, fail:0 };
+    body.replaceChildren(h('div', { class:'sck-t' }, title), out); body.scrollTop = 0;
+    const P = {
+      cnt, follow:false,
+      live: () => active && my === tok,
+      sec: t => out.append(h('div', { class:'sck-sec' }, t)),
+      note: t => out.append(h('div', { class:'sck-n' }, t)),
+      el: n => { out.append(n); return n; },
+      row(st, label, val) {
+        const s = h('span', { class:'sck-s' }), v = h('span', { class:'sck-v' }), el = h('div', { class:'sck-r' }, s, h('span', { class:'sck-l' }, label), v);
+        let cur = null;
+        const set = (st2, val2) => {
+          if (cur && cnt[cur] != null) cnt[cur]--;
+          cur = st2; if (cnt[st2] != null) cnt[st2]++;
+          el.dataset.st = st2; s.textContent = TAG[st2];
+          if (val2 !== undefined) v.textContent = val2 == null ? '' : String(val2);
+        };
+        set(st, val); out.append(el);
+        if (P.follow) body.scrollTop = body.scrollHeight;
+        return set;
+      }
+    };
+    return P;
+  }
+
+  /* ---------- Tests ---------- */
+  async function sysInfo(P) {
+    const n = navigator, ua = n.userAgent || '', ver = (ua.match(/(?:Chrome|Chromium)\/([\d.]+)/) || [])[1];
+    const mq = q => { try { return matchMedia(q).matches; } catch { return false; } };
+    const dpr = window.devicePixelRatio || 1;
+    P.sec('Software');
+    P.row('info', 'Application', 'Media+ TV (' + location.host + ')');
+    P.row('info', 'Browser engine', ver ? 'Chromium ' + ver : 'unknown');
+    P.row('info', 'Platform', n.platform || 'n/a');
+    P.row('info', 'User agent', ua);
+    P.row('info', 'Language', (n.languages && n.languages.join(', ')) || n.language || 'n/a');
+    P.row('info', 'Time zone', (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return 'n/a'; } })());
+    P.row('info', 'Local time', new Date().toLocaleString('en-GB'));
+    P.sec('Display');
+    P.row('info', 'Screen', screen.width + ' x ' + screen.height + ' px');
+    P.row('info', 'Viewport', innerWidth + ' x ' + innerHeight + ' px @ ' + dpr + 'x');
+    P.row('info', 'Physical resolution', Math.round(screen.width * dpr) + ' x ' + Math.round(screen.height * dpr) + ' px');
+    P.row('info', 'Color depth', (screen.colorDepth || '?') + ' bit');
+    P.row('info', 'HDR display', mq('(dynamic-range: high)') ? 'yes' : 'no / unknown');
+    P.row('info', 'Wide color gamut', mq('(color-gamut: p3)') ? 'P3 or better' : mq('(color-gamut: srgb)') ? 'sRGB' : 'unknown');
+    P.row('info', 'Fullscreen', document.fullscreenElement ? 'active' : 'not active');
+    P.sec('Hardware');
+    P.row('info', 'CPU threads', n.hardwareConcurrency || 'n/a');
+    P.row('info', 'Device memory', n.deviceMemory ? '>= ' + n.deviceMemory + ' GB' : 'n/a');
+    if (performance.memory) P.row('info', 'JS heap', mb(performance.memory.usedJSHeapSize) + ' of ' + mb(performance.memory.jsHeapSizeLimit));
+    P.row('info', 'Page uptime', Math.round(performance.now() / 1000) + ' s');
+    const q = P.row('run', 'Storage usage', 'reading ...');
+    try { const e = await n.storage.estimate(); q('info', mb(e.usage) + ' of ' + mb(e.quota)); } catch { q('info', 'n/a'); }
+    P.sec('Pairing');
+    P.row('info', 'Phone pairing', store.get('pairTopic') ? 'paired' : 'not paired');
+  }
+
+  async function storageTest(P) {
+    P.sec('Storage');
+    const K = 'mp_sck_test';
+    const t = (label, fn) => { const r = P.row('run', label, 'testing ...'); try { r('ok', fn()); } catch (e) { r('fail', (e && e.message) || 'failed'); } };
+    t('localStorage read/write', () => { localStorage.setItem(K, '1'); if (localStorage.getItem(K) !== '1') throw new Error('value mismatch'); localStorage.removeItem(K); return 'ok'; });
+    t('sessionStorage read/write', () => { sessionStorage.setItem(K, '1'); if (sessionStorage.getItem(K) !== '1') throw new Error('value mismatch'); sessionStorage.removeItem(K); return 'ok'; });
+    const r = P.row('run', 'IndexedDB', 'opening ...');
+    await new Promise(res => {
+      let d = false; const fin = (s, v) => { if (d) return; d = true; r(s, v); res(); };
+      setTimeout(() => fin('fail', 'timeout'), 4000);
+      try {
+        const q = indexedDB.open('mp_sck_db', 1);
+        q.onerror = () => fin('fail', 'cannot open database');
+        q.onsuccess = () => { try { q.result.close(); indexedDB.deleteDatabase('mp_sck_db'); } catch {} fin('ok', 'open / close ok'); };
+      } catch (e) { fin('fail', e && e.message); }
+    });
+    P.row('caches' in window ? 'ok' : 'warn', 'Cache API', 'caches' in window ? 'available' : 'not available');
+    P.row(navigator.cookieEnabled ? 'ok' : 'warn', 'Cookies', navigator.cookieEnabled ? 'enabled' : 'disabled');
+    try {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('mt:'));
+      const bytes = keys.reduce((a, k) => a + k.length + (localStorage.getItem(k) || '').length, 0) * 2;
+      P.row('info', 'Media+ saved data', keys.length + ' entries, ' + (bytes / 1024).toFixed(1) + ' KB');
+    } catch {}
+  }
+
+  function codecTest(P) {
+    const v = document.createElement('video'), a = document.createElement('audio');
+    const cp = (el, t) => { try { return el.canPlayType(t); } catch { return ''; } };
+    const mse = t => { try { return !!(window.MediaSource && MediaSource.isTypeSupported(t)); } catch { return false; } };
+    P.sec('Video');
+    [['H.264 / AVC (required)', 'video/mp4; codecs="avc1.640028"', true], ['H.265 / HEVC', 'video/mp4; codecs="hvc1.1.6.L93.B0"'], ['VP9', 'video/webm; codecs="vp9"'], ['AV1', 'video/mp4; codecs="av01.0.05M.08"'], ['HLS (native)', 'application/vnd.apple.mpegurl']]
+      .forEach(([l, t, req]) => { const x = cp(v, t); P.row(x ? 'ok' : req ? 'fail' : 'warn', l, x ? 'supported (' + x + ')' : 'not supported'); });
+    P.row(window.MediaSource ? 'ok' : 'warn', 'Media Source Extensions', window.MediaSource ? 'available' : 'not available');
+    const hls = mse('video/mp4; codecs="avc1.640028,mp4a.40.2"');
+    P.row(hls ? 'ok' : 'fail', 'HLS playback (hls.js)', hls ? 'supported' : 'not supported');
+    P.sec('Audio');
+    [['AAC (required)', 'audio/mp4; codecs="mp4a.40.2"', true], ['MP3', 'audio/mpeg'], ['Opus', 'audio/webm; codecs="opus"'], ['Dolby Digital (AC-3)', 'audio/mp4; codecs="ac-3"'], ['Dolby Digital Plus (E-AC-3)', 'audio/mp4; codecs="ec-3"']]
+      .forEach(([l, t, req]) => { const x = cp(a, t); P.row(x ? 'ok' : req ? 'fail' : 'warn', l, x ? 'supported' : 'not supported'); });
+    P.sec('Other');
+    P.row(navigator.requestMediaKeySystemAccess ? 'ok' : 'warn', 'DRM (EME)', navigator.requestMediaKeySystemAccess ? 'available' : 'not available');
+    P.row(window.AudioContext || window.webkitAudioContext ? 'ok' : 'warn', 'Web Audio', window.AudioContext || window.webkitAudioContext ? 'available' : 'not available');
+  }
+
+  async function networkTest(P) {
+    P.sec('Network');
+    P.row(navigator.onLine ? 'ok' : 'fail', 'Browser online state', navigator.onLine ? 'online' : 'offline');
+    const c = navigator.connection;
+    if (c) P.row('info', 'Connection', [c.type, c.effectiveType, c.downlink && c.downlink + ' Mbit/s', c.rtt != null && c.rtt + ' ms rtt'].filter(Boolean).join(' / ') || 'n/a');
+    const r = P.row('run', 'Internet (3 pings)', 'measuring ...');
+    const ts = [];
+    for (let i = 0; i < 3 && P.live(); i++) {
+      const t0 = performance.now();
+      try {
+        const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000);
+        await fetch('https://www.gstatic.com/generate_204?' + Date.now(), { mode:'no-cors', cache:'no-store', signal:ctl.signal });
+        clearTimeout(to); ts.push(performance.now() - t0);
+      } catch {}
+    }
+    if (ts.length) { const avg = ts.reduce((x, y) => x + y, 0) / ts.length; r(avg < 400 ? 'ok' : 'warn', Math.round(avg) + ' ms average (' + ts.length + ' of 3 replies)'); }
+    else r('fail', 'no response');
+    const rr = P.row('run', 'Phone relay (WebSocket)', 'connecting ...');
+    await new Promise(res => {
+      let d = false, w = null; const t0 = performance.now();
+      const fin = (st, v) => { if (d) return; d = true; clearTimeout(to); try { w && w.close(); } catch {} rr(st, v); res(); };
+      const to = setTimeout(() => fin('fail', 'timeout after 6 s'), 6000);
+      try {
+        w = new WebSocket(RELAY_URL + '/?t=syscheck' + Math.random().toString(36).slice(2, 8));
+        w.onopen = () => fin('ok', 'connected in ' + Math.round(performance.now() - t0) + ' ms');
+        w.onerror = () => fin('fail', 'connection error');
+      } catch (e) { fin('fail', (e && e.message) || 'WebSocket unavailable'); }
+    });
+    P.row(store.get('pairTopic') ? 'ok' : 'warn', 'Phone pairing', store.get('pairTopic') ? 'paired' : 'not paired');
+  }
+
+  async function perfTest(P) {
+    P.sec('Performance');
+    const a = P.row('run', 'CPU benchmark', 'running ...');
+    await sleep(80);
+    const t0 = performance.now(); let x = 0;
+    for (let i = 1; i < 6e6; i++) x += Math.sqrt(i) * Math.sin(i);
+    const ms = performance.now() - t0;
+    if (x === 1.2345) console.log(x);
+    a(ms < 400 ? 'ok' : ms < 1200 ? 'warn' : 'fail', Math.round(ms) + ' ms (lower is better)');
+    const f = P.row('run', 'Frame rate (2 s)', 'measuring ...');
+    const res = await new Promise(done => {
+      let n = 0, s0 = 0, last = 0, worst = 0;
+      const step = t => {
+        if (!P.live()) return done(null);
+        if (!s0) s0 = last = t; else { n++; worst = Math.max(worst, t - last); last = t; }
+        if (t - s0 >= 2000) done({ fps:n / ((t - s0) / 1000), worst }); else requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+    if (!res) return;
+    f(res.fps >= 50 ? 'ok' : res.fps >= 25 ? 'warn' : 'fail', res.fps.toFixed(1) + ' fps, slowest frame ' + Math.round(res.worst) + ' ms');
+  }
+
+  async function autoTests(P) {
+    P.follow = true;
+    P.note('Running all automatic tests. This takes about 15 seconds.');
+    for (const fn of [sysInfo, storageTest, codecTest, networkTest, perfTest]) { if (!P.live()) return; await fn(P); }
+    if (!P.live()) return;
+    P.sec('Summary');
+    const { ok, warn, fail } = P.cnt;
+    P.row(fail ? 'fail' : warn ? 'warn' : 'ok', 'Overall result', ok + ' passed, ' + warn + ' warnings, ' + fail + ' failed');
+  }
+
+  /* ---------- Interaktive Tests ---------- */
+  function displayTest(P) {
+    const bars = ['#fff', '#ff0', '#0ff', '#0f0', '#f0f', '#f00', '#00f'].map((c, i) => c + ' ' + (i * 100 / 7) + '%,' + c + ' ' + ((i + 1) * 100 / 7) + '%').join(',');
+    const PAT = [
+      ['Red', 'background:#f00'], ['Green', 'background:#0f0'], ['Blue', 'background:#00f'], ['White', 'background:#fff'], ['Black', 'background:#000'],
+      ['Grayscale ramp', 'background:linear-gradient(90deg,#000,#fff)'],
+      ['Color bars', 'background:linear-gradient(90deg,' + bars + ')'],
+      ['Grid', 'background-color:#000;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:10vh 10vh'],
+      ['Checkerboard', 'background-color:#000;background-image:linear-gradient(45deg,#fff 25%,transparent 25%,transparent 75%,#fff 75%),linear-gradient(45deg,#fff 25%,#000 25%,#000 75%,#fff 75%);background-size:20vh 20vh;background-position:0 0,10vh 10vh']
+    ];
+    P.note('Full-screen test patterns. LEFT/RIGHT changes the pattern, BACK closes the test.');
+    let i = 0, lt = 0;
+    const lab = h('div', { class:'sck-full-l' }), el = h('div', { class:'sck-full' }, lab);
+    root.append(el);
+    const paint = () => {
+      el.style.cssText = PAT[i][1];
+      lab.textContent = (i + 1) + '/' + PAT.length + '  ' + PAT[i][0] + '   -   LEFT/RIGHT: change, BACK: close';
+      lab.classList.remove('hide'); clearTimeout(lt); lt = setTimeout(() => lab.classList.add('hide'), 2500);
+    };
+    setHint(['LEFT/RIGHT  Change pattern', 'BACK  Close']);
+    sub = {
+      key(k) {
+        if (k === 'right' || k === 'ok' || k === 'down') { i = (i + 1) % PAT.length; paint(); }
+        else if (k === 'left' || k === 'up') { i = (i + PAT.length - 1) % PAT.length; paint(); }
+        else if (k === 'back') closeSub();
+      },
+      close() { clearTimeout(lt); el.remove(); }
+    };
+    paint();
+  }
+
+  function audioTest(P) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    P.note('LEFT = left speaker, RIGHT = right speaker, OK = both speakers, UP/DOWN = pitch, BACK = leave.');
+    P.row(AC ? 'ok' : 'fail', 'Audio engine', AC ? 'available' : 'not available');
+    const last = P.row('info', 'Last tone', '-');
+    let freq = 440;
+    const tone = (pan, name) => {
+      if (!AC) return;
+      try {
+        if (!audio) audio = new AC();
+        if (audio.state === 'suspended') audio.resume();
+        const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = freq; g.gain.value = 0;
+        o.connect(g);
+        if (audio.createStereoPanner) { const p = audio.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(audio.destination); } else g.connect(audio.destination);
+        const t = audio.currentTime; g.gain.linearRampToValueAtTime(.25, t + .03); g.gain.linearRampToValueAtTime(0, t + .8);
+        o.start(t); o.stop(t + .85);
+        last('info', name + ' @ ' + freq + ' Hz');
+      } catch (e) { last('fail', (e && e.message) || 'error'); }
+    };
+    setHint(['LEFT  Left', 'RIGHT  Right', 'OK  Both', 'UP/DOWN  Pitch', 'BACK  Leave']);
+    sub = {
+      key(k) {
+        if (k === 'left') tone(-1, 'Left speaker');
+        else if (k === 'right') tone(1, 'Right speaker');
+        else if (k === 'ok') tone(0, 'Both speakers');
+        else if (k === 'up') { freq = Math.min(1760, freq * 2); tone(0, 'Both speakers'); }
+        else if (k === 'down') { freq = Math.max(110, freq / 2); tone(0, 'Both speakers'); }
+        else if (k === 'back') closeSub();
+      }
+    };
+  }
+
+  function remoteTest(P) {
+    P.note('Press any button on the remote (or on the phone remote). Press BACK three times in a row to leave.');
+    const big = P.el(h('div', { class:'sck-big' }, '-')), list = P.el(h('div', { class:'sck-log' }));
+    let backs = 0, bt = 0;
+    setHint(['Any key  Show key code', 'BACK x3  Leave']);
+    sub = {
+      key(k, ev) {
+        if (ev && ev.key === 'Shift' && !ev.isTrusted) return;          /* interner Handy-Fernbedienungs-Impuls */
+        const name = ev ? (ev.key === ' ' ? 'Space' : ev.key) : 'OK (click)';
+        big.textContent = name;
+        list.prepend(h('div', {}, name.padEnd(14) + ' code=' + (ev ? ev.code || '-' : '-') + '  keyCode=' + (ev ? ev.keyCode : 13) + (ev && !ev.isTrusted ? '  (phone)' : '')));
+        while (list.children.length > 8) list.lastChild.remove();
+        if (k === 'back') { clearTimeout(bt); bt = setTimeout(() => { backs = 0; }, 1500); if (++backs >= 3) closeSub(); } else backs = 0;
+      }
+    };
+  }
+
+  return { start, resume, get active() { return active; }, get busy() { return active || launching; }, get pending() { return flagFresh(); } };
+})();
+
 const IS_TV = typeof TV !== 'undefined';
 const PLUS = (() => {
   const LIVE = [
@@ -3084,6 +3457,7 @@ const PLUS = (() => {
   };
   if (IS_TV) document.addEventListener('loadstart', ev => { const v = ev.target; if (v && v.tagName === 'VIDEO') { const x = store.get('vol'); if (x != null) try { v.volume = +x; } catch {} } }, true);
   function remoteKey(k) {
+    if (SysCheck.busy && ['ctrl', 'home', 'menu', 'settings'].includes(k)) return;
     if (k === 'ctrl') { openControlAnywhere(); return; }
     if ((k === 'ok' || k === 'pp') && ScreenSaver.playRec()) return;
     if (k === 'home') { goHomeNow(); return; }
@@ -3142,6 +3516,8 @@ const PLUS = (() => {
       if (d.t === 'reload' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///reload')) {
         history.replaceState(null, '', location.href.split('#')[0]); location.reload(); return;
       }
+      if (d.t === 'systemcheck' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///systemcheck')) { SysCheck.start(); return; }
+      if (SysCheck.busy) { if (SysCheck.active && d.t === 'k') remoteKey(d.v); return; }
       if (d.t === 'clock' || (d.t === 'q' && String(d.v).trim().toLowerCase() === '///clock')) {
         ScreenSaver.show(true); return;
       }
@@ -3592,6 +3968,11 @@ const PLUS = (() => {
       else Welcome.show();
       $('#q').value = ''; return;
     }
+    if (ql === '///systemcheck') {
+      if (store.get('tvTopic')) PLUS.sendTv({ t:'systemcheck' });
+      else SysCheck.start();
+      $('#q').value = ''; return;
+    }
     if (ql === '///clock') {
       if (store.get('tvTopic')) PLUS.sendTv({ t:'clock' });
       else ScreenSaver.show(true);
@@ -3607,5 +3988,5 @@ const PLUS = (() => {
   window.addEventListener('resize', applyPin);
   PLUS.init();
   route();
-  Welcome.firstRun();
+  if (SysCheck.pending) { if (!window.BOOT) SysCheck.resume(); } else Welcome.firstRun();   /* BIOS öffnet nach der Start-Animation (tv.html) */
 })();
