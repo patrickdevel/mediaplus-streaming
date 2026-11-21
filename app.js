@@ -2443,9 +2443,10 @@ const ScreenSaver = (() => {
   var pk = null;
   const PK_DE = { lake:'See', forest:'Wald', sunset:'Sonnenuntergang', mountains:'Berge', night:'Nacht', city:'Stadt', blue:'Blau', sun:'Sonne', deep:'Tiefer' };
   const pkName = f => f.replace(/^tv-saver-/, '').replace(/\.\w+$/, '').split('-').map(w => PK_DE[w] || w).join(' ');
-  const pkVideo = (cls, still) => { const v = document.createElement('video'); v.className = 'saver-video ' + cls; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = still ? 'metadata' : 'auto'; v.src = SNOOPY_URL + (still ? '#t=1' : ''); return v; };
+  const pkVideo = (cls, still) => { const v = document.createElement('video'); v.className = 'saver-video ' + cls; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto'; v.src = SNOOPY_URL + (still ? '#t=0.001' : ''); v.style.display = 'block'; v.style.opacity = '1'; return v; };
+  /* Snoopy in der Auswahl = nur Standbild (erster Frame), nie abspielen */
   const pkMedia = it => {
-    if (it.video) { const v = pkVideo('pk-lv', false); v.autoplay = true; try { const p = v.play(); p && p.catch && p.catch(() => {}); } catch {} return v; }
+    if (it.video) return pkVideo('pk-lv', true);
     const im = document.createElement('img'); im.src = it.src; im.alt = ''; return im;
   };
   function applyChoice(it) {
@@ -2472,11 +2473,33 @@ const ScreenSaver = (() => {
   const st = (el, o) => { Object.assign(el.style, o); return el; };
   const FILL = { position:'absolute', left:'0', top:'0', width:'100%', height:'100%', objectFit:'cover', display:'block' };
   const pkItem = i => i === 0 ? { video:true, label:'Snoopy' } : { label:'Fotos', i:index % TV_SAVER_IMAGES.length, src:TV_SAVER_IMAGES[index % TV_SAVER_IMAGES.length] };
-  function pkPaint() {
-    const m = pkMedia(pkItem(pk.sel)); st(m, FILL); pk.main.replaceChildren(m);
+  const pkSlide = (it, blur) => {
+    const w = st(document.createElement('div'), { position:'absolute', left:'0', top:'0', width:'100%', height:'100%', overflow:'hidden' });
+    const m = pkMedia(it); st(m, FILL);
+    if (blur) st(m, { filter:'blur(3.2rem) saturate(1.4) brightness(.6)', transform:'scale(1.35)' });
+    w.append(m); return w;
+  };
+  function pkPaint(dir) {
+    const it = pkItem(pk.sel), T = 'transform .55s cubic-bezier(.2,.8,.2,1)';
+    /* Karte: neue schiebt die alte weg */
+    const nw = pkSlide(it, false), old = [...pk.main.children];
+    if (dir) {
+      st(nw, { transform:'translateX(' + dir * 100 + '%)', transition:T });
+      old.forEach(o => st(o, { transition:T, transform:'translateX(' + -dir * 100 + '%)' }));
+    }
+    pk.main.append(nw); void nw.offsetWidth;
+    if (dir) st(nw, { transform:'translateX(0)' });
+    setTimeout(() => old.forEach(o => o.remove()), dir ? 600 : 0);
+    if (!dir) old.forEach(o => o.remove());
+    /* Hintergrund: verblurrt das aktuell gewählte Motiv, weich überblendet */
+    const nb = st(pkSlide(it, true), { opacity:dir ? '0' : '1', transition:'opacity .55s ease' });
+    const ob = [...pk.bg.children];
+    pk.bg.append(nb); void nb.offsetWidth; st(nb, { opacity:'1' });
+    setTimeout(() => ob.forEach(o => o.remove()), 600);
     pk.label.textContent = pk.sel === 0 ? 'Snoopy' : 'Fotos';
     pk.dots.forEach((d, i) => st(d, { width:i === pk.sel ? pk.dw * 2.6 + 'px' : pk.dw + 'px', background:i === pk.sel ? '#fff' : 'rgba(255,255,255,.35)' }));
   }
+  function pkGo(n) { if (!pk || pk.closing || n < 0 || n > 1 || n === pk.sel) return; const dir = n > pk.sel ? 1 : -1; pk.sel = n; pkPaint(dir); }
   function openPicker() {
     if (!visible || pk || black || !root) return;
     hideRec(); Spotify.run(false); clearTimeout(slideTimer); clearTimeout(blackTimer);
@@ -2486,25 +2509,28 @@ const ScreenSaver = (() => {
     let mh = Math.round(H * .76), mw = Math.round(mh * 16 / 9);
     if (mw > W * .92) { mw = Math.round(W * .92); mh = Math.round(mw * 9 / 16); }
     const mx = Math.round((W - mw) / 2), my = Math.round(H * .04);
-    const ov = st(document.createElement('div'), { position:'fixed', left:'0', top:'0', width:'100%', height:'100%', zIndex:'100000', background:'rgba(11,11,14,0)', transition:'background .6s ease', overflow:'hidden', color:'#fff', fontFamily:'inherit' });
-    const main = st(document.createElement('div'), { position:'absolute', left:'0', top:'0', width:W + 'px', height:H + 'px', overflow:'hidden', background:'#000', borderRadius:'0', boxShadow:'0 0 0 rgba(0,0,0,0)', transition:['left','top','width','height','border-radius','box-shadow'].map(p => p + ' ' + T).join(',') });
+    const ov = st(document.createElement('div'), { position:'fixed', left:'0', top:'0', width:'100%', height:'100%', zIndex:'100000', background:'#0b0b0e', overflow:'hidden', color:'#fff', fontFamily:'inherit', transition:'background .6s ease' });
+    const bg = st(document.createElement('div'), { position:'absolute', left:'0', top:'0', width:'100%', height:'100%', opacity:'0', transition:'opacity .6s ease' });
+    const main = st(document.createElement('div'), { position:'absolute', left:'0', top:'0', width:W + 'px', height:H + 'px', overflow:'hidden', background:'#000', borderRadius:'0', boxShadow:'0 0 0 rgba(0,0,0,0)', transition:['left','top','width','height','border-radius','box-shadow'].map(p => p + ' ' + T).join(','), touchAction:'pan-y' });
     const info = st(document.createElement('div'), { position:'absolute', left:'0', top:(my + mh + Math.round(H * .025)) + 'px', width:'100%', textAlign:'center', opacity:'0', transition:'opacity .5s ease' });
     const label = st(document.createElement('div'), { fontSize:Math.round(fs * 1.5) + 'px', fontWeight:'700', letterSpacing:'-.01em' });
     const dw = Math.max(8, Math.round(H * .012));
     const dotsEl = st(document.createElement('div'), { marginTop:Math.round(H * .018) + 'px', height:dw + 'px', display:'flex', justifyContent:'center', alignItems:'center' });
-    const dots = [0, 1].map(i => { const d = st(document.createElement('i'), { display:'block', height:dw + 'px', borderRadius:dw + 'px', margin:'0 ' + Math.round(dw * .45) + 'px', transition:'width .3s ease,background .3s ease', cursor:'pointer' }); d.onclick = ev => { ev.stopPropagation(); if (pk && !pk.closing) { pk.sel = i; pkPaint(); } }; return d; });
+    const dots = [0, 1].map(i => { const d = st(document.createElement('i'), { display:'block', height:dw + 'px', borderRadius:dw + 'px', margin:'0 ' + Math.round(dw * .45) + 'px', transition:'width .3s ease,background .3s ease', cursor:'pointer' }); d.onclick = ev => { ev.stopPropagation(); pkGo(i); }; return d; });
     dotsEl.append(...dots);
-    const hint = st(document.createElement('div'), { marginTop:Math.round(H * .02) + 'px', fontSize:Math.round(fs * .75) + 'px', opacity:'.5' }); hint.textContent = '◀ ▶ wechseln  ·  OK übernehmen  ·  Zurück abbrechen';
-    info.append(label, dotsEl, hint);
+    info.append(label, dotsEl);
     main.onclick = ev => { ev.stopPropagation(); if (pk && !pk.closing) closePicker(true); };
-    ov.append(main, info);
+    let tx = null;
+    main.addEventListener('touchstart', ev => { tx = ev.touches[0].clientX; }, { passive:true });
+    main.addEventListener('touchend', ev => { if (tx === null) return; const dx = ev.changedTouches[0].clientX - tx; tx = null; if (Math.abs(dx) > 40) { ev.preventDefault(); pkGo(dx < 0 ? pk.sel + 1 : pk.sel - 1); } });
+    ov.append(bg, main, info);
     document.body.append(ov);
-    pk = { main, label, dots, dw, el:ov, info, sel:cur, cur, closing:false, W, H };
-    pkPaint();
+    pk = { main, bg, label, dots, dw, el:ov, info, sel:cur, cur, closing:false, W, H };
+    pkPaint(0);
     void ov.offsetWidth;
     setTimeout(() => {
       if (!pk || pk.closing) return;
-      st(ov, { background:'rgba(11,11,14,1)' });
+      st(bg, { opacity:'1' });
       st(main, { left:mx + 'px', top:my + 'px', width:mw + 'px', height:mh + 'px', borderRadius:Math.round(H * .035) + 'px', boxShadow:'0 30px 80px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.16)' });
       st(info, { opacity:'1' });
     }, 60);
@@ -2514,10 +2540,10 @@ const ScreenSaver = (() => {
     pk.closing = true;
     const p = pk;
     if (apply && p.sel !== p.cur) applyChoice(pkItem(p.sel));
-    else if (!apply) { const m = pkMedia(pkItem(p.cur)); st(m, FILL); p.main.replaceChildren(m); }
+    else if (!apply) { p.main.replaceChildren(pkSlide(pkItem(p.cur), false)); }
     st(p.info, { opacity:'0' });
     st(p.main, { left:'0', top:'0', width:p.W + 'px', height:p.H + 'px', borderRadius:'0', boxShadow:'0 0 0 rgba(0,0,0,0)' });
-    setTimeout(() => { if (p.el) st(p.el, { background:'rgba(11,11,14,0)' }); }, 500);
+    st(p.bg, { opacity:'0' }); setTimeout(() => { if (p.el) st(p.el, { background:'rgba(11,11,14,0)' }); }, 500);
     if (visible) {
       if (blackAfter() > 0) { clearTimeout(blackTimer); blackTimer = setTimeout(goBlack, blackAfter()); }
       if (!root.classList.contains('vmode')) { clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval()); }
@@ -2528,8 +2554,8 @@ const ScreenSaver = (() => {
   function pickKey(k) {
     if (!pk) return false;
     if (pk.closing) return true;
-    if (k === 'left' || k === 'up') { if (pk.sel > 0) { pk.sel--; pkPaint(); navTick(); } }
-    else if (k === 'right' || k === 'down') { if (pk.sel < 1) { pk.sel++; pkPaint(); navTick(); } }
+    if (k === 'left' || k === 'up') { if (pk.sel > 0) { pkGo(pk.sel - 1); navTick(); } }
+    else if (k === 'right' || k === 'down') { if (pk.sel < 1) { pkGo(pk.sel + 1); navTick(); } }
     else if (k === 'ok' || k === 'pp') closePicker(true);
     else if (k === 'back' || k === 'home' || k === 'menu' || k === 'settings') closePicker(false);
     return true;
