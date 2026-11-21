@@ -436,6 +436,7 @@ function appTile(a, onOpen) {
   const measure = () => { const d = nm.scrollWidth - box.clientWidth; box.classList.toggle('scroll', d > 1); box.style.setProperty('--d', -d + 'px'); box.style.setProperty('--t', Math.max(2, d / 30) + 's'); };
   b.addEventListener('mouseenter', measure); b.addEventListener('focus', measure);
   b.onclick = () => { onOpen(a, b); };
+  b._app = a; b.addEventListener('contextmenu', ev => { ev.preventDefault(); openAppOptions(b); });
   if (a.installslite) { b.addEventListener('focus', () => warm(a.installslite)); b.addEventListener('mouseover', () => warm(a.installslite)); warm(a.installslite); }
   return b;
 }
@@ -2190,12 +2191,14 @@ const ScreenSaver = (() => {
   }
   const isPlayKey = ev => ev.key === 'MediaPlayPause' || ev.key === 'MediaPlay' || ev.key === 'Enter' || ev.key === ' ' || [179, 415, 10252, 13].includes(ev.keyCode);
   const goBlack = () => {
-    if (!visible || black) return;
+    if (!visible || black || pk) return;
     black = true; clearTimeout(slideTimer); hideRec(); Spotify.run(false);
     if (root) root.classList.add('black');
   };
   const accUp = () => !!(layerEl && layerEl.classList && layerEl.classList.contains('acc'));
+  const PK_KEYS = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', Enter:'ok', ' ':'ok', Escape:'back', Backspace:'back' };
   const onKey = ev => {
+    if (pk) { ev.preventDefault(); ev.stopImmediatePropagation(); const k = PK_KEYS[ev.key]; if (k) pickKey(k); return; }
     if (accUp()) { if (!visible) schedule(); return; }
     if (visible && black) { ev.preventDefault(); ev.stopImmediatePropagation(); hide(); return; }
     if (visible && recCur && isPlayKey(ev)) { ev.preventDefault(); ev.stopImmediatePropagation(); playRec(); return; }
@@ -2359,6 +2362,7 @@ const ScreenSaver = (() => {
   }
 
   function nextImage() {
+    if (pk) return;
     if (!root || !visible || black || root.classList.contains('vmode')) return;
     index = (index + 1) % TV_SAVER_IMAGES.length;
     const next = index % 2 ? imgB : imgA, old = index % 2 ? imgA : imgB;
@@ -2382,6 +2386,7 @@ const ScreenSaver = (() => {
   function hide() {
     if (!visible) return;
     visible = false; black = false; clearTimeout(blackTimer); hideRec(); Spotify.run(false);
+    if (pk) { root.classList.remove('pick'); pk.live.remove(); pk.el.remove(); pk = null; }
     clearTimeout(slideTimer);
     if (vid) { try { vid.pause(); } catch {} prepareStart(); }
     clearDigitTimers();
@@ -2433,8 +2438,93 @@ const ScreenSaver = (() => {
     fillRecs().then(() => setTimeout(() => { if (visible && !black && !recCur && recsOn() && recQ.length) showRec(recQ.shift()); }, 2500));
   }
 
+
+  /* ===== Motiv-Auswahl (Handy: Hamburger halten): Bild schrumpft, Vorschau-Liste unten, OK übernimmt – Bildschirmschoner bleibt an ===== */
+  var pk = null;
+  const PK_DE = { lake:'See', forest:'Wald', sunset:'Sonnenuntergang', mountains:'Berge', night:'Nacht', city:'Stadt', blue:'Blau', sun:'Sonne', deep:'Tiefer' };
+  const pkName = f => f.replace(/^tv-saver-/, '').replace(/\.\w+$/, '').split('-').map(w => PK_DE[w] || w).join(' ');
+  const pkVideo = (cls, muted = true) => { const v = document.createElement('video'); v.className = 'saver-video ' + cls; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'metadata'; v.src = SNOOPY_URL; return v; };
+  function applyChoice(it) {
+    clearTimeout(slideTimer);
+    if (it.video) {
+      store.set('saverMode', 'snoopy'); loadVideo();
+      if (vidReady) { root.classList.add('vmode'); try { const p = vid.play(); p && p.catch && p.catch(() => {}); } catch {} }
+      else toast('Snoopy lädt …');
+      if (window.__sico) try { window.__sico(); } catch {}
+    } else {
+      store.set('saverMode', 'images');
+      root.classList.remove('vmode'); if (vid) { try { vid.pause(); } catch {} }
+      index = it.i;
+      const s = index % 2 ? imgB : imgA, o = index % 2 ? imgA : imgB;
+      clearTimeout(s.kt); clearTimeout(o.kt);
+      o.el.classList.remove('on', 'ken'); o.el.style.zIndex = '';
+      s.el.style.zIndex = 2; s.el.classList.remove('on', 'ken');
+      setSlide(s, TV_SAVER_IMAGES[index]).then(() => { if (!visible) return; void s.el.offsetWidth; s.el.classList.add('on', 'ken'); });
+    }
+  }
+  function pkPaint(first) {
+    const { items, cards, live, row } = pk;
+    cards.forEach((c, i) => {
+      const on = i === pk.sel; c.classList.toggle('on', on);
+      const v = c.querySelector('video'); if (v) { if (on) { try { v.play().catch(() => {}); } catch {} } else { try { v.pause(); } catch {} } }
+    });
+    const c = cards[pk.sel];
+    row.scrollTo({ left:c.offsetLeft - (row.clientWidth - c.offsetWidth) / 2, behavior:first ? 'auto' : 'smooth' });
+    const it = items[pk.sel];
+    if (pk.sel === pk.cur) { live.replaceChildren(); return; }
+    let el;
+    if (it.video) { el = pkVideo('pk-lv'); el.preload = 'auto'; el.autoplay = true; el.play && el.play().catch(() => {}); }
+    else { el = document.createElement('img'); el.src = it.src; el.alt = ''; }
+    live.replaceChildren(el);
+  }
+  function openPicker() {
+    if (!visible || pk || black || !root) return;
+    hideRec(); Spotify.run(false); clearTimeout(slideTimer); clearTimeout(blackTimer);
+    const items = [{ video:true, label:'Snoopy' }, ...TV_SAVER_IMAGES.map((f, i) => ({ src:f, i, label:pkName(f) }))];
+    const cur = root.classList.contains('vmode') ? 0 : 1 + (index % TV_SAVER_IMAGES.length);
+    const live = h('div', { class:'pk-live' });
+    root.querySelector('.saver-bg').append(live);
+    const cards = items.map((it, i) => {
+      let th;
+      if (it.video) th = pkVideo('pk-th'); else { th = document.createElement('img'); th.className = 'pk-th'; th.src = it.src; th.alt = ''; th.decoding = 'async'; }
+      const c = h('button', { class:'pk-c', type:'button' }, th, h('span', { class:'pk-n' }, it.label));
+      if (i === cur) c.append(h('em', { class:'pk-act' }, 'Aktiv'));
+      c.onclick = ev => { ev.stopPropagation(); if (pk.closing) return; pk.sel = i; pkPaint(); pickKey('ok'); };
+      return c;
+    });
+    const row = h('div', { class:'pk-row' }, ...cards);
+    const el = h('div', { class:'saver-pick' }, h('div', { class:'pk-h' }, 'Bildschirmschoner-Motiv'), row, h('div', { class:'pk-hint' }, '◀ ▶ auswählen  ·  OK übernehmen  ·  Zurück abbrechen'));
+    root.append(el);
+    pk = { items, cards, live, row, el, sel:cur, cur, closing:false };
+    pkPaint(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (pk) root.classList.add('pick'); }));
+  }
+  function closePicker(apply) {
+    if (!pk || pk.closing) return;
+    pk.closing = true;
+    const p = pk, it = p.items[p.sel];
+    if (apply && p.sel !== p.cur) applyChoice(it);
+    root.classList.remove('pick');
+    p.cards.forEach(c => { const v = c.querySelector('video'); if (v) { try { v.pause(); } catch {} } });
+    if (visible) {
+      if (blackAfter() > 0) { clearTimeout(blackTimer); blackTimer = setTimeout(goBlack, blackAfter()); }
+      if (!root.classList.contains('vmode')) { clearTimeout(slideTimer); slideTimer = setTimeout(nextImage, interval()); }
+      Spotify.run(true);
+    }
+    setTimeout(() => { p.live.remove(); p.el.remove(); if (pk === p) pk = null; }, 800);
+  }
+  function pickKey(k) {
+    if (!pk) return false;
+    if (pk.closing) return true;
+    if (k === 'left' || k === 'up') { if (pk.sel > 0) { pk.sel--; pkPaint(); navTick(); } }
+    else if (k === 'right' || k === 'down') { if (pk.sel < pk.items.length - 1) { pk.sel++; pkPaint(); navTick(); } }
+    else if (k === 'ok' || k === 'pp') closePicker(true);
+    else if (k === 'back' || k === 'home' || k === 'menu' || k === 'settings') closePicker(false);
+    return true;
+  }
+
   function schedule() { clearTimeout(timer); pendingShow = false; if (store.get('saverOn', true)) { if (useVideo()) loadVideo(); timer = setTimeout(show, delay()); } }
-  function activity() { if (accUp()) { if (!visible) schedule(); return; } if (visible) hide(); else schedule(); }
+  function activity() { if (pk) return; if (accUp()) { if (!visible) schedule(); return; } if (visible) hide(); else schedule(); }
   function start() {
     ensure();
     ['pointerdown', 'click', 'mousemove'].forEach(t => document.addEventListener(t, activity, true));
@@ -2445,7 +2535,7 @@ const ScreenSaver = (() => {
     setInterval(() => { if (visible) tickClock(); }, 1000);
     schedule();
   }
-  return { start, show, hide, schedule, playRec };
+  return { start, show, hide, schedule, playRec, isVisible:() => visible && !black, openPicker, pickOpen:() => !!pk, pickKey };
 })();
 
 let tvFullscreenTried = false;
@@ -3641,8 +3731,11 @@ const PLUS = (() => {
   };
   if (IS_TV) document.addEventListener('loadstart', ev => { const v = ev.target; if (v && v.tagName === 'VIDEO') { const x = store.get('vol'); if (x != null) try { v.volume = +x; } catch {} } }, true);
   function remoteKey(k) {
-    if (SysCheck.busy && ['ctrl', 'home', 'menu', 'settings'].includes(k)) return;
+    if (SysCheck.busy && ['ctrl', 'home', 'menu', 'settings', 'opts'].includes(k)) return;
     if (k === 'ctrl') { openControlAnywhere(); return; }
+    if (k === 'opts') { openOptions(); return; }
+    if (optMenu) { optKey(k); return; }
+    if (ScreenSaver.pickOpen() && ScreenSaver.pickKey(k)) return;
     if ((k === 'ok' || k === 'pp') && ScreenSaver.playRec()) return;
     if (k === 'home') { goHomeNow(); return; }
     if (k === 'menu') { openSide(); return; }
@@ -4175,3 +4268,74 @@ const PLUS = (() => {
   route();
   if (SysCheck.pending) { if (!window.BOOT) SysCheck.resume(); } else Welcome.firstRun();   /* BIOS öffnet nach der Start-Animation (tv.html) */
 })();
+
+/* ===== Optionen-Menü (Handy: Hamburger-Taste 1 s halten) ===== */
+var optMenu = null;
+function closeOptMenu(refocus = true) {
+  const m = optMenu; if (!m) return; optMenu = null;
+  m.el.classList.remove('show'); m.scrim.remove(); setTimeout(() => m.el.remove(), 220);
+  if (refocus && m.from && m.from.isConnected) { try { m.from.focus({ preventScroll:true }); } catch {} }
+}
+function optPaint() { optMenu.btns.forEach((b, i) => b.classList.toggle('on', i === optMenu.sel)); }
+function optPick(i) {
+  const m = optMenu; if (!m) return; const it = m.items[i]; if (!it) return;
+  closeOptMenu(true); setTimeout(() => it.fn(), 120);
+}
+function optKey(k) {
+  const m = optMenu; if (!m) return false;
+  if (k === 'up' || k === 'left') { m.sel = (m.sel + m.items.length - 1) % m.items.length; optPaint(); navTick(); }
+  else if (k === 'down' || k === 'right') { m.sel = (m.sel + 1) % m.items.length; optPaint(); navTick(); }
+  else if (k === 'ok' || k === 'pp') optPick(m.sel);
+  else if (k === 'back' || k === 'home' || k === 'menu' || k === 'settings') closeOptMenu(true);
+  return true;
+}
+function openOptMenu(title, items, from) {
+  closeOptMenu(false);
+  const scrim = h('div', { class:'optm-scrim' });
+  scrim.addEventListener('pointerdown', ev => { ev.preventDefault(); closeOptMenu(true); });
+  const el = h('div', { class:'optm', role:'menu', 'aria-label':title });
+  const btns = items.map((it, i) => {
+    const b = h('button', { class:'optm-i' + (it.danger ? ' danger' : ''), type:'button', role:'menuitem' }, icon(it.icon), h('span', {}, it.label));
+    b.onclick = ev => { ev.stopPropagation(); optPick(i); };
+    b.addEventListener('mouseenter', () => { if (optMenu && optMenu.sel !== i) { optMenu.sel = i; optPaint(); } });
+    return b;
+  });
+  el.append(h('div', { class:'optm-t' }, title), ...btns);
+  document.body.append(scrim, el);
+  const r = from ? from.getBoundingClientRect() : { left:innerWidth / 2, right:innerWidth / 2, top:innerHeight / 3 };
+  const w = el.offsetWidth, hh = el.offsetHeight, gap = 18;
+  let x = r.right + gap; if (x + w > innerWidth - 20) x = r.left - gap - w;
+  x = Math.max(20, x);
+  const y = Math.max(20, Math.min(r.top, innerHeight - hh - 20));
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  optMenu = { el, scrim, btns, items, sel:0, from };
+  optPaint();
+  requestAnimationFrame(() => el.classList.add('show'));
+}
+function openAppOptions(tile) {
+  const a = tile && tile._app; if (!a) return;
+  const items = [{ label:'Öffnen', icon:'external', fn:() => tile.click() }];
+  const k = appKey(a);
+  if (store.get('apps', []).some(x => appKey(x) === k)) items.push({ label:'Deinstallieren', icon:'trash', danger:true, fn:async () => {
+    if (!(await askConfirm(a.name + ' deinstallieren?', 'Deinstallieren'))) return;
+    store.set('apps', store.get('apps', []).filter(x => appKey(x) !== k));
+    store.set('devapps', store.get('devapps', []).filter(x => appKey(x) !== k));
+    window._appsPaint && window._appsPaint(); toast(a.name + ' deinstalliert');
+    setTimeout(() => { const t = document.querySelector('.atile'); if (t) focusEl(t); }, 60);
+  } });
+  openOptMenu(a.name, items, tile);
+}
+function openOptions() {
+  if (optMenu) { closeOptMenu(true); return; }
+  if (ScreenSaver.pickOpen()) return;
+  if (ScreenSaver.isVisible()) { ScreenSaver.openPicker(); return; }
+  if (layerEl || dlgEl) return;
+  const ae = document.activeElement, t = ae && ae.closest && ae.closest('.atile');
+  if (t && t._app) { openAppOptions(t); return; }
+  toast('Hier gibt es keine Optionen');
+}
+window.addEventListener('keydown', ev => {
+  if (!optMenu || dlgEl) return;
+  const k = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', Enter:'ok', ' ':'ok', Escape:'back', Backspace:'back' }[ev.key];
+  ev.preventDefault(); ev.stopImmediatePropagation(); if (k) optKey(k);
+}, true);
