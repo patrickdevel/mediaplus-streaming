@@ -427,14 +427,13 @@ function Logo(a) {
 }
 const warmed = new Set();
 function warm(u) { if (!u || warmed.has(u)) return; warmed.add(u); try { const o = new URL(u).origin; const p = document.createElement('link'); p.rel = 'preconnect'; p.href = o; p.crossOrigin = ''; document.head.append(p); const f = document.createElement('link'); f.rel = 'prefetch'; f.href = u; document.head.append(f); } catch {} }
-const selSnd = new Audio('selectpitched.mp3'); selSnd.preload = 'auto';
 function appTile(a, onOpen) {
   const lg = Logo(a), nm = h('span', {}, a.name), box = h('div', { class:'atm' }, nm);
   lg.append(h('div', { class:'atn' }, box));
   const b = h('button', { class:'atile', type:'button', 'aria-label':a.name }, lg);
   const measure = () => { const d = nm.scrollWidth - box.clientWidth; box.classList.toggle('scroll', d > 1); box.style.setProperty('--d', -d + 'px'); box.style.setProperty('--t', Math.max(2, d / 30) + 's'); };
   b.addEventListener('mouseenter', measure); b.addEventListener('focus', measure);
-  b.onclick = () => { try { selSnd.currentTime = 0; selSnd.play().catch(() => {}); } catch {} onOpen(a, b); };
+  b.onclick = () => { onOpen(a, b); };
   if (a.installslite) { b.addEventListener('focus', () => warm(a.installslite)); b.addEventListener('mouseover', () => warm(a.installslite)); warm(a.installslite); }
   return b;
 }
@@ -1930,7 +1929,8 @@ function showSugg() {
 }
 
 const TV = { video:null, player:null, pending:true, last:null };
-const navSnd = new Audio('navigate.mp3'); navSnd.preload = 'auto';
+const navSnd = new Audio('navigate.ogg'); navSnd.preload = 'auto';
+const selectSnd = new Audio('select.ogg'); selectSnd.preload = 'auto';
 const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-sunset.jpg', 'tv-saver-mountains.jpg', 'tv-saver-night-lake.jpg', 'tv-saver-night-city.jpg', 'tv-saver-night-mountains.jpg', 'tv-saver-blue-night.jpg', 'tv-saver-sun-mountains.jpg', 'tv-saver-deep-forest.jpg'];
 
 /* ===== Spotify: Anzeige im Bildschirmschoner (Login läuft über mobile.html, Token kommt per Kopplung) ===== */
@@ -2439,6 +2439,18 @@ function navTick() {
   if ([...document.querySelectorAll('video:not(.saver-video)')].some(v => !v.paused && !v.ended)) return;
   try { navSnd.currentTime = 0; navSnd.play().catch(() => {}); } catch {}
 }
+/* Auswählen (OK / Klick auf Buttons, Karten, Einstellungen, Dialog-Optionen): select.ogg. App-Kacheln bleiben still. */
+function selectTick() {
+  if ([...document.querySelectorAll('video:not(.saver-video)')].some(v => !v.paused && !v.ended)) return;
+  try { selectSnd.currentTime = 0; selectSnd.play().catch(() => {}); } catch {}
+}
+document.addEventListener('click', ev => {
+  if (window.BOOT && BOOT.active) return;
+  const t = ev.target && ev.target.closest && ev.target.closest('a[href],button,[tabindex="0"],.dopt');
+  if (!t || t.closest('.atile,#sck,#sck-boot') || t.disabled) return;
+  if (t.matches('input,textarea,select') && !/^(checkbox|radio|button|submit)$/.test(t.type || '')) return;
+  selectTick();
+}, true);
 const FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex="0"]';
 
 let dlgEl = null;
