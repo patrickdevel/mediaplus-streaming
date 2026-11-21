@@ -403,7 +403,7 @@ let appWin = null, layerEl = null;
 const appKey = a => a.installslite || a.name;
 const LOGO_V = Date.now();
 const bust = u => u ? u + (u.includes('?') ? '&' : '?') + 'v=' + LOGO_V : u;
-const installedApps = () => { const cat = store.get('appcat', []); return store.get('apps', []).map(a => { const c = cat.find(x => appKey(x) === appKey(a)); return c ? { name:a.name, installslite:a.installslite, ...c } : { name:a.name, installslite:a.installslite }; }); };
+const installedApps = () => { const cat = [...store.get('devapps', []), ...store.get('appcat', [])]; return store.get('apps', []).map(a => { const c = cat.find(x => appKey(x) === appKey(a)); return c ? { name:a.name, installslite:a.installslite, ...c } : { name:a.name, installslite:a.installslite }; }); };
 async function fetchApps() {
   try {
     let t = null;
@@ -526,6 +526,76 @@ function openStore(opener) {
   fetchApps().then(l => { cat = l; if (!det) render(); });
 }
 
+/* ===== Entwickler: Wireless Debugging (PC-Bridge) =====
+   Der TV hört nur bei aktivem Wireless Debugging auf einem eigenen Relay-Kanal (mpdev + Kopplungscode).
+   Die PC-Seite (debug.html) verbindet sich mit diesem Code und kann eigene Apps installieren/deinstallieren. */
+const DevBridge = (() => {
+  const RELAY = 'wss://relay.patrick4real.workers.dev', ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let ws = null, retryT = 0, tries = 0, lastSeen = 0, seen = [];
+  const enabled = () => store.get('wdebug', false) === true;
+  const rawCode = () => String(store.get('devCode', '') || '');
+  const newCode = () => { let c = ''; crypto.getRandomValues(new Uint8Array(8)).forEach(x => { c += ALPHA[x % 32]; }); store.set('devCode', c); return c; };
+  const pretty = c => c.replace(/(.{4})(?=.)/g, '$1-');
+  const custom = () => { const v = store.get('devapps', []); return Array.isArray(v) ? v : []; };
+  const cleanUrl = u => { try { const x = new URL(String(u || '').trim()); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch { return ''; } };
+  const pub = () => custom().map(a => ({ key:appKey(a), name:a.name, url:a.installslite, logo:a.logo || '', description:a.description || '' }));
+  const repaint = () => { window._appsPaint && window._appsPaint(); };
+
+  function install(a) {
+    a = a || {};
+    const name = String(a.name || '').trim().slice(0, 40), url = cleanUrl(a.url), logo = a.logo ? cleanUrl(a.logo) : '', description = String(a.description || '').trim().slice(0, 200);
+    if (!name) return { ok:false, err:'Name fehlt' };
+    if (!url) return { ok:false, err:'App-URL ungültig (muss mit http:// oder https:// beginnen)' };
+    if (a.logo && !logo) return { ok:false, err:'Bild-URL ungültig' };
+    const entry = { name, installslite:url, logo, description, dev:true }, k = appKey(entry);
+    store.set('devapps', [...custom().filter(x => appKey(x) !== k), entry]);
+    store.set('apps', [...store.get('apps', []).filter(x => appKey(x) !== k), { name, installslite:url }]);
+    repaint();
+    return { ok:true, name };
+  }
+  function remove(key) {
+    const a = custom().find(x => appKey(x) === key);
+    if (!a) return { ok:false, err:'App nicht gefunden' };
+    store.set('devapps', custom().filter(x => appKey(x) !== key));
+    store.set('apps', store.get('apps', []).filter(x => appKey(x) !== key));
+    repaint();
+    return { ok:true, name:a.name };
+  }
+  function send(o) { if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ t:'dev', s:'tv', ...o })); } catch {} } }
+  function handle(d) {
+    if (!d || d.t !== 'dev' || d.s !== 'pc' || !enabled()) return;
+    if (d.i) { if (seen.includes(d.i)) return; seen.push(d.i); if (seen.length > 100) seen.shift(); }
+    const was = lastSeen; lastSeen = Date.now();
+    if (!was || lastSeen - was > 30000) toast('PC verbunden');
+    const r = { r:d.i, a:d.a };
+    if (d.a === 'hello' || d.a === 'ping') return send({ ...r, ok:true, name:'Media+ TV', apps:pub() });
+    if (d.a === 'list') return send({ ...r, ok:true, apps:pub() });
+    if (d.a === 'install') { const x = install(d.app); if (x.ok) toast(x.name + ' vom PC installiert'); return send({ ...r, ok:x.ok, err:x.err, apps:pub() }); }
+    if (d.a === 'remove') { const x = remove(String(d.key || '')); if (x.ok) toast(x.name + ' vom PC deinstalliert'); return send({ ...r, ok:x.ok, err:x.err, apps:pub() }); }
+    send({ ...r, ok:false, err:'Unbekannter Befehl' });
+  }
+  function disconnect() { clearTimeout(retryT); const w = ws; ws = null; lastSeen = 0; try { w && w.close(); } catch {} }
+  function connect() {
+    clearTimeout(retryT);
+    if (!IS_TV || !enabled() || !rawCode() || !window.WebSocket) return disconnect();
+    const t = 'mpdev' + rawCode().toLowerCase();
+    if (ws && ws.readyState < 2 && ws._t === t) return;
+    try { ws && ws.close(); } catch {}
+    const w = ws = new WebSocket(RELAY + '/?t=' + encodeURIComponent(t)); w._t = t;
+    w.onopen = () => { tries = 0; };
+    w.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch { return; } try { handle(d); } catch {} };
+    w.onclose = () => { if (ws === w) { ws = null; if (enabled()) retryT = setTimeout(connect, Math.min(15000, 1000 * (++tries))); } };
+    w.onerror = () => { try { w.close(); } catch {} };
+  }
+  return {
+    init() { if (!IS_TV) return; if (enabled()) { if (!rawCode()) newCode(); connect(); } setInterval(() => { if (!enabled()) return; connect(); if (ws && ws.readyState === 1) { try { ws.send('{"t":"ping"}'); } catch {} } }, 30000); },
+    enabled, code:() => pretty(rawCode()), connected:() => enabled() && Date.now() - lastSeen < 25000,
+    setEnabled(v) { store.set('wdebug', !!v); if (v) { newCode(); disconnect(); connect(); } else disconnect(); },
+    regen() { newCode(); disconnect(); connect(); },
+    list:pub, remove, pageUrl:() => location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'debug.html')
+  };
+})();
+
 /* ===== Einstellungen (nur echte Optionen) ===== */
 (function(){ if (store.get('noanim', false)) document.body.classList.add('noanim'); if (store.get('cursor', false)) document.documentElement.style.cursor = 'auto'; })();
 function openSettings(opener, opts) {
@@ -565,7 +635,17 @@ function openSettings(opener, opts) {
   const A = (label, fn, dng) => ({ t:'action', label, fn, dng });
   const L = (label, href) => ({ t:'link', label, href });
   const Q = (label, kind) => ({ t:'qr', label, kind });
-  const I = (label, val) => ({ t:'info', label, val: typeof val === 'function' ? val : () => val });
+  const I = (label, val, tap) => ({ t:'info', label, tap, val: typeof val === 'function' ? val : () => val });
+  const DV = label => ({ t:'dev', label });
+  /* Entwickler werden: 5× hintereinander auf Info → Netzwerk tippen (wie bei Android) */
+  let devTaps = 0, devTapT = 0;
+  const devTap = () => {
+    if (g('devMode', false)) { toast('Du bist bereits Entwickler'); return; }
+    clearTimeout(devTapT); devTapT = setTimeout(() => { devTaps = 0; }, 3000);
+    const left = 5 - (++devTaps);
+    if (left <= 0) { devTaps = 0; clearTimeout(devTapT); store.set('devMode', true); toast('Du bist jetzt Entwickler!'); sync(); return; }
+    if (devTaps >= 2) toast('Noch ' + left + ' Mal tippen, um Entwickler zu werden');
+  };
   const reroute = () => route();
   const saver = () => { ScreenSaver.schedule(); };
   const wipe = (key, label) => A(label, async () => { if (await askConfirm(label + '?', 'Löschen')) { store.set(key, Array.isArray(g(key, [])) ? [] : {}); markNav(); toast('Erledigt'); } }, true);
@@ -597,7 +677,7 @@ function openSettings(opener, opts) {
       I('Installierte Apps', () => String(store.get('apps', []).length)),
       TK('Beim Schließen nachfragen', 'askclose', true),
       A('App-Katalog neu laden', async () => { await fetchApps(); window._appsPaint && window._appsPaint(); toast('Katalog aktualisiert'); }),
-      A('Alle Apps deinstallieren', async () => { if (await askConfirm('Alle Apps deinstallieren?', 'Deinstallieren')) { store.set('apps', []); window._appsPaint && window._appsPaint(); toast('Apps entfernt'); } }, true)]],
+      A('Alle Apps deinstallieren', async () => { if (await askConfirm('Alle Apps deinstallieren?', 'Deinstallieren')) { store.set('apps', []); store.set('devapps', []); window._appsPaint && window._appsPaint(); toast('Apps entfernt'); } }, true)]],
     ['Zugänglichkeit', [
       L('Audiodeskription', '#/access/ad'), L('Gebärdensprache', '#/access/dgs'), L('Mit Untertitel', '#/access/ut')]],
     ['Kopplung', [
@@ -613,8 +693,9 @@ function openSettings(opener, opts) {
       A('Alles zurücksetzen', async () => { if (await askConfirm('Alle Einstellungen und Daten zurücksetzen?', 'Zurücksetzen')) { try { Object.keys(localStorage).filter(k => k.startsWith('mt:')).forEach(k => localStorage.removeItem(k)); } catch {} location.reload(); } }, true)]],
     ['Info', [
       I('Verlauf', () => String(store.get('hist', []).length)), I('Gemerkt', () => String(store.get('saved', []).length)),
-      I('Netzwerk', () => navigator.onLine ? 'Verbunden' : 'Offline'),
-      A('Verbindung testen', async () => { const t0 = Date.now(); try { await fetch(location.href, { cache:'no-store', method:'HEAD' }); toast('Online · ' + (Date.now() - t0) + ' ms'); } catch { toast('Keine Verbindung'); } })]]
+      I('Netzwerk', () => navigator.onLine ? 'Verbunden' : 'Offline', () => devTap()),
+      A('Verbindung testen', async () => { const t0 = Date.now(); try { await fetch(location.href, { cache:'no-store', method:'HEAD' }); toast('Online · ' + (Date.now() - t0) + ' ms'); } catch { toast('Keine Verbindung'); } }),
+      { ...DV('Entwickleroptionen'), when: () => g('devMode', false) }]]
   ];
   let sub = null, qrIv = 0, qrOn = false;
   const pop = n => { n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); };
@@ -653,6 +734,54 @@ function openSettings(opener, opts) {
     list.append(...kids.slice(0, 1), ...kids.slice(1));
     back.focus({ preventScroll:true });
   }
+  let devOn = false;
+  function leaveDev() { devOn = false; clearInterval(qrIv); draw('back', 0); const b = list.querySelector('[data-dev]'); b && b.focus({ preventScroll:true }); }
+  function showDev() {
+    devOn = true; clearInterval(qrIv);
+    title.textContent = 'Entwickleroptionen'; pop(title);
+    let stV = null;
+    const build = (fi, anim) => {
+      list.className = 'slist' + (anim ? ' fwd' : ''); list.replaceChildren(); if (anim) list.scrollTop = 0;
+      let i = 0; const kids = [];
+      kids.push(row('Zurück', '', leaveDev, 'bk', i++));
+      if (!IS_TV) kids.push(row('Wireless Debugging', h('span', { class:'v' }, 'Nur am TV'), null, 'inf', i++));
+      else {
+        const on = DevBridge.enabled(), tg = h('span', { class:'tg' + (on ? ' on' : '') });
+        kids.push(row('Wireless Debugging', tg, async () => {
+          if (!DevBridge.enabled()) {
+            if (!await askConfirm('Wireless Debugging aktivieren? Ein Computer kann sich dann mit dem Kopplungscode verbinden und Apps auf diesem Gerät installieren. Aktiviere es nur, wenn du dem Computer vertraust.', 'Aktivieren')) return;
+            DevBridge.setEnabled(true); toast('Wireless Debugging aktiviert');
+          } else { DevBridge.setEnabled(false); toast('Wireless Debugging deaktiviert'); }
+          build(1, false);
+        }, '', i++));
+        if (on) {
+          stV = h('span', { class:'v' }, '');
+          kids.push(row('Status', stV, null, 'inf', i++));
+          kids.push(h('div', { class:'qrw' },
+            h('div', { class:'qrt dim' }, 'Kopplungscode'),
+            h('div', { class:'qrt code' }, DevBridge.code()),
+            h('div', { class:'qrt dim' }, 'Öffne am PC diese Seite und gib den Code ein:'),
+            h('div', { class:'qrt dim url' }, DevBridge.pageUrl())));
+          kids.push(row('Neuen Code erzeugen', '', () => { DevBridge.regen(); toast('Neuer Kopplungscode'); build(4, false); }, '', i++));
+        }
+      }
+      const apps = DevBridge.list();
+      kids.push(row('Eigene Apps', h('span', { class:'v' }, String(apps.length)), null, 'inf', i++));
+      apps.forEach(a => kids.push(row(a.name, h('span', { class:'v' }, 'Entfernen'), async () => {
+        if (await askConfirm(a.name + ' deinstallieren?', 'Deinstallieren')) { DevBridge.remove(a.key); toast(a.name + ' deinstalliert'); build(1, false); }
+      }, '', i++)));
+      kids.push(row('Entwicklermodus deaktivieren', '', async () => {
+        if (!await askConfirm('Entwicklermodus deaktivieren? Wireless Debugging wird dabei ausgeschaltet.', 'Deaktivieren')) return;
+        store.set('devMode', false); DevBridge.setEnabled(false); toast('Entwicklermodus deaktiviert'); leaveDev();
+      }, 'dng', i++));
+      list.append(...kids);
+      const t = list.children[Math.min(fi, list.children.length - 1)]; if (t) t.focus({ preventScroll:true });
+      paintSt();
+    };
+    const paintSt = () => { if (stV && stV.isConnected) stV.textContent = DevBridge.connected() ? 'PC verbunden' : 'Wartet auf PC'; };
+    qrIv = setInterval(() => { if (!list.isConnected) return clearInterval(qrIv); paintSt(); }, 1000);
+    build(0, true);
+  }
   function draw(dir, focusIdx) {
     cond = [];
     list.className = 'slist ' + dir; list.replaceChildren(); list.scrollTop = 0;
@@ -672,15 +801,17 @@ function openSettings(opener, opts) {
         } else if (it.t === 'qr') list.append(row(it.label, chev(), () => showQr(it), '', i++));
         else if (it.t === 'action') list.append(row(it.label, '', () => it.fn(), it.dng ? 'dng' : '', i++));
         else if (it.t === 'link') list.append(row(it.label, chev(), () => { el._close(true); location.hash = it.href; }, '', i++));
-        else list.append(row(it.label, h('span', { class:'v' }, it.val()), null, 'inf', i++));
+        else if (it.t === 'dev') { const b = row(it.label, chev(), () => showDev(), '', i++); b.dataset.dev = '1'; list.append(b); }
+        else list.append(row(it.label, h('span', { class:'v' }, it.val()), it.tap || null, 'inf', i++));
         if (it.when) { const b = list.lastElementChild; cond.push({ it, b, prev:b.previousElementSibling }); if (!it.when()) b.remove(); }
       });
     }
     const t = list.children[sub == null ? (focusIdx || 0) : Math.min(1, list.children.length - 1)]; if (t) t.focus({ preventScroll:true });
   }
   el._close = (force) => {
+    if (devOn && !force) { leaveDev(); return; }
     if (qrOn && !force) { qrOn = false; clearInterval(qrIv); draw('back', 0); return; }
-    clearInterval(qrIv); qrOn = false;
+    clearInterval(qrIv); qrOn = false; devOn = false;
     if (sub != null && !force) { const k = sub; sub = null; draw('back', k); return; }
     el.classList.remove('show'); layerEl = null; window.__sico = null; clearTimeout(gifT); setTimeout(() => el.remove(), 450);
     if (opener && opener.isConnected) opener.focus({ preventScroll:true });
@@ -4001,6 +4132,7 @@ const PLUS = (() => {
   window.addEventListener('hashchange', route);
   window.addEventListener('resize', applyPin);
   PLUS.init();
+  DevBridge.init();
   route();
   if (SysCheck.pending) { if (!window.BOOT) SysCheck.resume(); } else Welcome.firstRun();   /* BIOS öffnet nach der Start-Animation (tv.html) */
 })();
