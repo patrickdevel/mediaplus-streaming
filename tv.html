@@ -59,8 +59,20 @@
 <div id="scrim"></div>
 <main id="main"></main>
 <div id="toast" role="status"></div>
+<div id="setbg" aria-hidden="true"><i></i><i></i></div>
 
 <style>
+/* Gleicher Hintergrund wie die Einstellungen: Live-TV, Suche, Abos, Shorts, Verlauf, Gemerkt */
+#setbg{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .45s ease;overflow:hidden;
+ background:radial-gradient(60% 70% at 15% 20%,#8fdcff 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#7fb2ff 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#7fc9c9 0,transparent 60%),linear-gradient(160deg,#76c8ff,#9ec4dc 55%,#6fb3c4)}
+:root[data-theme="dark"] #setbg{background:radial-gradient(60% 70% at 15% 20%,#16324a 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#1b2a5a 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#0f3b3b 0,transparent 60%),linear-gradient(160deg,#0b1118,#0e141c 55%,#0a1216)}
+#setbg i{position:absolute;width:60vw;height:60vw;border-radius:50%;filter:blur(9vw);opacity:.6;animation:sDrift 16s ease-in-out infinite alternate}
+#setbg i:first-child{background:#7fd6ff;left:-18vw;top:-24vw}
+#setbg i:last-child{background:#7d9dff;right:-22vw;bottom:-30vw;animation-duration:22s;animation-delay:-7s}
+:root[data-theme="dark"] #setbg i:first-child{background:#1c6aa0;opacity:.28}
+:root[data-theme="dark"] #setbg i:last-child{background:#2c3fa8;opacity:.28}
+body[data-route="live"] #setbg,body[data-route="suche"] #setbg,body[data-route="subs"] #setbg,body[data-route="shorts"] #setbg,body[data-route="library"] #setbg{opacity:1}
+body[data-route="live"],body[data-route="suche"],body[data-route="subs"],body[data-route="shorts"],body[data-route="library"]{background:transparent!important}
 /* Intro-Choreografie nach dem Boot: erst nur das Karussell, dann kommen Dock (unten) und Uhr + Drei-Punkte (oben) rein */
 .acc.top{z-index:260}
 html.bi,html.bi body{overflow:hidden}
