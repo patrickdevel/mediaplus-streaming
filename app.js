@@ -712,6 +712,24 @@ function ccSyms() {
     '<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></symbol>' +
     '<symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8"/><path d="M12 9.5v4l2.5 2M9.5 2h5"/></symbol>');
 }
+const accOpen = () => !!(layerEl && layerEl.classList && layerEl.classList.contains('acc'));
+/* Kontrollzentrum überall öffnen (Handy: OK 3 s halten): auch in Apps und über dem Screensaver */
+function openControlAnywhere() {
+  if (accOpen()) { layerEl._close(); return; }
+  if (layerEl || dlgEl) return;
+  let op = document.querySelector('.hmore'), dummy = null;
+  const cs = op && getComputedStyle(op);
+  if (!op || !document.body.classList.contains('home') || cs.display === 'none' || cs.visibility === 'hidden') {
+    dummy = h('div', { class:'acc-op' });
+    dummy.style.cssText = 'position:fixed;top:2.1rem;right:3.4rem;width:3.8rem;height:3.8rem;pointer-events:none;visibility:hidden';
+    document.body.append(dummy); op = dummy;
+  }
+  openControl(op);
+  const el = layerEl;
+  if (!el || !el.classList.contains('acc')) { if (dummy) dummy.remove(); return; }
+  el.classList.add('top');
+  if (dummy) { const oc = el._close; el._close = () => { oc(); setTimeout(() => dummy.remove(), 900); }; }
+}
 function openControl(opener) {
   if (layerEl) { if (layerEl.classList.contains('acc')) layerEl._close(); return; }
   ccSyms();
@@ -719,12 +737,12 @@ function openControl(opener) {
   const bg = h('div', { class:'acc-bg' });
   const tiles = [];
   const T = (cls, kids, fn, label) => { const b = h('button', { class:'t ' + cls, type:'button', 'aria-label':label }, ...kids); b.onclick = fn; tiles.push(b); return b; };
-  const go = fn => { el._close(); setTimeout(fn, 300); };
+  const go = (fn, keepSaver) => { el._close(); if (!keepSaver) ScreenSaver.hide(); setTimeout(fn, 300); };
   const dark = () => document.documentElement.dataset.theme === 'dark';
 
   const tm = h('b', { class:'ctime' });
   const tick = () => { const d = new Date(); tm.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
-  const clock = T('big', [tm, h('span', {}, 'Bildschirmschoner')], () => go(() => ScreenSaver.show(true)), 'Bildschirmschoner mit Uhr starten');
+  const clock = T('big', [tm, h('span', {}, 'Bildschirmschoner')], () => go(() => ScreenSaver.show(true), true), 'Bildschirmschoner mit Uhr starten');
 
   const thI = h('span', { class:'ti' }), thS = h('small', {});
   const paintTh = () => { thI.replaceChildren(icon(dark() ? 'moon' : 'sun')); thS.textContent = dark() ? 'Dunkel' : 'Hell'; };
@@ -2243,7 +2261,9 @@ const ScreenSaver = (() => {
     black = true; clearTimeout(slideTimer); hideRec(); Spotify.run(false);
     if (root) root.classList.add('black');
   };
+  const accUp = () => !!(layerEl && layerEl.classList && layerEl.classList.contains('acc'));
   const onKey = ev => {
+    if (accUp()) { if (!visible) schedule(); return; }
     if (visible && black) { ev.preventDefault(); ev.stopImmediatePropagation(); hide(); return; }
     if (visible && recCur && isPlayKey(ev)) { ev.preventDefault(); ev.stopImmediatePropagation(); playRec(); return; }
     activity();
@@ -2481,7 +2501,7 @@ const ScreenSaver = (() => {
   }
 
   function schedule() { clearTimeout(timer); pendingShow = false; if (store.get('saverOn', true)) { if (useVideo()) loadVideo(); timer = setTimeout(show, delay()); } }
-  function activity() { if (visible) hide(); else schedule(); }
+  function activity() { if (accUp()) { if (!visible) schedule(); return; } if (visible) hide(); else schedule(); }
   function start() {
     ensure();
     ['pointerdown', 'click', 'mousemove'].forEach(t => document.addEventListener(t, activity, true));
@@ -2771,7 +2791,7 @@ function tvKey(ev) {
 
   if (k === 'Home' || k === 'BrowserHome' || k === 'GoHome' || c === 36 || c === 458 || c === 10073) { ev.preventDefault(); goHomeNow(); return; }
   /* App offen: ALLE Tasten (auch Zurück) an die App weiterreichen – die App meldet per mp-app-exit, wenn sie geschlossen werden soll */
-  if (appWin && !dlgEl) {
+  if (appWin && !dlgEl && !accOpen()) {
     if (appSearch || keyIsSys(k, c)) return; /* Lautstärke, Sprachsuche, Einstellungen, Menü bleiben beim System */
     ev.preventDefault();
     if (keyIsSearch(k, c)) return openAppSearch();
@@ -3325,12 +3345,13 @@ const PLUS = (() => {
   };
   if (IS_TV) document.addEventListener('loadstart', ev => { const v = ev.target; if (v && v.tagName === 'VIDEO') { const x = store.get('vol'); if (x != null) try { v.volume = +x; } catch {} } }, true);
   function remoteKey(k) {
+    if (k === 'ctrl') { openControlAnywhere(); return; }
     if ((k === 'ok' || k === 'pp') && ScreenSaver.playRec()) return;
     if (k === 'home') { goHomeNow(); return; }
     if (k === 'menu') { openSide(); return; }
     if (k === 'settings') { openSettings(); return; }
     /* App offen: Handy-Tasten gehen an die App (OK = Enter), Suche-Overlay hat Vorrang */
-    if (appWin && !dlgEl && !appSearch && ['up','down','left','right','ok','back'].includes(k)) {
+    if (appWin && !dlgEl && !appSearch && !accOpen() && ['up','down','left','right','ok','back'].includes(k)) {
       const M = { up:['ArrowUp',38], down:['ArrowDown',40], left:['ArrowLeft',37], right:['ArrowRight',39], ok:['Enter',13], back:['Escape',27] }[k];
       try { appWin._frame.focus(); appWin._frame.contentWindow.focus(); } catch {}
       try { appWin._frame.contentWindow.postMessage({ type:'mp-key', key:M[0], keyCode:M[1] }, '*'); } catch {}
