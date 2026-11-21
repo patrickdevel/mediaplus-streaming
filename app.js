@@ -890,6 +890,28 @@ function openControl(opener) {
 
   const rand = T('pill wide', [h('span', { class:'ti' }, icon('shuffle')), h('span', { class:'tx' }, h('b', {}, 'Überrasch mich'), h('small', {}, 'Zufälliges Video'))], () => go(() => { location.hash = '#/random'; }), 'Zufälliges Video');
 
+  /* Spotify-Karte (nur Anzeige, kein Klick): gleiches Design wie „Überrasch mich“, mit Ein-/Aus- und Songwechsel-Animation */
+  let spUnsub = null, spIv = 0, spSwap = 0, spOff = 0, spKey = '';
+  const spIn = h('div', { class:'spc-in' }), sp = h('div', { class:'t pill wide sp', 'aria-hidden':'true' }, spIn), spw = h('div', { class:'spw nt' }, sp);
+  const spK = n => n.title + '|' + n.artist + '|' + n.cover;
+  const fillSp = n => spIn.replaceChildren(n.cover ? h('img', { class:'spc-cv', src:n.cover, alt:'' }) : h('div', { class:'spc-cv ph' }),
+    h('span', { class:'tx' }, h('b', {}, n.title), h('small', {}, n.artist)));
+  const paintSp = n => {
+    if (el._closing) return;
+    if (!n) { clearTimeout(spSwap); spw.classList.remove('nt', 'on'); clearTimeout(spOff); spOff = setTimeout(() => { if (!spw.classList.contains('on')) spKey = ''; }, 700); return; }
+    clearTimeout(spOff);
+    const k = spK(n);
+    if (!spw.classList.contains('on') || !spKey) {
+      fillSp(n); spKey = k; spIn.classList.remove('out', 'pre'); spw.classList.remove('nt'); void spw.offsetWidth; spw.classList.add('on'); return;
+    }
+    if (k !== spKey) {
+      spKey = k; clearTimeout(spSwap); spIn.classList.add('out');
+      spSwap = setTimeout(() => { fillSp(n); spIn.classList.add('pre'); spIn.classList.remove('out'); void spIn.offsetWidth; spIn.classList.remove('pre'); }, 280);
+    }
+  };
+  const sp0 = Spotify.connected() ? Spotify.fresh() : null;
+  if (sp0) { fillSp(sp0); spKey = spK(sp0); spw.classList.add('on'); tiles.push(sp); }
+
   const rnd = (ic, label, fn) => T('rnd', [icon(ic)], () => go(fn), label);
   const row = h('div', { class:'acc-row' },
     rnd('search', 'Suche', () => { location.hash = '#/suche'; }),
@@ -897,17 +919,18 @@ function openControl(opener) {
     rnd('grid', 'Apps', () => openStore(opener)),
     rnd('settings', 'Einstellungen', () => openSettings(opener)));
   const cap = h('div', { class:'acc-cap' });
-  const panel = h('div', { class:'acc-panel' }, clock, theme, sleep, rand, row, cap);
+  const panel = h('div', { class:'acc-panel' }, clock, theme, sleep, rand, spw, row, cap);
   el.addEventListener('focusin', ev => { const t = ev.target.closest && ev.target.closest('.t'); cap.textContent = t && t.classList.contains('rnd') ? t.getAttribute('aria-label') : ''; });
   bg.addEventListener('mousedown', () => el._close());
   el.append(bg, panel);
 
   tick(); paintTh(); paintSl();
+  if (Spotify.connected()) { spUnsub = Spotify.sub(paintSp); Spotify.poll(); spIv = setInterval(() => Spotify.poll(), 5000); }
   const iv = setInterval(tick, 5000), hc = () => el._close();
   window.addEventListener('hashchange', hc);
   el._close = () => {
     if (el._closing) return; el._closing = true;
-    clearInterval(iv); window.removeEventListener('hashchange', hc); opener.classList.remove('on');
+    clearInterval(iv); clearInterval(spIv); clearTimeout(spSwap); clearTimeout(spOff); spUnsub && spUnsub(); window.removeEventListener('hashchange', hc); opener.classList.remove('on');
     el.classList.remove('show', 'rdy'); if (layerEl === el) layerEl = null;
     setTimeout(() => el.remove(), 700);
     if (opener && opener.isConnected) opener.focus({ preventScroll:true });
@@ -1938,6 +1961,7 @@ const TV_SAVER_IMAGES = ['tv-saver-lake.jpg', 'tv-saver-forest.jpg', 'tv-saver-s
 /* ===== Spotify: Anzeige im Bildschirmschoner (Login läuft über mobile.html, Token kommt per Kopplung) ===== */
 const Spotify = (() => {
   let tok = '', exp = 0, now = null, pollT = 0, busy = false, card = null, key = '';
+  const subs = new Set(), emit = () => subs.forEach(f => { try { f(now); } catch {} });
   const connected = () => !!store.get('spRT', '') && !!store.get('spCid', '');
   let pr = null, tickT = 0, bar = null, inner = null, swapT = 0, lastPoll = 0;
   const SPI = '<svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true"><defs><mask id="spm"><rect width="24" height="24" fill="#fff"/><path d="M5.6 9.2c4.3-1.2 9.2-.8 13 1.4M6.4 12.7c3.5-.9 7.2-.6 10.3 1.2M7.2 16c2.7-.6 5.4-.4 7.8.9" fill="none" stroke="#000" stroke-width="1.7" stroke-linecap="round"/></mask></defs><circle cx="12" cy="12" r="11" fill="currentColor" mask="url(#spm)"/></svg>';
@@ -1997,15 +2021,15 @@ const Spotify = (() => {
       now = { title:it.name, artist:(it.artists || []).map(a => a.name).join(', ') || (it.show && it.show.publisher) || '', cover:(imgs[1] || imgs[0] || {}).url || '' };
       pr = { ms:j.progress_ms || 0, dur:it.duration_ms || 0, at:Date.now() };
     } catch { now = null; }
-    finally { busy = false; paint(); }
+    finally { busy = false; paint(); emit(); }
   }
   function attach(root) { card = h('div', { class:'sp-card' }); root.append(card); paint(); }
   function run(on) {
     clearInterval(pollT); pollT = 0;
     if (on && connected() && store.get('saverSpotify', true) !== false) { poll(); pollT = setInterval(poll, 5000); }
-    else { now = null; paint(); }
+    else { now = null; paint(); emit(); }
   }
-  function disconnect() { store.set('spRT', ''); store.set('spCid', ''); tok = ''; exp = 0; now = null; paint(); }
+  function disconnect() { store.set('spRT', ''); store.set('spCid', ''); tok = ''; exp = 0; now = null; paint(); emit(); }
   function set(d) {
     if (!d.rt || !d.cid) { disconnect(); toast('Spotify getrennt'); return; }
     store.set('spRT', d.rt); store.set('spCid', d.cid); tok = ''; exp = 0; toast('Spotify verbunden');
@@ -2033,7 +2057,7 @@ const Spotify = (() => {
         h('button', { class:'btn primary', type:'button', onclick:() => history.back() }, 'Fertig'),
         h('button', { class:'btn', type:'button', onclick:() => { disconnect(); paintSt(); toast('Spotify getrennt'); } }, 'Trennen')));
   }
-  return { attach, run, set, page, disconnect, connected };
+  return { attach, run, set, page, disconnect, connected, poll, fresh:() => (Date.now() - lastPoll < 8000 ? now : null), sub:f => { subs.add(f); return () => subs.delete(f); } };
 })();
 
 const ScreenSaver = (() => {
