@@ -564,6 +564,7 @@ function openSettings(opener) {
   const CK = (label, key, vals, def, fn) => C(label, vals, () => g(key, def), v => { store.set(key, v); fn && fn(v); });
   const A = (label, fn, dng) => ({ t:'action', label, fn, dng });
   const L = (label, href) => ({ t:'link', label, href });
+  const Q = (label, kind) => ({ t:'qr', label, kind });
   const I = (label, val) => ({ t:'info', label, val: typeof val === 'function' ? val : () => val });
   const reroute = () => route();
   const saver = () => { ScreenSaver.schedule(); };
@@ -600,10 +601,10 @@ function openSettings(opener) {
     ['Zugänglichkeit', [
       L('Audiodeskription', '#/access/ad'), L('Gebärdensprache', '#/access/dgs'), L('Mit Untertitel', '#/access/ut')]],
     ['Kopplung', [
-      IS_TV ? L('Mit Handy koppeln (QR)', '#/pair') : L('An TV senden', '#/send'),
+      IS_TV ? Q('Mit Handy koppeln (QR)', 'pair') : L('An TV senden', '#/send'),
       TK('Spotify-Karte im Bildschirmschoner', 'saverSpotify', true, saver),
       I('Spotify-Status', () => Spotify.connected() ? 'Verbunden' : 'Nicht verbunden'),
-      L('Spotify verbinden', '#/spotify'),
+      Q('Spotify verbinden', 'spotify'),
       A('Spotify trennen', () => { Spotify.disconnect(); toast('Spotify getrennt'); }, true)]],
     ['Daten', [
       A('Exportieren (JSON)', () => PLUS.exportData()),
@@ -615,12 +616,33 @@ function openSettings(opener) {
       I('Netzwerk', () => navigator.onLine ? 'Verbunden' : 'Offline'),
       A('Verbindung testen', async () => { const t0 = Date.now(); try { await fetch(location.href, { cache:'no-store', method:'HEAD' }); toast('Online · ' + (Date.now() - t0) + ' ms'); } catch { toast('Keine Verbindung'); } })]]
   ];
-  let sub = null;
+  let sub = null, qrIv = 0, qrOn = false;
   const pop = n => { n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop'); };
   const row = (label, right, onclick, cls, i) => { const b = h('button', { class:'srow' + (cls ? ' ' + cls : ''), type:'button', style:'--i:' + i }, h('span', {}, label), right); if (onclick) b.onclick = onclick; return b; };
   const label = (it, v) => { const f = it.vals.find(x => same(x[1], v)); return f ? f[0] : it.vals[0][0]; };
   let cond = [];
   const sync = () => cond.forEach(c => { const want = !!c.it.when(); if (want && !c.b.isConnected && c.prev && c.prev.isConnected) c.prev.after(c.b); else if (!want && c.b.isConnected) c.b.remove(); });
+  function showQr(it) {
+    qrOn = true; clearInterval(qrIv);
+    list.className = 'slist fwd'; list.replaceChildren(); list.scrollTop = 0;
+    const isSp = it.kind === 'spotify';
+    title.textContent = isSp ? 'Spotify verbinden' : 'Mit Handy koppeln'; pop(title);
+    const back = row('Zurück', '', () => { qrOn = false; clearInterval(qrIv); draw('back', 0); }, 'bk', 0);
+    const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
+    const url = base + '?tv=' + store.get('pairTopic') + (isSp ? '#/spotify' : '#/remote');
+    const box = h('div', { class:'qrbox', style:'width:30vh;margin:0 auto;font-size:2.2vh' }, 'QR-Code wird erzeugt …');
+    new Promise((res, rej) => {
+      if (window.qrcode) return res();
+      const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      sc.onload = res; sc.onerror = rej; document.head.append(sc);
+    }).then(() => { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag({ cellSize:6, margin:0 }); })
+      .catch(() => { box.textContent = 'QR-Code nicht verfügbar'; });
+    const st = h('div', { style:'text-align:center;font-size:2.8vh;font-weight:600;color:#111;padding-top:1.2vh' });
+    const paintSt = () => { st.textContent = isSp ? (Spotify.connected() ? '✓ Spotify ist verbunden' : 'Scanne den Code mit dem Handy') : 'Scanne den Code mit dem Handy'; };
+    paintSt(); qrIv = setInterval(() => { if (!st.isConnected) return clearInterval(qrIv); paintSt(); }, 1000);
+    list.append(back, h('div', { style:'padding-top:1vh' }, box, st));
+    back.focus({ preventScroll:true });
+  }
   function draw(dir, focusIdx) {
     cond = [];
     list.className = 'slist ' + dir; list.replaceChildren(); list.scrollTop = 0;
@@ -637,7 +659,8 @@ function openSettings(opener) {
         } else if (it.t === 'cycle') {
           const v = h('span', { class:'v' }, label(it, it.get()));
           list.append(row(it.label, v, () => { const cur = it.vals.findIndex(x => same(x[1], it.get())); const nx = it.vals[(cur + 1) % it.vals.length]; it.set(nx[1]); v.textContent = nx[0]; pop(v); sync(); }, '', i++));
-        } else if (it.t === 'action') list.append(row(it.label, '', () => it.fn(), it.dng ? 'dng' : '', i++));
+        } else if (it.t === 'qr') list.append(row(it.label, chev(), () => showQr(it), '', i++));
+        else if (it.t === 'action') list.append(row(it.label, '', () => it.fn(), it.dng ? 'dng' : '', i++));
         else if (it.t === 'link') list.append(row(it.label, chev(), () => { el._close(true); location.hash = it.href; }, '', i++));
         else list.append(row(it.label, h('span', { class:'v' }, it.val()), null, 'inf', i++));
         if (it.when) { const b = list.lastElementChild; cond.push({ it, b, prev:b.previousElementSibling }); if (!it.when()) b.remove(); }
@@ -646,6 +669,8 @@ function openSettings(opener) {
     const t = list.children[sub == null ? (focusIdx || 0) : Math.min(1, list.children.length - 1)]; if (t) t.focus({ preventScroll:true });
   }
   el._close = (force) => {
+    if (qrOn && !force) { qrOn = false; clearInterval(qrIv); draw('back', 0); return; }
+    clearInterval(qrIv); qrOn = false;
     if (sub != null && !force) { const k = sub; sub = null; draw('back', k); return; }
     el.classList.remove('show'); layerEl = null; window.__sico = null; clearTimeout(gifT); setTimeout(() => el.remove(), 450);
     if (opener && opener.isConnected) opener.focus({ preventScroll:true });
