@@ -419,10 +419,12 @@ async function fetchApps() {
 }
 function Logo(a) {
   if (a.settings) { const g = h('div', { class:'alg set' }); g.innerHTML = '<svg viewBox="0 0 24 24"><use href="#i-settings"/></svg>'; return g; }
+  const PIC = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-8 9"/></svg>';
+  if (!a.logo && a.name !== 'Apps') { const g = h('div', { class:'alg ph noicon' }); g.innerHTML = PIC; return g; }   /* kein Icon vorhanden → Bild-Symbol */
   const u = bust(a.logo || APPS_LOGO), w = h('div', { class:'alg' });
   const bg = h('img', { class:'lgb', src:u, alt:'' }), im = h('img', { class:'lgf', src:u, alt:'' });
   im.onload = () => { if (im.naturalWidth / im.naturalHeight > 1.6) w.classList.add('wide'); };
-  im.onerror = () => { w.classList.add('ph'); if (a.name === 'Apps') w.innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>'; else w.replaceChildren(h('b', {}, (a.name || '?')[0].toUpperCase())); };
+  im.onerror = () => { w.classList.add('ph'); if (a.name === 'Apps') w.innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>'; else { w.classList.add('noicon'); w.innerHTML = PIC; } };
   w.append(bg, im); return w;
 }
 const warmed = new Set();
