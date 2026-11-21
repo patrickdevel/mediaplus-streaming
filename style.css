@@ -1871,3 +1871,8 @@ body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
 
 /* App-Start: Logo-Splash blendet ruhig aus (ohne Blur) */
 .asplash{transition:opacity .4s ease!important}
+
+/* Beim Öffnen von Apps/Einstellungen/Store: Hintergrund wird dunkler statt live verblurrt */
+.ablur,.ablur.on{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.ablur{transition:background .45s ease!important}
+.ablur.on{background:rgba(0,0,0,.7)!important}
