@@ -215,7 +215,7 @@ html.br body.home .hero .hdots,html.br body.home .hglass{transition:opacity .9s 
   frame(0);
   var fp=(document.fonts&&document.fonts.load)?Promise.race([document.fonts.load('700 156px "Space Grotesk"'),new Promise(function(r){setTimeout(r,1500);})]):Promise.resolve();
   fp.then(go,go);
-  function reveal(){root.classList.add('br');root.classList.remove('bi');setTimeout(function(){root.classList.remove('br');},2400);}
+  function reveal(){root.classList.add('br');root.classList.remove('bi');try{window.focusDock&&window.focusDock();}catch(x){}setTimeout(function(){root.classList.remove('br');},2400);}
   function tryReveal(n){
     if(document.body.classList.contains('home')&&!document.querySelector('.hero .hslide')&&n<30)return setTimeout(function(){tryReveal(n+1);},200);
     reveal();
