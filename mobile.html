@@ -2722,7 +2722,7 @@ const PLUS = (() => {
     }, true);
     /* Kopplung */
     if (IS_TV) { if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); }
-    else { const p = new URLSearchParams(location.search).get('tv'); if (p) { store.set('tvTopic', p.replace(/[^\w-]/g, '')); history.replaceState(null, '', location.pathname + '#/remote'); window.dispatchEvent(new Event('hashchange')); } if (store.get('tvTopic')) { relayPhone(); setTimeout(() => phoneConn().catch(() => {}), 500); } document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) { relayPhone(); phoneConn().catch(() => {}); } });
+    else { const p = new URLSearchParams(location.search).get('tv'); if (p) { store.set('tvTopic', p.replace(/[^\w-]/g, '')); history.replaceState(null, '', location.pathname + (/^#\/spotify/.test(location.hash) ? '#/spotify' : '#/remote')); window.dispatchEvent(new Event('hashchange')); } if (store.get('tvTopic')) { relayPhone(); setTimeout(() => phoneConn().catch(() => {}), 500); } document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) { relayPhone(); phoneConn().catch(() => {}); } });
       /* Herzschlag: erkennt tote P2P-Leitungen, bevor die nächste Taste verloren geht */
       setInterval(() => { if (!store.get('tvTopic') || document.hidden) return; sendP2P({ t:'ping' }, 2500).catch(() => {}); }, 5000); }
     setTimeout(refreshBadge, 3000); setInterval(refreshBadge, 600000);
