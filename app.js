@@ -637,10 +637,20 @@ function openSettings(opener) {
       sc.onload = res; sc.onerror = rej; document.head.append(sc);
     }).then(() => { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag({ cellSize:6, margin:0 }); })
       .catch(() => { box.textContent = 'QR-Code nicht verfügbar'; });
-    const st = h('div', { style:'text-align:center;font-size:2.8vh;font-weight:600;color:#111;padding-top:1.2vh' });
-    const paintSt = () => { st.textContent = isSp ? (Spotify.connected() ? '✓ Spotify ist verbunden' : 'Scanne den Code mit dem Handy') : 'Scanne den Code mit dem Handy'; };
+    const st = h('div', { class:'qrt big' });
+    const paintSt = () => { st.textContent = isSp ? (Spotify.connected() ? '✓ Spotify ist verbunden' : 'Noch nicht verbunden') : 'Mit dem Handy scannen'; };
     paintSt(); qrIv = setInterval(() => { if (!st.isConnected) return clearInterval(qrIv); paintSt(); }, 1000);
-    list.append(back, h('div', { style:'padding-top:1vh' }, box, st));
+    const kids = [back, h('div', { class:'qrw' }, box, st,
+      h('p', { class:'qrt' }, isSp ? 'Scanne den Code mit dem Handy und melde dich bei Spotify an. Danach erscheint im Bildschirmschoner der aktuelle Titel.' : 'Scanne den Code mit dem Handy. Dort kannst du Suchbegriffe eintippen oder Videos auf den TV schicken.'))];
+    if (!isSp) {
+      kids.push(h('div', { class:'qrt dim' }, 'Oder Code am Handy eingeben (Mehr → TV koppeln)'),
+        h('div', { class:'qrt code' }, (store.get('pairTopic') || '').slice(2).toUpperCase().replace(/(.{5})(?=.)/g, '$1 ')));
+    }
+    kids.push(h('div', { class:'qrt dim url' }, url), h('div', { class:'qrt dim' }, 'Adresse der Handy-Seite'));
+    const inp = h('input', { class:'pick qri', type:'url', autocomplete:'off', spellcheck:'false', value:base, 'aria-label':'Adresse der Handy-Seite' });
+    kids.push(inp, row('Speichern', '', () => { store.set('mobileUrl', inp.value.trim()); toast('Gespeichert'); showQr(it); }, '', 1));
+    if (isSp) kids.push(row('Spotify trennen', '', () => { Spotify.disconnect(); toast('Spotify getrennt'); paintSt(); }, 'dng', 2));
+    list.append(...kids.slice(0, 1), ...kids.slice(1));
     back.focus({ preventScroll:true });
   }
   function draw(dir, focusIdx) {
