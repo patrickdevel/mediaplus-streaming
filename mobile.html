@@ -369,6 +369,74 @@ body.compact:not(.sopen) .search button{width:34px;border-left-color:transparent
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+/* ===== Mehr-Menü im Einstellungen-Look (wie am TV) ===== */
+:root:has(body[data-route="plus"]){background:#76c8ff}
+:root[data-theme="dark"]:has(body[data-route="plus"]){background:#0b1118}
+body[data-route="plus"]{background:transparent}
+@media(max-width:999px){body[data-route="plus"] .top{display:none}}
+body[data-route="plus"] main{position:relative;z-index:1;padding:0 16px calc(48px + env(safe-area-inset-bottom,0px))}
+.mbg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;animation:mFade .45s ease both;
+ background:radial-gradient(60% 70% at 15% 20%,#8fdcff 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#7fb2ff 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#7fc9c9 0,transparent 60%),linear-gradient(160deg,#76c8ff,#9ec4dc 55%,#6fb3c4)}
+:root[data-theme="dark"] .mbg{background:radial-gradient(60% 70% at 15% 20%,#16324a 0,transparent 60%),radial-gradient(55% 60% at 85% 15%,#1b2a5a 0,transparent 60%),radial-gradient(60% 70% at 30% 95%,#0f3b3b 0,transparent 60%),linear-gradient(160deg,#0b1118,#0e141c 55%,#0a1216)}
+.mbg i{position:absolute;width:80vw;height:80vw;border-radius:50%;filter:blur(12vw);opacity:.6;animation:mDrift 16s ease-in-out infinite alternate}
+.mbg i:first-child{background:#7fd6ff;left:-24vw;top:-30vw}
+.mbg i:last-child{background:#7d9dff;right:-30vw;bottom:-36vw;animation-duration:22s;animation-delay:-7s}
+:root[data-theme="dark"] .mbg i:first-child{background:#1c6aa0;opacity:.28}
+:root[data-theme="dark"] .mbg i:last-child{background:#2c3fa8;opacity:.28}
+@keyframes mFade{from{opacity:0}to{opacity:1}}
+@keyframes mDrift{to{transform:translate(18vw,10vw) scale(1.18)}}
+@keyframes mIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes mTitle{from{opacity:0;transform:translateY(-8px) scale(.96);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+
+/* Sticky Header mit Fade */
+.mh{position:sticky;top:0;z-index:5;isolation:isolate;margin:0 -16px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 22px;display:flex;align-items:center;min-height:calc(env(safe-area-inset-top,0px) + 78px)}
+@media(min-width:1000px){.mh{top:var(--hf)}}
+.mh::before{content:"";position:absolute;inset:0 0 -18px 0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .25s ease;
+ background:linear-gradient(to bottom,rgba(130,200,240,.86) 0,rgba(130,200,240,.55) 60%,rgba(130,200,240,0));
+ -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+ -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent)}
+:root[data-theme="dark"] .mh::before{background:linear-gradient(to bottom,rgba(11,17,24,.92) 0,rgba(11,17,24,.6) 60%,rgba(11,17,24,0))}
+.mh.stuck::before{opacity:1}
+.mh h1{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 12px);height:44px;margin:0;display:flex;align-items:center;justify-content:center;pointer-events:none;
+ font-size:22px;font-weight:700;letter-spacing:-.01em;color:#3b78c2;animation:mTitle .45s cubic-bezier(.2,.9,.2,1) both}
+:root[data-theme="dark"] .mh h1{color:#7db4f0}
+.mback{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#3b5a8a;background:rgba(255,255,255,.4);
+ box-shadow:0 2px 10px rgba(10,40,90,.12);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:transform .2s cubic-bezier(.34,1.56,.64,1),background .15s}
+.mback .ic{width:22px;height:22px;stroke-width:2.2}
+.mback:active{transform:scale(.9);background:#fff}
+:root[data-theme="dark"] .mback{color:#9cc3f5;background:rgba(255,255,255,.1);box-shadow:0 2px 10px rgba(0,0,0,.35)}
+:root[data-theme="dark"] .mback:active{background:rgba(255,255,255,.22)}
+
+/* Bereiche + Zeilen */
+.mwrap{display:flex;flex-direction:column;max-width:620px;margin:0 auto}
+.msec{display:flex;flex-direction:column;gap:8px;padding-top:14px}
+.msec h2{margin:0;padding:10px 20px 2px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(0,0,0,.45)}
+:root[data-theme="dark"] .msec h2{color:rgba(255,255,255,.5)}
+.mrow,.mseg{animation:mIn .5s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i,0)*38ms + 80ms)}
+.mrow{flex:none;display:flex;align-items:center;gap:14px;width:100%;min-height:56px;padding:0 20px;border-radius:99px;background:rgba(255,255,255,.32);color:#111;
+ font-size:16px;font-weight:500;text-align:left;transition:transform .28s cubic-bezier(.34,1.56,.64,1),background .2s,box-shadow .25s}
+.mrow>.ic:first-child{width:22px;height:22px;stroke:#3b5a8a;stroke-width:2.2}
+.mrow .l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow .go{width:18px;height:18px;opacity:.4}
+a.mrow:active,button.mrow:active{transform:scale(.975);background:#fff;box-shadow:0 8px 24px rgba(10,40,90,.2),0 0 0 2px rgba(255,255,255,.9);transition-duration:.08s}
+.mrow:focus-visible{outline:0;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.95)}
+:root[data-theme="dark"] .mrow{color:#f2f2f2;background:rgba(255,255,255,.08)}
+:root[data-theme="dark"] .mrow>.ic:first-child{stroke:#9cc3f5}
+:root[data-theme="dark"] a.mrow:active,:root[data-theme="dark"] button.mrow:active{background:rgba(255,255,255,.2);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 2px rgba(255,255,255,.7)}
+.mrow.mcard{flex-wrap:wrap;gap:12px;padding:16px 18px;border-radius:28px}
+.mchip{height:34px;padding:0 16px;border-radius:99px;background:rgba(255,255,255,.4);color:#111;font-size:14px;font-weight:600;transition:background .2s,box-shadow .2s}
+.mchip.on{background:#fff;box-shadow:0 2px 10px rgba(10,40,90,.2)}
+:root[data-theme="dark"] .mchip{background:rgba(255,255,255,.1);color:#f2f2f2}
+:root[data-theme="dark"] .mchip.on{background:rgba(255,255,255,.25);color:#fff;box-shadow:none}
+.mcard .swatch{width:34px;height:34px;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(10,40,90,.2);transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+.mcard .swatch.on{outline:0;transform:scale(1.1);box-shadow:0 0 0 3px rgba(255,255,255,.95),0 4px 12px rgba(10,40,90,.3)}
+.mseg{display:flex;gap:4px;padding:5px;border-radius:99px;background:rgba(255,255,255,.32)}
+.mseg button{flex:1;height:46px;border-radius:99px;font-size:15px;font-weight:600;color:#111;transition:background .2s,box-shadow .2s,color .2s}
+.mseg button.on{background:#fff;box-shadow:0 2px 10px rgba(10,40,90,.2)}
+:root[data-theme="dark"] .mseg{background:rgba(255,255,255,.08)}
+:root[data-theme="dark"] .mseg button{color:#f2f2f2}
+:root[data-theme="dark"] .mseg button.on{background:rgba(255,255,255,.22);color:#fff;box-shadow:none}
+
 /* PLUS */
 .seenb{position:absolute;right:.5em;top:.5em;z-index:2;background:rgba(0,0,0,.72);color:#fff;font-size:.8em;padding:.15em .6em;border-radius:99px}
 .newb{background:var(--accent);color:#fff;font-size:.8em;padding:.15em .7em;border-radius:99px;font-weight:600}
@@ -2238,19 +2306,52 @@ const PLUS = (() => {
   }
   function more() {
     document.title = 'Mehr – Media +';
-    const sec = (t, ...k) => [h('div', { class:'side-h', style:'padding:20px 0 8px' }, t), h('div', { class:'lvchips', style:'padding:0' }, ...k)];
-    const lnk = (ic, l, href) => h('a', { class:'btn', href }, icon(ic), l);
-    const act = (l, fn, on) => h('button', { class:'btn' + (on ? ' primary' : ''), type:'button', onclick:fn }, l);
+    const sprite = document.querySelector('svg symbol').parentNode;
+    const extra = { upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>', 'chev-r':'<path d="m9 6 6 6-6 6"/>' };
+    for (const k in extra) if (!document.getElementById('i-' + k)) sprite.insertAdjacentHTML('beforeend', '<symbol id="i-' + k + '" viewBox="0 0 24 24">' + extra[k] + '</symbol>');
+
+    let n = 0;
+    const row = (tag, props, ...kids) => h(tag, { ...props, class:'mrow', style:'--i:' + (n++) }, ...kids);
+    const lnk = (ic, l, href) => row('a', { href }, icon(ic), h('span', { class:'l' }, l), icon('chev-r', 'go'));
+    const act = (ic, l, fn) => row('button', { type:'button', onclick:fn }, icon(ic), h('span', { class:'l' }, l), icon('chev-r', 'go'));
+    const sec = (t, ...k) => h('section', { class:'msec' }, h('h2', {}, t), ...k);
+
+    /* Akzentfarbe: ohne Neuaufbau der Seite umschalten */
+    const sw = [];
+    const paintAcc = () => { const a = store.get('accent', ''); std.classList.toggle('on', !a); sw.forEach(b => b.classList.toggle('on', b.dataset.c === a)); };
+    const std = h('button', { class:'mchip', type:'button', onclick:() => { store.set('accent', ''); applyLook(); paintAcc(); } }, 'Standard');
+    COLORS.forEach(c => sw.push(h('button', { class:'swatch', type:'button', 'data-c':c, style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); paintAcc(); } })));
+    paintAcc();
+
+    /* Kartengröße */
+    const SIZES = [['Klein', .8], ['Mittel', 1], ['Groß', 1.3]];
+    const segB = SIZES.map(([l, f]) => h('button', { type:'button', onclick:() => { store.set('cw', f); applyLook(); paintCw(); } }, l));
+    const paintCw = () => segB.forEach((b, i) => b.classList.toggle('on', store.get('cw', 1) === SIZES[i][1]));
+    paintCw();
+
     const file = h('input', { type:'file', accept:'application/json,.json', hidden:true, onchange:async ev => {
       try { importData(JSON.parse(await ev.target.files[0].text())); toast('Importiert'); route(); } catch { toast('Datei nicht lesbar'); } } });
-    main.append(hd('Mehr'),
-      ...sec('Entdecken', lnk('tv', 'Live-TV', '#/live'), lnk('refresh', 'Überrasch mich', '#/random'), lnk('captions', 'Audiodeskription', '#/access/ad'),
-        lnk('captions', 'Gebärdensprache', '#/access/dgs'), lnk('captions', 'Mit Untertitel', '#/access/ut')),
-      ...sec('Kopplung Handy ↔ TV', IS_TV ? lnk('share', 'Mit Handy koppeln (QR)', '#/pair') : lnk('share', 'An TV senden', '#/send'), lnk('share', 'TV koppeln', '#/connect'), lnk('tv', 'Fernbedienung', '#/remote'), lnk('music', 'Spotify verbinden', '#/spotify')),
-      ...sec('Akzentfarbe', act('Standard', () => { store.set('accent', ''); applyLook(); route(); }, !store.get('accent', '')),
-        ...COLORS.map(c => h('button', { class:'swatch' + (store.get('accent', '') === c ? ' on' : ''), type:'button', style:'background:' + c, 'aria-label':'Akzent ' + c, onclick:() => { store.set('accent', c); applyLook(); route(); } }))),
-      ...sec('Kartengröße', ...[['Klein', .8], ['Mittel', 1], ['Groß', 1.3]].map(([l, f]) => act(l, () => { store.set('cw', f); applyLook(); route(); }, store.get('cw', 1) === f))),
-      ...sec('Daten (Merkliste, Verlauf, Abos)', act('Exportieren (JSON)', exportData), act('Importieren …', () => file.click()), file));
+
+    const goBack = () => { if (history.length > 1) history.back(); else location.hash = '#/'; };
+    const head = h('header', { class:'mh' },
+      h('button', { class:'mback', type:'button', 'aria-label':'Zurück', onclick:goBack }, icon('left')),
+      h('h1', {}, 'Mehr'));
+    const onScroll = () => head.classList.toggle('stuck', window.scrollY > 6);
+    window.addEventListener('scroll', onScroll, { passive:true });
+    cleanups.push(() => window.removeEventListener('scroll', onScroll));
+
+    main.append(
+      h('div', { class:'mbg', 'aria-hidden':'true' }, h('i'), h('i')),
+      head,
+      h('div', { class:'mwrap' },
+        sec('Entdecken', lnk('tv', 'Live-TV', '#/live'), lnk('refresh', 'Überrasch mich', '#/random'), lnk('captions', 'Audiodeskription', '#/access/ad'),
+          lnk('captions', 'Gebärdensprache', '#/access/dgs'), lnk('captions', 'Mit Untertitel', '#/access/ut')),
+        sec('Kopplung Handy ↔ TV', IS_TV ? lnk('share', 'Mit Handy koppeln (QR)', '#/pair') : lnk('share', 'An TV senden', '#/send'), lnk('share', 'TV koppeln', '#/connect'),
+          lnk('tv', 'Fernbedienung', '#/remote'), lnk('music', 'Spotify verbinden', '#/spotify')),
+        sec('Akzentfarbe', h('div', { class:'mrow mcard', style:'--i:' + (n++) }, std, ...sw)),
+        sec('Kartengröße', h('div', { class:'mseg', style:'--i:' + (n++) }, ...segB)),
+        sec('Daten (Merkliste, Verlauf, Abos)', act('download', 'Exportieren (JSON)', exportData), act('upload', 'Importieren …', () => file.click()), file)));
+    onScroll();
   }
 
   /* ---------- Kopplung Handy -> TV (über ntfy.sh) ---------- */
