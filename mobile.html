@@ -2406,6 +2406,21 @@ const PLUS = (() => {
   function remotePage() {
     document.title = 'Fernbedienung – Media +';
     if (!document.getElementById('rcCss3')) document.head.append(h('style', { id:'rcCss3' }, "body[data-route=\"remote\"]{overflow:hidden}\nbody[data-route=\"remote\"] main{padding:calc(var(--hf) + 6px) 20px 12px;min-height:0}\n.rh{display:flex;align-items:center;gap:10px;height:52px}.rh h1{margin:0;font-size:22px;white-space:nowrap}\n.rst{display:flex;align-items:center;gap:6px;min-width:0;max-width:46%;font-size:11px;color:var(--fg-3);padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-2)}\n.rst .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.rst .dt{flex:none;width:7px;height:7px;border-radius:50%;background:#30a46c}\n.rc{max-width:380px;margin:0 auto;height:calc(100vh - var(--hf) - 70px);height:calc(100dvh - var(--hf) - 70px);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px}\n.rc button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;font-family:inherit}\n.tr{width:100%;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px}\n.rcb{flex:none;display:grid;place-items:center;width:clamp(46px,7.4dvh,58px);height:clamp(46px,7.4dvh,58px);border-radius:50%;border:1px solid var(--border);background:var(--bg-3);color:var(--fg);transition:transform .08s,background .08s,color .08s}\n.rcb .ic{width:46%;height:46%;stroke-width:2.2}.rcb:active{transform:scale(.92);background:var(--fg);color:var(--bg)}\n.rs{flex:1;min-width:0;display:flex;align-items:center;height:48px;border-radius:999px;border:1px solid var(--border-2);background:var(--bg-2);padding:0 5px 0 16px}\n.rs[hidden]{display:none}\n.rs input{flex:1;min-width:0;height:100%;border:0;background:transparent;font-size:16px;outline:0;color:var(--fg)}\n.rs button{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);display:grid;place-items:center}\n.dpw{position:relative;flex:none;width:clamp(190px,calc(100dvh - 355px),min(380px,calc(100vw - 40px)));aspect-ratio:1}\n.dpw>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 4px 10px rgba(0,0,0,.14))}\n.dpw [data-k]{outline:none;-webkit-tap-highlight-color:transparent}\n.dpw .wg{fill:var(--bg-3);stroke:var(--bg-3);stroke-width:4;stroke-linejoin:round;cursor:pointer;transition:fill .1s,stroke .1s;touch-action:manipulation}\n.dpw .wg.on{fill:var(--border-2);stroke:var(--border-2)}\n.dpw .ch{fill:none;stroke:var(--fg-2);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}\n.dpw .okc{fill:var(--fg);cursor:pointer;transition:opacity .1s;touch-action:manipulation}.dpw .okc.on{opacity:.7}\n.dpw .okt{fill:var(--bg);font-size:10px;font-weight:800;letter-spacing:.02em;pointer-events:none}\n.cb{position:absolute;display:grid;place-items:center;border-radius:50%;border:1px solid var(--border);background:var(--bg-3);color:var(--fg);transition:transform .08s,background .08s,color .08s}\n.cb .ic{width:48%;height:48%;stroke-width:2.2}.cb:active{transform:scale(.92);background:var(--fg);color:var(--bg)}\n.cb.s{width:14%;height:14%}.cb.b{width:17.5%;height:17.5%}\n.cb.kb{left:0;top:5%}.cb.mc{right:0;top:5%}.cb.bk{left:0;bottom:0}\n.cb.hm{right:0;bottom:0;background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}.cb.hm:active{background:var(--accent);color:var(--accent-fg);opacity:.8}\n.rsheet{width:100%;flex:none;border-radius:26px;background:var(--bg-3);border:1px solid var(--border);overflow:hidden}\n.rtabs{display:grid;grid-template-columns:repeat(3,1fr);background:rgba(127,127,127,.16)}\n.rtabs button{height:42px;border:0;background:transparent;color:var(--fg-3);font-size:15px;font-weight:600}\n.rtabs button.on{background:var(--bg-3);color:var(--fg);border-radius:20px 20px 0 0}\n.rpan{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;padding:10px}.rpan[hidden]{display:none}\n.rpan button{height:clamp(46px,7dvh,58px);border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:5px;font-weight:700;font-size:14px;transition:background .08s,color .08s}\n.rpan button:active{background:var(--fg);color:var(--bg)}.rpan .ic{width:24px;height:24px;stroke-width:2.2}"));
+    if (!document.getElementById('rcCss4')) document.head.append(h('style', { id:'rcCss4' }, [
+      '.dpw{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}',
+      '.dpw .okt{display:none}',
+      '.dpw .okc{transition:opacity .25s ease}',
+      '.dpw .okr{fill:none;stroke:var(--fg);stroke-width:20;stroke-dasharray:100 100;stroke-dashoffset:100;opacity:0;pointer-events:none;transition:opacity .25s ease}',
+      '.dpw.okh .okc{opacity:.28!important}',
+      '.dpw.okh .okr{opacity:1}',
+      '.okl{position:absolute;left:50%;top:50%;width:40%;height:40%;transform:translate(-50%,-50%);display:grid;place-items:center;pointer-events:none;color:#fff;mix-blend-mode:difference;font-weight:800;letter-spacing:.02em;line-height:1}',
+      '.okl span{grid-area:1/1;transition:opacity .35s ease,filter .35s ease,transform .35s ease}',
+      '.okl .ok-n{opacity:0;filter:blur(8px);transform:scale(1.35);font-size:1.5em}',
+      '.dpw.okh .ok-t{opacity:0;filter:blur(8px);transform:scale(.7)}',
+      '.dpw.okh .ok-n{opacity:1;filter:blur(0);transform:scale(1)}',
+      '.okl .ok-n.tick{animation:okTick .3s ease-out}',
+      '@keyframes okTick{from{filter:blur(5px);opacity:.35;transform:scale(1.25)}to{filter:blur(0);opacity:1;transform:scale(1)}}'
+    ].join('\n')));
     const paired = !!store.get('tvTopic');
     const goBack = () => { if (history.length > 1) history.back(); else location.hash = '#/plus'; };
     const stEl = paired ? h('span', { class:'rst' }, h('span', { class:'dt' }), h('span', { class:'tx' })) : null;
@@ -2444,13 +2459,45 @@ const PLUS = (() => {
       h('button', { class:'cb s mc', type:'button', 'aria-label':'Sprachsuche', onclick:voice }, icon('mic')),
       btn('cb b bk', 'back', 'Zurück', icon('return')),
       btn('cb b hm', 'home', 'Startseite', icon('home')));
-    dpw.insertAdjacentHTML('afterbegin', "<svg viewBox=\"0 0 100 100\" aria-hidden=\"false\"><path class=\"wg\" data-k=\"up\" role=\"button\" aria-label=\"Hoch\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"right\" role=\"button\" aria-label=\"Rechts\" transform=\"rotate(90 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"down\" role=\"button\" aria-label=\"Runter\" transform=\"rotate(180 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"left\" role=\"button\" aria-label=\"Links\" transform=\"rotate(270 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><polyline class=\"ch\" points=\"43.5,16.5 50,10 56.5,16.5\"/><polyline class=\"ch\" points=\"43.5,83.5 50,90 56.5,83.5\"/><polyline class=\"ch\" points=\"16.5,43.5 10,50 16.5,56.5\"/><polyline class=\"ch\" points=\"83.5,43.5 90,50 83.5,56.5\"/><circle class=\"okc\" data-k=\"ok\" role=\"button\" aria-label=\"OK\" cx=\"50\" cy=\"50\" r=\"20\"/><text class=\"okt\" x=\"50\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\">OK</text></svg>");
+    dpw.insertAdjacentHTML('afterbegin', "<svg viewBox=\"0 0 100 100\" aria-hidden=\"false\"><path class=\"wg\" data-k=\"up\" role=\"button\" aria-label=\"Hoch\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"right\" role=\"button\" aria-label=\"Rechts\" transform=\"rotate(90 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"down\" role=\"button\" aria-label=\"Runter\" transform=\"rotate(180 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><path class=\"wg\" data-k=\"left\" role=\"button\" aria-label=\"Links\" transform=\"rotate(270 50 50)\" d=\"M19.47 14.27A47 47 0 0 1 80.53 14.27L64.89 29.91A25 25 0 0 0 35.11 29.91Z\"/><polyline class=\"ch\" points=\"43.5,16.5 50,10 56.5,16.5\"/><polyline class=\"ch\" points=\"43.5,83.5 50,90 56.5,83.5\"/><polyline class=\"ch\" points=\"16.5,43.5 10,50 16.5,56.5\"/><polyline class=\"ch\" points=\"83.5,43.5 90,50 83.5,56.5\"/><circle class=\"okc\" data-k=\"ok\" role=\"button\" aria-label=\"OK\" cx=\"50\" cy=\"50\" r=\"20\"/><circle class=\"okr\" cx=\"50\" cy=\"50\" r=\"10\" pathLength=\"100\" transform=\"rotate(-90 50 50)\"/><text class=\"okt\" x=\"50\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\">OK</text></svg>");
     const hit = ev => ev.target.closest && ev.target.closest('[data-k]');
     dpw.addEventListener('pointerdown', ev => { const t = hit(ev); if (t) t.classList.add('on'); });
     ['pointerup', 'pointercancel', 'pointerout'].forEach(n => dpw.addEventListener(n, ev => { const t = hit(ev); if (t) t.classList.remove('on'); }, true));
     dpw.addEventListener('click', ev => { const t = hit(ev); if (t) key(t.dataset.k); });
     dpw.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { const t = hit(ev); if (t) { ev.preventDefault(); key(t.dataset.k); } } });
     dpw.querySelectorAll('[data-k]').forEach(n => n.setAttribute('tabindex', '0'));
+
+    /* OK 3 s halten: Taste wird grau, füllt sich im Uhrzeigersinn, "OK" blurrt zum Countdown; danach öffnet sich am TV das Kontrollzentrum (3 Punkte) */
+    {
+      const okc = dpw.querySelector('.okc'), okr = dpw.querySelector('.okr');
+      const ol = h('div', { class:'okl', 'aria-hidden':'true' }, h('span', { class:'ok-t' }, 'OK'), h('span', { class:'ok-n' }, '3'));
+      dpw.append(ol);
+      const nEl = ol.querySelector('.ok-n');
+      const fit = () => { ol.style.fontSize = (dpw.clientWidth * .1) + 'px'; };
+      fit(); if (window.ResizeObserver) new ResizeObserver(fit).observe(dpw); else window.addEventListener('resize', fit);
+      const HOLD = 3000, DELAY = 250;
+      let t0 = 0, raf = 0, dT = 0, active = false, fired = false, lastN = 0;
+      const reset = () => { clearTimeout(dT); cancelAnimationFrame(raf); active = false; lastN = 0; dpw.classList.remove('okh'); okr.style.strokeDashoffset = ''; };
+      const frame = now => {
+        if (!active) return;
+        const p = Math.min(1, (now - t0) / HOLD);
+        okr.style.strokeDashoffset = String(100 - p * 100);
+        const n = Math.max(1, Math.ceil((1 - p) * 3));
+        if (n !== lastN) { lastN = n; nEl.textContent = n; nEl.classList.remove('tick'); void nEl.offsetWidth; nEl.classList.add('tick'); }
+        if (p >= 1) { fired = true; if (navigator.vibrate) navigator.vibrate([20, 50, 30]); reset(); key('ctrl'); return; }
+        raf = requestAnimationFrame(frame);
+      };
+      const begin = ev => {
+        if (ev.button > 0) return;
+        fired = false; clearTimeout(dT);
+        dT = setTimeout(() => { active = true; dpw.classList.add('okh'); okr.style.strokeDashoffset = '100'; t0 = performance.now(); raf = requestAnimationFrame(frame); }, DELAY);
+      };
+      okc.addEventListener('pointerdown', begin);
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => okc.addEventListener(n, reset));
+      dpw.addEventListener('contextmenu', ev => ev.preventDefault());
+      /* nach dem langen Halten kein zusätzliches OK senden */
+      okc.addEventListener('click', ev => { if (fired) { fired = false; ev.stopImmediatePropagation(); ev.preventDefault(); } });
+    }
 
     /* Tab-Fläche unten: Medien / Ton / Sender */
     const TABS = [
