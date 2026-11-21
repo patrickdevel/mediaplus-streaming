@@ -2428,6 +2428,21 @@ function initialTarget() {
   if (document.body.classList.contains('home')) return $('.happs .atile') || $('.hero .hslide a[tabindex="0"]') || $('.hero .btn.primary') || null;
   return $('main .chip.active, main .btn.primary, main .mopt, main .stile, main .card');
 }
+/* Nach Start/Neustart soll der Fokus ("Hover") immer in der App-Leiste (Dock) liegen – wartet, bis das Dock gebaut ist */
+function focusDock(n) {
+  n = n || 0;
+  if (typeof TV === 'undefined' || !document.body.classList.contains('home')) return;
+  if (typeof SysCheck !== 'undefined' && SysCheck.busy) return;
+  const t = $('.happs .atile');
+  if (t) {
+    TV.pending = false; window.scrollTo(0, 0); focusEl(t);
+    const a = document.activeElement;
+    if ((!a || a === document.body || a.closest('.hero')) && n < 20) setTimeout(() => focusDock(n + 1), 150);
+    return;
+  }
+  if (n < 40) setTimeout(() => focusDock(n + 1), 150);
+}
+window.focusDock = focusDock;
 function openSide() { focusEl($('#side .nav.active') || $('#side .nav')); }
 function closeSide() { const t = TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : initialTarget(); focusEl(t || $('#menu')); }
 
@@ -2627,6 +2642,7 @@ document.addEventListener('focusin', ev => { if (main.contains(ev.target)) TV.la
 new MutationObserver(() => {
   if (!TV.pending) return;
   const t = initialTarget();
+  if (document.body.classList.contains('home') && !(t && t.closest('.happs')) && performance.now() < 9000) return;   /* Home: auf das Dock warten */
   if (t) { TV.pending = false; focusEl(t); }
 }).observe(main, { childList:true, subtree:true });
 
