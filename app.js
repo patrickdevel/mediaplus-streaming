@@ -892,7 +892,8 @@ function openControl(opener) {
 
   /* Spotify-Karte (nur Anzeige, kein Klick): gleiches Design wie „Überrasch mich“, mit Ein-/Aus- und Songwechsel-Animation */
   let spUnsub = null, spIv = 0, spSwap = 0, spOff = 0, spKey = '';
-  const spIn = h('div', { class:'spc-in' }), sp = h('div', { class:'t pill wide sp', 'aria-hidden':'true' }, spIn), spw = h('div', { class:'spw nt' }, sp);
+  const spIn = h('div', { class:'spc-in' }), spLogo = h('span', { class:'spc-logo' }), sp = h('div', { class:'t pill wide sp', 'aria-hidden':'true' }, spIn, spLogo), spw = h('div', { class:'spw nt' }, sp);
+  spLogo.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="spm2"><rect width="24" height="24" fill="#fff"/><path d="M5.6 9.2c4.3-1.2 9.2-.8 13 1.4M6.4 12.7c3.5-.9 7.2-.6 10.3 1.2M7.2 16c2.7-.6 5.4-.4 7.8.9" fill="none" stroke="#000" stroke-width="1.7" stroke-linecap="round"/></mask></defs><circle cx="12" cy="12" r="11" fill="#fff" mask="url(#spm2)"/></svg>';
   const spK = n => n.title + '|' + n.artist + '|' + n.cover;
   const fillSp = n => spIn.replaceChildren(n.cover ? h('img', { class:'spc-cv', src:n.cover, alt:'' }) : h('div', { class:'spc-cv ph' }),
     h('span', { class:'tx' }, h('b', {}, n.title), h('small', {}, n.artist)));
