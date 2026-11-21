@@ -364,7 +364,17 @@ h2{color:var(--ac);font-size:3rem;font-weight:700}
 .rinfo b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:2.8rem;font-weight:700;line-height:1.25}
 .rinfo span{display:block;color:var(--tx2);font-size:1.6rem;margin-top:.8rem}
 .rbtns{display:flex;gap:1.4rem;margin-top:2.4rem;flex-wrap:wrap}
-#rscroll{flex:1;min-height:0;overflow-y:auto;padding:0 4rem 4rem}
+.rwrap{position:relative;flex:1;min-height:0}
+#rscroll{position:absolute;inset:0;overflow-y:auto;padding:2.6rem 4rem 12rem;contain:layout paint;overscroll-behavior:contain}
+.rf{position:absolute;left:0;right:0;pointer-events:none;z-index:2}
+.rf.t{top:0;height:4.6rem;background:linear-gradient(#0c1218,rgba(12,18,24,0))}
+.rf.b{bottom:0;height:11rem;background:linear-gradient(rgba(12,18,24,0),#0c1218 85%)}
+/* Performance im Player: Hintergrund ruhigstellen, teure Effekte aus */
+body.inpl::before,body.inpl::after{animation:none;display:none}
+body.inpl #nav,body.inpl #content{visibility:hidden}
+#pl .b{-webkit-backdrop-filter:none;backdrop-filter:none}
+#pl .card{animation:none}
+#fr{will-change:transform}
 #rscroll h2{font-size:2.4rem;margin:1.4rem 0 .2rem 1.6rem}
 .rgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2.4rem 1.8rem;padding:1.4rem 1.6rem 2rem}
 .rgrid .card{width:auto}
@@ -415,7 +425,7 @@ h2{color:var(--ac);font-size:3rem;font-weight:700}
         </div>
       </div>
     </div>
-    <div id="rscroll"><h2>Empfehlungen</h2><div id="rgrid" class="rgrid"></div></div>
+    <div class="rwrap"><div id="rscroll"><h2>Empfehlungen</h2><div id="rgrid" class="rgrid"></div></div><i class="rf t"></i><i class="rf b"></i></div>
   </div></div>
 <div id="toast"></div>
 <script>
@@ -646,11 +656,11 @@ function play(v) {
   S.playing = v; PL.cur = st0; PL.dur = pp && pp.d || 0; PL.buf = 0; PL.st = -1; PL.captions = false; PL.rate = 1; PL.muted = false;
   $('#pt').replaceChildren(h('b', {}, v.title), h('span', {}, (v.author && v.author.name) || ''));
   $('#fr').src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&start=' + st0 + '&controls=0&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&enablejsapi=1&cc_load_policy=0&fs=0&hl=de';
-  $('#pl').classList.add('show'); upd(); showBar(); if (document.activeElement) document.activeElement.blur(); focusEl($('#pplay')); window.focus();
+  document.body.classList.add('inpl'); $('#pl').classList.add('show'); upd(); showBar(); if (document.activeElement) document.activeElement.blur(); focusEl($('#pplay')); window.focus();
   [1500, 3000, 5000].forEach(t => setTimeout(killCaptions, t));
   setTimeout(() => { if (S.playing === v) recsFor(v).then(l => renderRecGrid(v, l)); }, 2500);
 }
-function closePl() { saveProg(true); S.playing = null; resetPl(); clearTimeout(PL.hide); $('#fr').src = 'about:blank'; $('#pl').classList.remove('show', 'paused'); $('#pui').classList.remove('show'); if (document.fullscreenElement && S.fsPl) { document.exitFullscreen().catch(() => {}); S.fsPl = false; } S.last && S.last.isConnected ? focusEl(S.last) : focusEl(initial()); }
+function closePl() { saveProg(true); S.playing = null; resetPl(); clearTimeout(PL.hide); $('#fr').src = 'about:blank'; document.body.classList.remove('inpl'); $('#pl').classList.remove('show', 'paused'); $('#pui').classList.remove('show'); if (document.fullscreenElement && S.fsPl) { document.exitFullscreen().catch(() => {}); S.fsPl = false; } S.last && S.last.isConnected ? focusEl(S.last) : focusEl(initial()); }
 const toggle = () => { if (PL.ended) return replay(); PL.userPaused = PL.st === 1; cmd(PL.st === 1 ? 'pauseVideo' : 'playVideo'); PL.st = PL.st === 1 ? 2 : 1; upd(); showBar(); };
 const seek = d => { if (PL.ended) return; PL.cur = Math.max(0, Math.min(PL.dur || 1e9, PL.cur + d)); cmd('seekTo', [PL.cur, true]); upd(); showBar(); };
 const captions = () => { PL.captions = !PL.captions; if (PL.captions) { cmd('loadModule', ['captions']); cmd('setOption', ['captions', 'track', { languageCode:'de' }]); } else killCaptions(); upd(); showBar(); };
