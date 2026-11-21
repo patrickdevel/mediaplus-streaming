@@ -1011,36 +1011,16 @@ const DURS = { all:['Jede Länge', {}], s:['Unter 10 Min', { max:600 }], m:['10�
 let sortKey = 'rel', durKey = 'all';
 
 /* =========================================================
-   Suchscreen: Tabs (Videos/Songs) jetzt BEI den Treffern
+   Suchscreen
    ========================================================= */
 function SearchScreen(q0) {
   document.title = 'Suche – Media +';
-  let q = q0 || '', t = 0, mode = 'videos';
+  let q = q0 || '', t = 0;
 
   const disp = h('div', { class:'sdisp' });
   const resInner = h('div');
 
-  const tabVideos = h('button', { class:'chip active', type:'button', 'data-mode':'videos', 'aria-pressed':'true' }, icon('film'), 'Videos');
-  const tabSongs  = h('button', { class:'chip',         type:'button', 'data-mode':'songs',  'aria-pressed':'false' }, icon('music'), 'Songs');
-  const tabs = h('div', { class:'stabs sres-tabs' }, tabVideos, tabSongs);
-
-  const res = h('div', { class:'sres' }, tabs, resInner);
-
-  const setMode = m => {
-    if (m === mode) return;
-    mode = m;
-    tabVideos.classList.toggle('active', m === 'videos');
-    tabSongs.classList.toggle('active',  m === 'songs');
-    tabVideos.setAttribute('aria-pressed', String(m === 'videos'));
-    tabSongs.setAttribute('aria-pressed',  String(m === 'songs'));
-    document.title = (m === 'songs' ? 'Songsuche' : 'Suche') + ' – Media +';
-    if (q.trim().length >= 2) go();
-    else resInner.replaceChildren(emptyBox('search', 'Tippe links einen Suchbegriff ein.'));
-  };
-  tabs.addEventListener('click', ev => {
-    const b = ev.target.closest('.chip'); if (!b) return;
-    setMode(b.dataset.mode);
-  });
+  const res = h('div', { class:'sres' }, resInner);
 
   const draw = () => { disp.replaceChildren(h('span', {}, q || 'Suchbegriff eingeben …'), h('i', { class:'caret' })); disp.classList.toggle('ph', !q); };
 
@@ -1055,27 +1035,6 @@ function SearchScreen(q0) {
     if (term.length < 2) { resInner.append(emptyBox('search', 'Tippe links einen Suchbegriff ein.')); return; }
     remember(term); drawHist();
 
-    if (mode === 'songs') {
-      const hd2 = h('h2', { class:'rowh' }, 'Songs · „' + term + '“');
-      const slist = h('div', { class:'slist' }, emptyBox('search', 'Suche läuft …'));
-      resInner.append(hd2, slist);
-      try {
-        const l = await SC.search(term);
-        if (tok !== routeToken || term !== q.trim() || mode !== 'songs') return;
-        if (!l.length) { slist.replaceChildren(emptyBox('music', `Keine Songs für „${term}“ gefunden.`)); }
-        else {
-          slist.replaceChildren(...l.map(SongRow));
-          hd2.textContent = 'Songs · ' + l.length + ' Treffer';
-          if (ff === true) { const a = slist.querySelector('.srow-a'); if (a) focusEl(a); }
-        }
-      } catch (err) {
-        if (tok !== routeToken) return;
-        slist.replaceChildren(emptyBox('alert', 'Die Songsuche ist gerade nicht möglich.',
-          h('div', { style:'font-size:12.5px;color:var(--fg-4)' }, String(err.message || err))));
-      }
-      return;
-    }
-
     const slot = h('div'), hd2 = h('h2', { class:'rowh' }, 'Folgen und Videos'),
           grid = h('div', { class:'grid' }, skeletons(4));
     resInner.append(slot, hd2, grid);
@@ -1086,7 +1045,7 @@ function SearchScreen(q0) {
     }, term);
     try {
       const r = await search({ text:term, size:24 });
-      if (tok !== routeToken || term !== q.trim() || mode !== 'videos') return;
+      if (tok !== routeToken || term !== q.trim()) return;
       if (!r.items.length) { resInner.replaceChildren(emptyBox('search', `Nichts gefunden für „${term}“.`)); return; }
       grid.replaceChildren();
       if (r.total) hd2.textContent = 'Folgen und Videos · ' + r.total.toLocaleString('de-DE') + ' Treffer';
@@ -1415,192 +1374,6 @@ function buildPlayer(video, perr) {
   };
   sync(); paint();
   return root;
-}
-
-/* SoundCloud */
-const SC_BASE = '';
-const SC = (() => {
-  const cache = new Map(), seen = new Set();
-  const GEN = ['all-music', 'hiphoprap', 'electronic', 'pop', 'danceedm', 'house', 'techno', 'trap', 'rbsoul', 'ambient'];
-  const api = async (p, q) => {
-    const r = await fetch(SC_BASE + '/api/' + p + '?' + new URLSearchParams(q), { headers:{ 'x-key':sessionStorage.getItem('key') || '' } });
-    if (r.status === 401) { const k = prompt('Zugriffscode:'); if (k) { sessionStorage.setItem('key', k); return api(p, q); } }
-    const d = await r.json().catch(() => ({ error:'Ungültige Antwort' }));
-    if (!r.ok) throw new Error(d.error || 'Fehler');
-    return d;
-  };
-  const art = u => u ? String(u).replace(/-(large|t\d+x\d+|crop|badge|small|tiny)\./, '-t500x500.') : '';
-  const stream = async t => {
-    if (t.streamUrl) return t.streamUrl;
-    const m = await api('track', { url:t.permalinkUrl });
-    t.streamUrl = m.streamUrl; t.duration = t.duration || m.duration;
-    if (!t.streamUrl) throw new Error('Kein Stream');
-    return t.streamUrl;
-  };
-  const likes = () => { const l = store.get('scLikes', []); return Array.isArray(l) ? l : []; };
-  const isLiked = id => likes().some(x => x.id == id);
-  const toggleLike = t => {
-    let l = likes(); const on = !l.some(x => x.id == t.id);
-    l = on ? [{ id:t.id, title:t.title, permalinkUrl:t.permalinkUrl, duration:t.duration, artworkUrl:t.artworkUrl, artist:t.artist ? { username:t.artist.username } : null }, ...l] : l.filter(x => x.id != t.id);
-    store.set('scLikes', l.slice(0, 300));
-    document.querySelectorAll('#side [data-cnt="scLikes"]').forEach(n => { n.textContent = l.length || ''; });
-    return on;
-  };
-  const norm = t => {
-    const u = t.artist || t.user || {};
-    return { id:t.id, title:t.title || 'Unbekannt', permalinkUrl:t.permalinkUrl || t.permalink_url || t.url || '',
-      duration:t.duration, artworkUrl:t.artworkUrl || t.artwork_url || u.avatar_url || '', streamUrl:t.streamUrl,
-      artist: (u.username || t.artistName) ? { username:u.username || t.artistName } : null };
-  };
-  const listFrom = d => {
-    if (Array.isArray(d)) return d;
-    if (!d || typeof d !== 'object') return [];
-    for (const k of ['collection', 'tracks', 'items', 'results', 'data']) {
-      const l = listFrom(d[k]); if (l.length) return l;
-    }
-    return [];
-  };
-  async function search(q) {
-    const d = await api('search', { q, query:q, type:'tracks', kind:'tracks' });
-    const l = listFrom(d);
-    return l.map(norm).filter(t => t.id && t.permalinkUrl).map(t => {
-      if (!cache.has(t.permalinkUrl)) cache.set(t.permalinkUrl, Object.assign({}, t));
-      return t;
-    });
-  }
-  async function feed(n) {
-    const g = GEN[Math.floor(Math.random() * GEN.length)];
-    const d = await api('explore', { type:'trending', genre:g, kind:'trending' });
-    const raw = listFrom(d);
-    const l = raw.map(norm).filter(t => t && t.id && t.permalinkUrl && !seen.has(t.id))
-      .sort(() => Math.random() - .5).slice(0, n);
-    return l.map(t => { seen.add(t.id); cache.set(t.permalinkUrl, t); return { sc:t, id:'sc' + t.id, title:t.title, topic:'' }; });
-  }
-  async function mix(arr) {
-    let songs = []; try { songs = await feed(Math.max(1, Math.ceil(arr.length / 2))); } catch {}
-    if (!songs.length) return arr;
-    const out = [];
-    arr.forEach((e, i) => { out.push(e); if (i % 2 === 1 && songs.length) out.push(songs.shift()); });
-    return out.concat(songs);
-  }
-  return { api, art, norm, stream, feed, mix, search, cache, likes, isLiked, toggleLike };
-})();
-
-async function SongWatch(url) {
-  Mini.close();
-  const tok = routeToken, wrap = h('div', { class:'watch' });
-  main.append(wrap);
-  let t = SC.cache.get(url);
-  try {
-    if (!t || !t.streamUrl) { const m = await SC.api('track', { url }); t = Object.assign({}, t || {}, SC.norm(m)); t.permalinkUrl = t.permalinkUrl || url; SC.cache.set(url, t); }
-  } catch (err) { wrap.append(h('div', { class:'perr show' }, icon('alert'), h('p', {}, 'Song konnte nicht geladen werden: ' + (err.message || err)))); return; }
-  if (tok !== routeToken) return;
-  document.title = `${t.title} – Media +`;
-  const video = h('video', { playsinline:true, preload:'auto', autoplay:true });
-  const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieser Song lässt sich hier nicht abspielen.'));
-  const player = buildPlayer(video, perr);
-  player.setTitle(t.title); player.classList.add('song');
-  const cov = SC.art(t.artworkUrl);
-  player.prepend(h('div', { class:'sbg' }, h('div', { class:'sbg-b', style: cov ? `background-image:url("${cov}")` : '' }), h('div', { class:'sbg-c' }, cov ? h('img', { src:cov, alt:'' }) : null)));
-  let hls = null;
-  const kill = () => { if (hls) { hls.destroy(); hls = null; } video.pause(); video.removeAttribute('src'); video.load(); };
-  const fail = () => perr.classList.add('show');
-  video.addEventListener('error', fail);
-  (async () => {
-    try {
-      const u = await SC.stream(t); if (tok !== routeToken) return;
-      if (/\.m3u8/.test(u) && !video.canPlayType('application/vnd.apple.mpegurl')) {
-        await loadHls(); if (tok !== routeToken) return;
-        if (!window.Hls || !Hls.isSupported()) return fail();
-        hls = new Hls(); hls.loadSource(u); hls.attachMedia(video);
-        hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) fail(); });
-      } else video.src = u;
-      video.play().catch(() => {});
-    } catch { fail(); }
-  })();
-  cleanups.push(kill);
-  if ('mediaSession' in navigator) try { navigator.mediaSession.metadata = new MediaMetadata({ title:t.title, artist:t.artist?.username || '', artwork: cov ? [{ src:cov, sizes:'500x500' }] : [] }); } catch {}
-  const lk = h('button', { class:'btn', type:'button' });
-  const paintLk = () => { const on = SC.isLiked(t.id); lk.className = 'btn' + (on ? ' on' : ''); lk.replaceChildren(icon('heart', on ? 'fill' : ''), on ? 'Gemerkt' : 'Merken'); };
-  lk.onclick = () => { const on = SC.toggleLike(t); toast(on ? 'Song gemerkt' : 'Aus Gemerkt entfernt'); paintLk(); }; paintLk();
-  const info = h('div', { style:'padding:14px 2px' },
-    h('div', { style:'font-size:1.2em;font-weight:700;line-height:1.3' }, t.title),
-    h('div', { style:'opacity:.7;margin-top:4px' }, t.artist?.username || ''),
-    h('div', { style:'display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:12px' }, lk,
-      t.permalinkUrl ? h('a', { href:t.permalinkUrl, target:'_blank', rel:'noopener noreferrer', style:'text-decoration:underline;opacity:.85' }, 'Auf SoundCloud') : null));
-  const relList = h('div', { class:'slist' });
-  const related = h('aside', { class:'related' }, h('h2', {}, 'Weitere Musik'), relList);
-  wrap.append(h('div', {}, player, info), related);
-  fillSongRecommendations(relList, tok, t.id);
-  player.focus({ preventScroll:true });
-}
-
-const fmtSongDur = ms => { const s = Math.round((ms || 0) / 1000); return s > 0 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : ''; };
-function SongRow(t) {
-  const cov = SC.art(t.artworkUrl);
-  const like = h('button', { class:'btn srow-l', type:'button', 'aria-label':'Song merken' });
-  const paint = () => { const on = SC.isLiked(t.id); like.className = 'btn srow-l' + (on ? ' on' : ''); like.setAttribute('aria-pressed', String(on)); like.replaceChildren(icon('heart', on ? 'fill' : '')); };
-  like.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); const on = SC.toggleLike(t); toast(on ? 'Song gemerkt' : 'Aus Gemerkt entfernt'); paint(); };
-  paint();
-  const meta = [t.artist && t.artist.username, fmtSongDur(t.duration)].filter(Boolean).join(' · ');
-  return h('div', { class:'srow' },
-    h('a', { class:'srow-a', href:'#/song/' + encodeURIComponent(t.permalinkUrl) },
-      h('div', { class:'srow-c' }, cov ? h('img', { src:cov, alt:'', loading:'lazy' }) : icon('film')),
-      h('div', { class:'txt' }, h('h3', { title:t.title }, t.title), h('p', {}, meta))),
-    like);
-}
-async function fillSongRecommendations(list, tok, excludeId) {
-  list.replaceChildren(h('p', { style:'color:var(--fg-3);font-size:13px' }, 'Empfehlungen werden geladen …'));
-  try {
-    const rows = await SC.feed(10);
-    if (tok !== routeToken) return;
-    const tracks = rows.map(x => x.sc).filter(t => t && t.id != excludeId);
-    list.replaceChildren(...(tracks.length ? tracks.map(SongRow) : [h('p', { style:'color:var(--fg-3);font-size:13px' }, 'Keine Empfehlungen verfügbar.') ]));
-  } catch (err) {
-    if (tok !== routeToken) return;
-    list.replaceChildren(h('p', { style:'color:var(--fg-3);font-size:13px' }, 'Empfehlungen konnten nicht geladen werden.'));
-  }
-}
-function Songs(arg) {
-  const tok = routeToken, liked = arg === 'liked', q = /^q\//.test(arg) ? arg.slice(2).trim() : '';
-  document.title = (liked ? 'Gemerkte Songs' : q || 'Songs') + ' – Media +';
-  const likes = SC.likes(), host = h('div', { class:'slist' });
-  const clr = liked && likes.length ? h('button', { class:'btn', type:'button', onclick:() => { if (confirm('Alle gemerkten Songs entfernen?')) { store.set('scLikes', []); route(); } } }, icon('trash'), 'Leeren') : null;
-  main.append(
-    h('div', { class:'page-h' }, h('h1', {}, liked ? 'Gemerkte Songs' : 'Songs'), h('span', { class:'grow' }), clr),
-    h('div', { class:'stabs' },
-      h('a', { class:'chip' + (liked ? '' : ' active'), href:'#/songs' }, icon('search'), 'Suche'),
-      h('a', { class:'chip' + (liked ? ' active' : ''), href:'#/songs/liked' }, icon('heart', liked ? 'fill' : ''), 'Gemerkt' + (likes.length ? ' (' + likes.length + ')' : ''))));
-  if (liked) {
-    main.append(host);
-    if (!likes.length) host.append(emptyBox('heart', 'Noch keine Songs gemerkt.', h('a', { class:'btn primary', href:'#/songs' }, icon('search'), 'Songs suchen')));
-    else likes.forEach(t => host.append(SongRow(t)));
-    return;
-  }
-  const inp = h('input', { class:'sinp', type:'search', placeholder:'Song oder Künstler suchen …', 'aria-label':'Songsuche', enterkeyhint:'search', autocomplete:'off', autocorrect:'off', autocapitalize:'off', spellcheck:'false', value:q });
-  main.append(h('form', { class:'ssearch', onsubmit:ev => {
-    ev.preventDefault(); const v = inp.value.trim(); if (!v) return; inp.blur();
-    const target = /^https?:\/\/([\w-]+\.)?soundcloud\.com\//i.test(v) ? '#/song/' + encodeURIComponent(v) : '#/songs/q/' + encodeURIComponent(v);
-    if (location.hash === target) route(); else location.hash = target;
-  } }, inp, h('button', { class:'btn primary', type:'submit', 'aria-label':'Suchen' }, icon('search'), 'Suchen')), host);
-  if (!q) {
-    const rec = h('div', { class:'slist' });
-    host.append(h('p', { style:'color:var(--fg-3);font-size:13px' }, 'Suche nach Songs oder Künstlern – oder füge einen SoundCloud-Link ein.'), h('h2', { class:'rowh' }, 'Empfehlungen für dich'), rec);
-    fillSongRecommendations(rec, tok, null);
-    if (!IS_TV) setTimeout(() => inp.focus(), 60);
-    return;
-  }
-  const run = async () => {
-    host.replaceChildren(emptyBox('search', 'Suche läuft …'));
-    try {
-      const l = await SC.search(q); if (tok !== routeToken) return;
-      host.replaceChildren(...(l.length ? l.map(SongRow) : [emptyBox('search', `Keine Songs für „${q}“ gefunden.`)]));
-    } catch (err) {
-      if (tok !== routeToken) return;
-      host.replaceChildren(emptyBox('alert', 'Die Songsuche ist gerade nicht möglich.', h('div', { style:'font-size:12.5px;color:var(--fg-4)' }, String(err.message || err)), h('button', { class:'btn primary', type:'button', onclick:run }, icon('refresh'), 'Erneut versuchen')));
-    }
-  };
-  run();
 }
 
 async function Watch(id) {
@@ -1949,8 +1722,6 @@ function route() {
     case 'subs':    PLUS.subsPage(); break;
     case 'random':  PLUS.random(); break;
     case 'shorts':  PLUS.shorts(); break;
-    case 'song':    SongWatch(arg); break;
-    case 'songs':   Songs(arg); break;
     case 'access':  PLUS.access(arg); break;
     case 'send':    PLUS.sendPage(); break;
     case 'pair':    PLUS.pairPage(); break;
@@ -1969,7 +1740,7 @@ function applyPin() {
 function markNav() {
   document.querySelectorAll('#side [data-cnt]').forEach(n => { const v = store.get(n.dataset.cnt, []).length; n.textContent = v || ''; });
   const hsh = location.hash || '#/';
-  document.querySelectorAll('#side .nav[data-href]').forEach(n => n.classList.toggle('active', n.dataset.href === hsh || (n.dataset.href === '#/' && /^#\/(browse|)/.test(hsh) && !/^#\/(watch|search|channel|library|show|songs?)/.test(hsh))));
+  document.querySelectorAll('#side .nav[data-href]').forEach(n => n.classList.toggle('active', n.dataset.href === hsh || (n.dataset.href === '#/' && /^#\/(browse|)/.test(hsh) && !/^#\/(watch|search|channel|library|show)/.test(hsh))));
 }
 
 function buildSide() {
@@ -2676,28 +2447,19 @@ function move(dir) {
     const t = (TV.last && TV.last.isConnected && canFocus(TV.last) ? TV.last : null) || initialTarget() || all.find(canFocus);
     return focusEl(t);
   }
-  /* Suche: erst am rechten Rand der Tastatur → Treffer/Pills */
+  /* Suche: erst am rechten Rand der Tastatur → Treffer */
   if (dir === 'right' && cur.closest('.sleft') && cur.classList.contains('key')) {
     const keys = Array.from(document.querySelectorAll('.sleft .key')).filter(canFocus);
     if (keys.length) {
       const maxR = Math.max(...keys.map(k => k.getBoundingClientRect().right));
       if (cur.getBoundingClientRect().right >= maxR - 12) {
-        const result = document.querySelector('.sres .card, .sres .srow-a, .sres a.card, .sres .slist .srow-a');
-        const tab = document.querySelector('.sres-tabs .chip.active, .sres-tabs .chip');
-        const target = (result && canFocus(result)) ? result : (tab && canFocus(tab) ? tab : null);
+        const result = document.querySelector('.sres .card, .sres a.card');
+        const target = (result && canFocus(result)) ? result : null;
         if (target) { TV.colFor = target; return focusEl(target); }
       }
     }
   }
-  /* Suche: von Treffern nach oben → Pills (Videos/Songs) */
-  if (dir === 'up' && cur.closest('.sres') && !cur.closest('.sres-tabs')) {
-    const tab = document.querySelector('.sres-tabs .chip.active, .sres-tabs .chip');
-    if (tab && canFocus(tab)) {
-      const c0 = cur.getBoundingClientRect(), t0 = tab.getBoundingClientRect();
-      if (t0.bottom <= c0.top + 4) { TV.colFor = tab; return focusEl(tab); }
-    }
-  }
-  /* Suche: von Treffern/Pills links zurück zur Tastatur */
+  /* Suche: von Treffern links zurück zur Tastatur */
   if (dir === 'left' && cur.closest('.sres') && !cur.closest('.sleft')) {
     const keys = Array.from(document.querySelectorAll('.sleft .key')).filter(canFocus);
     if (keys.length) {
@@ -3558,7 +3320,6 @@ const PLUS = (() => {
     }
     const nav = (ic, label, href, cnt) => h('a', { class:'nav', href, 'data-href':href },
       icon(ic), h('span', { class:'lbl' }, label), cnt ? h('span', { class:'cnt', 'data-cnt':cnt }) : null);
-    // FIX: "Songs" aus der Navigation entfernt – Songs sind jetzt in der Suche
     const home = document.querySelector('#side .nav[data-href="#/"]');
     if (home) home.after(
       nav('shorts', 'Shorts', '#/shorts'),
@@ -3665,7 +3426,6 @@ const PLUS = (() => {
     const lab = (a, b) => tv ? b : a;
 
     function build(e) {
-      if (e.sc) return buildSong(e);
       const ch = chanOf(e.channel), topic = e.topic || '', cid = ch.id || '_', v = h('video', { class:'sh-v', playsinline:true, preload:'none' });
       v.muted = true; v.setAttribute('webkit-playsinline', '');
       const bar = h('i'), art = h('article', { class:'sh-it paused' });
@@ -3722,90 +3482,6 @@ const PLUS = (() => {
       return s;
     }
 
-    function buildSong(e) {
-      const t = e.sc, cov = SC.art(t.artworkUrl), v = h('audio', { preload:'none' });
-      v.muted = true;
-      const bar = h('i'), art = h('article', { class:'sh-it sh-song paused' });
-      const s = { art, v, e, loaded:false, ready:false, t:0, song:true, hls:null };
-      const time = h('div', { class:'sh-s' }, '');
-      const fmt = x => isFinite(x) ? Math.floor(x / 60) + ':' + String(Math.floor(x % 60)).padStart(2, '0') : '0:00';
-      const prog = h('div', { class:'sh-prog' }, bar);
-      prog.onclick = ev => { ev.stopPropagation(); if (!isFinite(v.duration)) return; const r = prog.getBoundingClientRect(); v.currentTime = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * v.duration; };
-      s.stage = h('div', { class:'sh-stage', tabindex:'0' },
-        h('div', { class:'sh-bg', style: cov ? `background-image:url("${cov}")` : '' }),
-        h('div', { class:'sh-cover' }, cov ? h('img', { src:cov, alt:'' }) : null), v,
-        h('span', { class:'sh-pp' }, icon('play', 'fill')), h('div', { class:'sh-grad' }),
-        h('div', { class:'sh-info' }, h('span', { class:'sh-tag' }, '♪ Song'), h('div', { class:'sh-t' }, t.title), h('div', { class:'sh-ch' }, t.artist ? t.artist.username : ''), time), prog);
-      s.toggle = () => s.failed ? 0 : v.paused ? play(s) : v.pause();
-      s.stage.onclick = s.toggle;
-      const like = h('button', { class:'sh-b', type:'button', 'aria-label':'Gefällt mir' });
-      const paintLike = () => { const on = SC.isLiked(t.id); like.classList.toggle('on', on); like.replaceChildren(icon('heart', on ? 'fill' : ''), h('span', {}, on ? 'Gemerkt' : 'Like')); };
-      like.onclick = ev => { ev.stopPropagation(); const on = SC.toggleLike(t); toast(on ? 'Song gemerkt' : 'Like entfernt'); paintLike(); };
-      const seek = (d, g, l) => { const b = h('button', { class:'sh-b', type:'button', 'aria-label':l }, h('span', { class:'sh-g' }, g), h('span', {}, l)); b.onclick = ev => { ev.stopPropagation(); if (isFinite(v.duration)) v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + d)); }; return b; };
-      const snd = h('button', { class:'sh-b', type:'button', 'aria-label':'Ton' });
-      s.paintSound = () => snd.replaceChildren(icon(v.muted ? 'mute' : 'vol'), h('span', {}, v.muted ? 'Ton aus' : 'Ton an'));
-      snd.onclick = ev => { ev.stopPropagation(); store.set('shSound', !sound()); els.forEach(x => { x.v.muted = !sound(); x.paintSound(); }); };
-      const vid = h('a', { class:'sh-b', href:'#/song/' + encodeURIComponent(t.permalinkUrl), 'aria-label':'Als Video ansehen' }, icon('film'), h('span', {}, lab('Video', 'Als Video')));
-      vid.addEventListener('click', () => { try { v.pause(); } catch {} });
-      paintLike(); s.paintSound();
-      s.acts = h('div', { class:'sh-acts' }, like, seek(-10, '−10', 'Zurück'), seek(10, '+10', 'Vor'), vid, snd);
-      s.cd = h('div', { class:'sh-cd' }, '');
-      const nxt = h('button', { class:'sh-b pri', type:'button', 'aria-label':'Weiter zum nächsten Short' }, icon('play', 'fill'), h('span', {}, 'Weiter'));
-      nxt.onclick = ev => { ev.stopPropagation(); clearInterval(s.ft); go(ci + 1); };
-      const again = h('button', { class:'sh-b', type:'button', 'aria-label':'Song erneut laden' }, icon('refresh'), h('span', {}, 'Erneut versuchen'));
-      again.onclick = ev => { ev.stopPropagation(); songRetry(s); };
-      s.end = h('div', { class:'sh-end sh-fail', onclick:ev => ev.stopPropagation() }, icon('alert'), h('div', { class:'sh-end-t' }, 'Dieser Song kann nicht geladen werden'),
-        h('div', { class:'sh-end-s' }, [t.title, t.artist ? t.artist.username : ''].filter(Boolean).join(' – ')), s.cd, nxt, again);
-      s.cont = nxt; s.stage.append(s.end);
-      art.append(s.stage, s.acts); focusable(s, false);
-      v.addEventListener('play', () => { art.classList.remove('paused'); s.paintSound();
-        if ('mediaSession' in navigator) try { navigator.mediaSession.metadata = new MediaMetadata({ title:t.title, artist:t.artist ? t.artist.username : '', artwork: cov ? [{ src:cov, sizes:'500x500' }] : [] }); } catch {} });
-      v.addEventListener('pause', () => { if (!v.ended) art.classList.add('paused'); });
-      v.addEventListener('volumechange', s.paintSound);
-      v.addEventListener('timeupdate', () => { const d = v.duration; if (d > 0) bar.style.width = Math.min(100, v.currentTime / d * 100) + '%'; time.textContent = fmt(v.currentTime) + ' / ' + fmt(d || (t.duration || 0) / 1000); });
-      v.addEventListener('ended', () => { if (els[ci] === s) go(ci + 1); });
-      v.addEventListener('error', () => { if (v.getAttribute('src') && v.error) songFail(s); });
-      return s;
-    }
-    function songLoad(s, act) {
-      const v = s.v;
-      if (s.loaded) { if (act) v.preload = 'auto'; return; }
-      s.loaded = true; s.ready = false;
-      const bad = () => songFail(s);
-      v.addEventListener('canplay', () => { if (s.ready) return; s.ready = true; clearTimeout(s.t); if (els[ci] === s) play(s); }, { once:true });
-      clearTimeout(s.t); s.t = setTimeout(() => { if (!s.ready && s.loaded) bad(); }, 20000);
-      (async () => {
-        try {
-          const u = await SC.stream(s.e.sc); if (!s.loaded) return;
-          if (/\.m3u8/.test(u) && !v.canPlayType('application/vnd.apple.mpegurl')) {
-            await loadHls(); if (!s.loaded) return;
-            if (!window.Hls || !Hls.isSupported()) throw new Error('HLS');
-            s.hls = new Hls(); s.hls.loadSource(u); s.hls.attachMedia(v);
-            s.hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) bad(); });
-          } else v.src = u;
-          v.preload = 'auto';
-        } catch { bad(); }
-      })();
-    }
-    function songFail(s) {
-      if (s.failed) return;
-      s.failed = true; clearTimeout(s.t);
-      if (s.hls) { s.hls.destroy(); s.hls = null; }
-      try { s.v.pause(); } catch {}
-      s.art.classList.remove('paused'); s.art.classList.add('failed');
-      if (els[ci] === s) { failCount(s); if (tv) s.cont.focus(); }
-    }
-    function failCount(s) {
-      clearInterval(s.ft); let n = 4; s.cd.textContent = `Weiter in ${n} s …`;
-      s.ft = setInterval(() => {
-        if (els[ci] !== s || !s.failed) { clearInterval(s.ft); return; }
-        if (--n <= 0) { clearInterval(s.ft); go(ci + 1); } else s.cd.textContent = `Weiter in ${n} s …`;
-      }, 1000);
-    }
-    function songRetry(s) {
-      clearInterval(s.ft); s.failed = false; s.loaded = false; s.ready = false; s.art.classList.remove('failed');
-      songLoad(s, true);
-    }
     function focusable(s, on) { [s.stage, ...s.acts.querySelectorAll('.sh-b'), ...s.end.querySelectorAll('.sh-b')].forEach(el => { el.tabIndex = on ? 0 : -1; }); }
     function finish(s) {
       if (s.done) return; s.done = true; s.v.pause(); s.art.classList.add('ended');
@@ -3818,7 +3494,6 @@ const PLUS = (() => {
       if (p) p.catch(() => { v.muted = true; return v.play(); }).catch(() => {}).then(s.paintSound);
     }
     function load(s, act) {
-      if (s.song) return songLoad(s, act);
       const v = s.v;
       if (!s.loaded) {
         s.loaded = true; s.ready = false;
@@ -3831,7 +3506,7 @@ const PLUS = (() => {
         v.preload = act ? 'auto' : 'metadata'; v.src = secure(s.e.url_video || s.e.url_video_low || s.e.url_video_hd);
       } else if (act) v.preload = 'auto';
     }
-    function release(s) { clearTimeout(s.t); if (s.hls) { s.hls.destroy(); s.hls = null; } s.v.pause(); s.v.removeAttribute('src'); s.v.load(); s.loaded = false; s.ready = false; clearInterval(s.ft); if (s.failed) { s.failed = false; s.art.classList.remove('failed'); } }
+    function release(s) { clearTimeout(s.t); if (s.hls) { s.hls.destroy(); s.hls = null; } s.v.pause(); s.v.removeAttribute('src'); s.v.load(); s.loaded = false; s.ready = false; }
     function activate(i) {
       if (i === ci || !els[i]) return;
       const pv = els[ci]; if (pv && pv.t0) { const d = Date.now() - pv.t0; shBump(pv.e.topic, d < 2500 ? -1 : d > 8000 ? 1 : 0); }
@@ -3840,7 +3515,6 @@ const PLUS = (() => {
       els.forEach((x, j) => { if (j !== i) { x.v.pause(); focusable(x, false); if (Math.abs(j - i) > 2 && x.loaded) release(x); } });
       const s = els[i]; focusable(s, true); load(s, true);
       if (s.ready) play(s);
-      if (s.failed) { failCount(s); if (tv) s.cont.focus(); }
       if (els[i + 1]) load(els[i + 1], false);
       if (i >= els.length - 3) more();
       const a = document.activeElement;
@@ -3856,7 +3530,6 @@ const PLUS = (() => {
       if (loading) return; loading = true;
       try {
         let arr = await shFetch(els.length ? 8 : 6);
-        try { arr = await SC.mix(arr); } catch {}
         if (tok !== routeToken) return;
         if (!arr.length && !els.length) throw new Error('Keine Videos gefunden');
         arr.forEach(e => { try { const s = build(e); s.art._i = els.length; els.push(s); feed.append(s.art); io.observe(s.art); } catch (x) { console.error('Shorts build', x); lastErr = x; } });
