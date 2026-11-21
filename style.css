@@ -1285,7 +1285,7 @@ body.hicon{filter:contrast(1.25)}
 @keyframes sDrift{to{transform:translate(14vw,9vw) scale(1.18)}}
 .aset .sin{z-index:2}
 .aset h1.pop{animation:sTitle .45s cubic-bezier(.2,.9,.2,1) both}
-@keyframes sTitle{from{opacity:0;transform:translateY(-1.6vh) scale(.96);filter:blur(.8vh)}to{opacity:1;transform:none;filter:none}}
+@keyframes sTitle{from{opacity:0;transform:translateY(-1.6vh) scale(.96);filter:blur(.8vh)}to{opacity:1;transform:none}}
 /* Logo-Kachel: Einflug + Schweben */
 .aset .sfl{position:absolute;left:7vw;top:calc(53% - min(15vw,28vh));width:min(30vw,56vh);height:min(30vw,56vh);opacity:0;transform:translateX(-6vw) scale(.8) rotate(-4deg);transition:opacity .45s .12s,transform .7s .1s cubic-bezier(.2,1.2,.3,1)}
 .aset.show .sfl{opacity:1;transform:none}
@@ -1848,7 +1848,7 @@ body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
 /* ===== Spotify-Karte im Bildschirmschoner (unten links) ===== */
 .sp-card{position:absolute;left:3.5rem;bottom:3rem;z-index:4;max-width:22rem;display:flex;align-items:center;gap:.8rem;padding:.55rem 1.2rem .55rem .55rem;border-radius:1.6rem;color:#fff;
   background:rgba(10,10,14,.22);-webkit-backdrop-filter:blur(3rem) saturate(1.5)!important;backdrop-filter:blur(3rem) saturate(1.5)!important;
-  opacity:0;transform:translateY(1.2rem);pointer-events:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+  overflow:hidden;flex-direction:column;align-items:stretch;gap:0;padding:.55rem 1.2rem .8rem .55rem;opacity:0;transform:translateY(1.6rem) scale(.94);transform-origin:left bottom;pointer-events:none;transition:opacity .5s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
 .sp-card.on{opacity:1;transform:none}
 .sp-card::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
   background:linear-gradient(135deg,rgba(210,210,216,.45),rgba(210,210,216,.07) 50%,rgba(210,210,216,.26));
@@ -1856,6 +1856,15 @@ body.home:not(.home-scrolled) .tv-saver.show>.saver-video{
   mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
 .sp-cv{flex:none;width:3.6rem;height:3.6rem;border-radius:1rem;object-fit:cover;background:rgba(255,255,255,.12)}
 .sp-tx{min-width:0;display:flex;flex-direction:column;gap:.05rem}
-.sp-l{font-size:.8rem;font-weight:600;color:#1ed760}
+.sp-l{display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.55)}
 .sp-t{font-size:1.1rem;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp-a{font-size:.9rem;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.sp-in{display:flex;align-items:center;gap:.8rem;transition:opacity .28s ease,transform .28s ease}
+.sp-card.swap .sp-in{opacity:0;transform:translateX(-1rem) scale(.97)}
+.sp-in .sp-cv,.sp-in .sp-tx{animation:spIn .55s cubic-bezier(.2,.8,.2,1) both}
+.sp-in .sp-tx{animation-delay:.06s}
+@keyframes spIn{from{opacity:0;transform:translateX(1rem)}to{opacity:1;transform:none}}
+.sp-ic{display:inline-block;width:.95rem;height:.95rem;color:rgba(255,255,255,.55);flex:none}
+.sp-bar{position:absolute;left:0;right:0;bottom:0;height:.25rem;background:rgba(255,255,255,.14)}
+.sp-bar i{display:block;height:100%;width:100%;background:#fff;transform-origin:left;transform:scaleX(0);transition:transform .5s linear}
