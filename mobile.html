@@ -2409,7 +2409,7 @@ const PLUS = (() => {
     if (!document.getElementById('rcCss4')) document.head.append(h('style', { id:'rcCss4' }, [
       '.dpw{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}',
       '.dpw .okt{display:none}',
-      '.dpw .okc{transition:opacity .25s ease}',
+      '.dpw .okc{transition:opacity .25s ease;touch-action:none}',
       '.dpw .okr{fill:none;stroke:var(--fg);stroke-width:20;stroke-dasharray:100 100;stroke-dashoffset:100;opacity:0;pointer-events:none;transition:opacity .25s ease}',
       '.dpw.okh .okc{opacity:.28!important}',
       '.dpw.okh .okr{opacity:1}',
@@ -2467,22 +2467,22 @@ const PLUS = (() => {
     dpw.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { const t = hit(ev); if (t) { ev.preventDefault(); key(t.dataset.k); } } });
     dpw.querySelectorAll('[data-k]').forEach(n => n.setAttribute('tabindex', '0'));
 
-    /* OK 3 s halten: Taste wird grau, füllt sich im Uhrzeigersinn, "OK" blurrt zum Countdown; danach öffnet sich am TV das Kontrollzentrum (3 Punkte) */
+    /* OK 1 s halten: Taste wird grau, füllt sich im Uhrzeigersinn, "OK" blurrt zum Countdown; danach öffnet sich am TV das Kontrollzentrum (3 Punkte) */
     {
       const okc = dpw.querySelector('.okc'), okr = dpw.querySelector('.okr');
-      const ol = h('div', { class:'okl', 'aria-hidden':'true' }, h('span', { class:'ok-t' }, 'OK'), h('span', { class:'ok-n' }, '3'));
+      const ol = h('div', { class:'okl', 'aria-hidden':'true' }, h('span', { class:'ok-t' }, 'OK'), h('span', { class:'ok-n' }, '1'));
       dpw.append(ol);
       const nEl = ol.querySelector('.ok-n');
       const fit = () => { ol.style.fontSize = (dpw.clientWidth * .1) + 'px'; };
       fit(); if (window.ResizeObserver) new ResizeObserver(fit).observe(dpw); else window.addEventListener('resize', fit);
-      const HOLD = 3000, DELAY = 250;
+      const HOLD = 1000, DELAY = 200;
       let t0 = 0, raf = 0, dT = 0, active = false, fired = false, lastN = 0;
       const reset = () => { clearTimeout(dT); cancelAnimationFrame(raf); active = false; lastN = 0; dpw.classList.remove('okh'); okr.style.strokeDashoffset = ''; };
       const frame = now => {
         if (!active) return;
         const p = Math.min(1, (now - t0) / HOLD);
         okr.style.strokeDashoffset = String(100 - p * 100);
-        const n = Math.max(1, Math.ceil((1 - p) * 3));
+        const n = Math.max(1, Math.ceil((1 - p) * HOLD / 1000));
         if (n !== lastN) { lastN = n; nEl.textContent = n; nEl.classList.remove('tick'); void nEl.offsetWidth; nEl.classList.add('tick'); }
         if (p >= 1) { fired = true; if (navigator.vibrate) navigator.vibrate([20, 50, 30]); reset(); key('ctrl'); return; }
         raf = requestAnimationFrame(frame);
@@ -2492,7 +2492,8 @@ const PLUS = (() => {
         fired = false; clearTimeout(dT);
         dT = setTimeout(() => { active = true; dpw.classList.add('okh'); okr.style.strokeDashoffset = '100'; t0 = performance.now(); raf = requestAnimationFrame(frame); }, DELAY);
       };
-      okc.addEventListener('pointerdown', begin);
+      okc.addEventListener('pointerdown', ev => { try { okc.setPointerCapture(ev.pointerId); } catch {} begin(ev); });
+      okc.addEventListener('selectstart', ev => ev.preventDefault());
       ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => okc.addEventListener(n, reset));
       dpw.addEventListener('contextmenu', ev => ev.preventDefault());
       /* nach dem langen Halten kein zusätzliches OK senden */
