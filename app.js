@@ -671,7 +671,7 @@ function openSettings(opener, opts) {
       TK('Uhr anzeigen', 'saverClock', true, saver),
       { ...CK('Uhr-Design', 'saverClockStyle', [['Standard', 'std'], ['Schmal', 'slim']], 'std', saver), when: () => g('saverClock', true) },
       CK('Starten nach', 'saverDelay', [['1 Min.', 1], ['5 Min.', 5], ['10 Min.', 10], ['20 Min.', 20], ['30 Min.', 30]], 5, saver),
-      CK('Motiv', 'saverMode', [['Snoopy', 'snoopy'], ['Bilder', 'images']], 'snoopy', v => { saver(); if (v === 'snoopy' && window.__sico) window.__sico(); }),
+      CK('Motiv', 'saverMode', [['Snoopy', 'snoopy'], ['Unterwasser', 'water'], ['Bilder', 'images']], 'snoopy', v => { saver(); if (v === 'snoopy' && window.__sico) window.__sico(); }),
       TK('Empfehlungen anzeigen', 'saverRecs', true, saver),
       CK('Schwarz nach', 'saverBlack', [['Nie', 0], ['10 Min.', 10], ['20 Min.', 20], ['30 Min.', 30], ['60 Min.', 60]], 30, saver),
       CK('Bildwechsel', 'saverInterval', [['10 s', 10], ['30 s', 30], ['60 s', 60]], 30, saver)]],
@@ -2067,9 +2067,15 @@ const ScreenSaver = (() => {
   let digits = [], lastHM = '', digitTimers = [];
   let recQ = [], recCur = null, recBusy = false, recEl = null, hintEl = null, blackEl = null, blackTimer = 0, black = false;
   const SNOOPY_URL = 'https://files.catbox.moe/heqbp1.mp4';
+  const WATER_URL = 'https://ia601906.us.archive.org/2/items/ytdown.com-you-tube-media-vlrd-vw-g-7s-i-aerial-underwater-cityscape-landscape-c_202611/YTDown.com_YouTube_Media__VlrdVwG7sI_Aerial-Underwater-Cityscape-Landscape-compilation-Apple-TV-Mac-OS-Sonoma-Screens_002_720p-trimmed.mp4';
+  /* Video-Motive (Snoopy, Unterwasser) – weitere einfach hier ergänzen */
+  const MOTIFS = [{ id:'snoopy', label:'Snoopy', url:SNOOPY_URL }, { id:'water', label:'Unterwasser', url:WATER_URL }];
+  const VIDS = {}, PRE = {};
+  let bgEl = null;
   let vid = null, vidReady = false, pendingShow = false;
   const blackAfter = () => { const v = Number(store.get('saverBlack', 30)); return isFinite(v) ? v * 60000 : 30 * 60000; };
-  const useVideo = () => store.get('saverMode', 'snoopy') !== 'images';
+  const curMode = () => { const m = store.get('saverMode', 'snoopy'); return m === 'images' ? 'images' : (MOTIFS.some(x => x.id === m) ? m : 'snoopy'); };
+  const useVideo = () => curMode() !== 'images';
   const recsOn = () => store.get('saverRecs', true) !== false;
   function prepareStart() {
     if (!vid) return;
@@ -2077,18 +2083,34 @@ const ScreenSaver = (() => {
     if (isFinite(vid.duration) && vid.duration > 40 && Math.random() < .2) t = Math.random() * vid.duration * .7;
     try { vid.currentTime = t; } catch {}
   }
-  function loadVideo() {
-    if (vid) return;
-    vid = document.createElement('video');
-    vid.className = 'saver-video';
-    vid.muted = true; vid.loop = true; vid.playsInline = true; vid.preload = 'auto';
-    vid.setAttribute('muted', ''); vid.setAttribute('playsinline', '');
-    const ok = () => { if (vidReady) return; vidReady = true; try { vid.pause(); } catch {} prepareStart(); if (pendingShow) { pendingShow = false; show(); } };
-    vid.addEventListener('canplaythrough', ok, { once:true });
-    vid.addEventListener('loadeddata', () => { if (vid.readyState >= 4) ok(); });
-    vid.addEventListener('error', () => { vidReady = false; if (pendingShow) { pendingShow = false; show(true); } });
-    vid.src = SNOOPY_URL;
-    try { vid.load(); } catch {}
+  /* Lädt das Video des aktuellen (oder angegebenen) Motivs; je Motiv ein eigenes <video>, nur das aktive ist sichtbar */
+  function loadVideo(id) {
+    id = id || curMode();
+    const M = MOTIFS.find(x => x.id === id);
+    if (!M) return;
+    let o = VIDS[id];
+    if (!o) {
+      const el = document.createElement('video');
+      o = VIDS[id] = { el, ready:false };
+      el.className = 'saver-video';
+      el.muted = true; el.loop = true; el.playsInline = true; el.preload = 'auto';
+      el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
+      const ok = () => {
+        if (o.ready) return; o.ready = true; try { el.pause(); } catch {}
+        if (vid === el) { vidReady = true; prepareStart(); if (pendingShow) { pendingShow = false; show(); } }
+      };
+      el.addEventListener('canplaythrough', ok, { once:true });
+      el.addEventListener('loadeddata', () => { if (el.readyState >= 4) ok(); });
+      el.addEventListener('error', () => { o.ready = false; if (vid === el) { vidReady = false; if (pendingShow) { pendingShow = false; show(true); } } });
+      el.src = M.url;
+      try { el.load(); } catch {}
+    }
+    if (bgEl && !o.el.parentNode) bgEl.append(o.el);
+    if (id === curMode()) {
+      if (vid && vid !== o.el) { try { vid.pause(); } catch {} }
+      vid = o.el; vidReady = o.ready;
+      Object.keys(VIDS).forEach(k => VIDS[k].el.classList.toggle('act', VIDS[k] === o));
+    }
   }
   const recSeen = new Set();
   const HINT = 'Taste oder Bewegung zum Fortfahren';
@@ -2343,11 +2365,12 @@ const ScreenSaver = (() => {
     dateEl  = h('div', { class:'saver-date' });
     const clockWrap = h('div', { class:'saver-clock-wrap' }, clockEl, dateEl);
     root = h('div', { class:'tv-saver', role:'dialog', 'aria-label':'Screensaver' },
-      h('div', { class:'saver-bg' }, imgA.el, imgB.el, (loadVideo(), vid)),
+      bgEl = h('div', { class:'saver-bg' }, imgA.el, imgB.el),
       h('div', { class:'saver-overlay' }),
       clockWrap, recEl = h('div', { class:'srec' }, ...(order = [0, 1, 2].map(i => h('div', { class:'srec-c p' + i })))),
       blackEl = h('div', { class:'saver-black' }));
     document.body.append(root);
+    loadVideo();
     if (window.ResizeObserver) { recRO = new ResizeObserver(placeBlur); recRO.observe(recEl); }
     buildClock();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitDigits);
@@ -2443,19 +2466,22 @@ const ScreenSaver = (() => {
   var pk = null;
   const PK_DE = { lake:'See', forest:'Wald', sunset:'Sonnenuntergang', mountains:'Berge', night:'Nacht', city:'Stadt', blue:'Blau', sun:'Sonne', deep:'Tiefer' };
   const pkName = f => f.replace(/^tv-saver-/, '').replace(/\.\w+$/, '').split('-').map(w => PK_DE[w] || w).join(' ');
-  const pkVideo = (cls, still) => { const v = document.createElement('video'); v.className = 'saver-video ' + cls; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto'; v.src = SNOOPY_URL + (still ? '#t=0.001' : ''); v.style.display = 'block'; v.style.opacity = '1'; return v; };
+  /* Standbild-Videos für die Auswahl werden schon vorher im Hintergrund geladen, damit der erste Frame sofort da ist */
+  const pkMake = id => { const M = MOTIFS.find(x => x.id === id); const v = document.createElement('video'); v.className = 'saver-video pk-lv'; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto'; v.src = M.url + '#t=0.001'; v.style.display = 'block'; v.style.opacity = '1'; try { v.load(); } catch {} return v; };
+  const pkWarm = () => MOTIFS.forEach(M => { PRE[M.id] = PRE[M.id] || []; while (PRE[M.id].length < 2) PRE[M.id].push(pkMake(M.id)); });
+  const pkVideo = id => { const q = PRE[id] || (PRE[id] = []); const v = q.length ? q.shift() : pkMake(id); setTimeout(pkWarm, 1500); return v; };
   /* Snoopy in der Auswahl = nur Standbild (erster Frame), nie abspielen */
   const pkMedia = it => {
-    if (it.video) return pkVideo('pk-lv', true);
+    if (it.video) return pkVideo(it.video);
     const im = document.createElement('img'); im.src = it.src; im.alt = ''; return im;
   };
   function applyChoice(it) {
     clearTimeout(slideTimer);
     if (it.video) {
-      store.set('saverMode', 'snoopy'); loadVideo();
+      store.set('saverMode', it.video); loadVideo(it.video);
       if (vidReady) { root.classList.add('vmode'); try { const p = vid.play(); p && p.catch && p.catch(() => {}); } catch {} }
-      else toast('Snoopy lädt …');
-      if (window.__sico) try { window.__sico(); } catch {}
+      else toast(it.label + ' lädt …');
+      if (it.video === 'snoopy' && window.__sico) try { window.__sico(); } catch {}
     } else {
       store.set('saverMode', 'images');
       root.classList.remove('vmode'); if (vid) { try { vid.pause(); } catch {} }
@@ -2472,7 +2498,7 @@ const ScreenSaver = (() => {
   }
   const st = (el, o) => { Object.assign(el.style, o); return el; };
   const FILL = { position:'absolute', left:'0', top:'0', width:'100%', height:'100%', objectFit:'cover', display:'block' };
-  const pkItem = i => i === 0 ? { video:true, label:'Snoopy' } : { label:'Fotos', i:index % TV_SAVER_IMAGES.length, src:TV_SAVER_IMAGES[index % TV_SAVER_IMAGES.length] };
+  const pkItem = i => i < MOTIFS.length ? { video:MOTIFS[i].id, label:MOTIFS[i].label } : { label:'Fotos', i:index % TV_SAVER_IMAGES.length, src:TV_SAVER_IMAGES[index % TV_SAVER_IMAGES.length] };
   const pkSlide = (it, blur) => {
     const w = st(document.createElement('div'), { position:'absolute', left:'0', top:'0', width:'100%', height:'100%', overflow:'hidden' });
     const m = pkMedia(it); st(m, FILL);
@@ -2496,15 +2522,16 @@ const ScreenSaver = (() => {
     const ob = [...pk.bg.children];
     pk.bg.append(nb); void nb.offsetWidth; st(nb, { opacity:'1' });
     setTimeout(() => ob.forEach(o => o.remove()), 600);
-    pk.label.textContent = pk.sel === 0 ? 'Snoopy' : 'Fotos';
+    pk.label.textContent = it.label;
     pk.dots.forEach((d, i) => st(d, { width:i === pk.sel ? pk.dw * 2.6 + 'px' : pk.dw + 'px', background:i === pk.sel ? '#fff' : 'rgba(255,255,255,.35)' }));
   }
-  function pkGo(n) { if (!pk || pk.closing || n < 0 || n > 1 || n === pk.sel) return; const dir = n > pk.sel ? 1 : -1; pk.sel = n; pkPaint(dir); }
+  function pkGo(n) { if (!pk || pk.closing || n < 0 || n > MOTIFS.length || n === pk.sel) return; const dir = n > pk.sel ? 1 : -1; pk.sel = n; pkPaint(dir); }
   function openPicker() {
     if (!visible || pk || black || !root) return;
     hideRec(); Spotify.run(false); clearTimeout(slideTimer); clearTimeout(blackTimer);
+    pkWarm();
     const W = innerWidth, H = innerHeight, fs = Math.round(H * .026);
-    const cur = root.classList.contains('vmode') ? 0 : 1;
+    const cur = root.classList.contains('vmode') ? Math.max(0, MOTIFS.findIndex(x => x.id === curMode())) : MOTIFS.length;
     const T = '.7s cubic-bezier(.2,.8,.2,1)';
     let mh = Math.round(H * .76), mw = Math.round(mh * 16 / 9);
     if (mw > W * .92) { mw = Math.round(W * .92); mh = Math.round(mw * 9 / 16); }
@@ -2516,7 +2543,7 @@ const ScreenSaver = (() => {
     const label = st(document.createElement('div'), { fontSize:Math.round(fs * 1.5) + 'px', fontWeight:'700', letterSpacing:'-.01em' });
     const dw = Math.max(8, Math.round(H * .012));
     const dotsEl = st(document.createElement('div'), { marginTop:Math.round(H * .018) + 'px', height:dw + 'px', display:'flex', justifyContent:'center', alignItems:'center' });
-    const dots = [0, 1].map(i => { const d = st(document.createElement('i'), { display:'block', height:dw + 'px', borderRadius:dw + 'px', margin:'0 ' + Math.round(dw * .45) + 'px', transition:'width .3s ease,background .3s ease', cursor:'pointer' }); d.onclick = ev => { ev.stopPropagation(); pkGo(i); }; return d; });
+    const dots = [...MOTIFS, 0].map((_, i) => { const d = st(document.createElement('i'), { display:'block', height:dw + 'px', borderRadius:dw + 'px', margin:'0 ' + Math.round(dw * .45) + 'px', transition:'width .3s ease,background .3s ease', cursor:'pointer' }); d.onclick = ev => { ev.stopPropagation(); pkGo(i); }; return d; });
     dotsEl.append(...dots);
     info.append(label, dotsEl);
     main.onclick = ev => { ev.stopPropagation(); if (pk && !pk.closing) closePicker(true); };
@@ -2555,7 +2582,7 @@ const ScreenSaver = (() => {
     if (!pk) return false;
     if (pk.closing) return true;
     if (k === 'left' || k === 'up') { if (pk.sel > 0) { pkGo(pk.sel - 1); navTick(); } }
-    else if (k === 'right' || k === 'down') { if (pk.sel < 1) { pkGo(pk.sel + 1); navTick(); } }
+    else if (k === 'right' || k === 'down') { if (pk.sel < MOTIFS.length) { pkGo(pk.sel + 1); navTick(); } }
     else if (k === 'ok' || k === 'pp') closePicker(true);
     else if (k === 'back' || k === 'home' || k === 'menu' || k === 'settings') closePicker(false);
     return true;
@@ -2570,6 +2597,7 @@ const ScreenSaver = (() => {
     setTimeout(fillRecs, 20000);
     document.addEventListener('play', ev => { if (ev.target && ev.target.classList && ev.target.classList.contains('saver-video')) return; hide(); }, true);
     if (useVideo()) loadVideo();
+    setTimeout(pkWarm, 4000);
     setInterval(() => { if (visible) tickClock(); }, 1000);
     schedule();
   }
