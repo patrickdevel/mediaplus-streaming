@@ -2078,7 +2078,7 @@ const ScreenSaver = (() => {
   const useVideo = () => curMode() !== 'images';
   const recsOn = () => store.get('saverRecs', true) !== false;
   function prepareStart() {
-    if (!vid) return;
+    if (!vid || vid !== (VIDS.snoopy && VIDS.snoopy.el)) return;
     let t = 0;
     if (isFinite(vid.duration) && vid.duration > 40 && Math.random() < .2) t = Math.random() * vid.duration * .7;
     try { vid.currentTime = t; } catch {}
@@ -2097,9 +2097,14 @@ const ScreenSaver = (() => {
       el.setAttribute('muted', ''); el.setAttribute('playsinline', '');
       const ok = () => {
         if (o.ready) return; o.ready = true; try { el.pause(); } catch {}
-        if (vid === el) { vidReady = true; prepareStart(); if (pendingShow) { pendingShow = false; show(); } }
+        if (vid === el) {
+          vidReady = true; prepareStart();
+          if (pendingShow) { pendingShow = false; show(); }
+          else if (visible && root && !pk && !root.classList.contains('vmode') && curMode() === id) { clearTimeout(slideTimer); root.classList.add('vmode'); try { const p = el.play(); p && p.catch && p.catch(() => {}); } catch {} }
+        }
       };
       el.addEventListener('canplaythrough', ok, { once:true });
+      el.addEventListener('canplay', ok, { once:true });
       el.addEventListener('loadeddata', () => { if (el.readyState >= 4) ok(); });
       el.addEventListener('error', () => { o.ready = false; if (vid === el) { vidReady = false; if (pendingShow) { pendingShow = false; show(true); } } });
       el.src = M.url;
@@ -2467,9 +2472,30 @@ const ScreenSaver = (() => {
   const PK_DE = { lake:'See', forest:'Wald', sunset:'Sonnenuntergang', mountains:'Berge', night:'Nacht', city:'Stadt', blue:'Blau', sun:'Sonne', deep:'Tiefer' };
   const pkName = f => f.replace(/^tv-saver-/, '').replace(/\.\w+$/, '').split('-').map(w => PK_DE[w] || w).join(' ');
   /* Standbild-Videos für die Auswahl werden schon vorher im Hintergrund geladen, damit der erste Frame sofort da ist */
-  const pkMake = id => { const M = MOTIFS.find(x => x.id === id); const v = document.createElement('video'); v.className = 'saver-video pk-lv'; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto'; v.src = M.url + '#t=0.001'; v.style.display = 'block'; v.style.opacity = '1'; try { v.load(); } catch {} return v; };
-  const pkWarm = () => MOTIFS.forEach(M => { PRE[M.id] = PRE[M.id] || []; while (PRE[M.id].length < 2) PRE[M.id].push(pkMake(M.id)); });
-  const pkVideo = id => { const q = PRE[id] || (PRE[id] = []); const v = q.length ? q.shift() : pkMake(id); setTimeout(pkWarm, 1500); return v; };
+  let pkHold = null;
+  const pkHolder = () => pkHold || (pkHold = Object.assign(document.createElement('div'), { style:'position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;opacity:0;pointer-events:none;z-index:-1' }), document.body.append(pkHold), pkHold);
+  /* TV-Browser zeigen ohne Abspielen oft keinen Frame: kurz stumm anspielen, pausieren, auf Anfang setzen */
+  const pkWake = v => {
+    const go = () => {
+      if (v._w) return; v._w = 1;
+      const stop = () => { try { v.pause(); v.currentTime = 0.001; } catch {} };
+      try { const p = v.play(); if (p && p.then) p.then(() => setTimeout(stop, 80)).catch(() => {}); else setTimeout(stop, 80); } catch {}
+    };
+    if (v.readyState >= 2) go(); else v.addEventListener('loadeddata', go, { once:true });
+  };
+  const pkMake = id => { const M = MOTIFS.find(x => x.id === id); const v = document.createElement('video'); v.className = 'saver-video pk-lv'; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'metadata'; v.src = M.url + '#t=0.001'; v.style.display = 'block'; v.style.opacity = '1'; pkHolder().append(v); try { v.load(); } catch {} pkWake(v); return v; };
+  const pkT0 = Date.now(); let pkWarming = false;
+  const pkWarm = () => {
+    if (pkWarming) return;
+    const M = MOTIFS.find(m => (PRE[m.id] = PRE[m.id] || []).length < 2);
+    if (!M) return;
+    if (useVideo() && !vidReady && Date.now() - pkT0 < 60000) { setTimeout(pkWarm, 3000); return; }
+    pkWarming = true;
+    const v = pkMake(M.id); PRE[M.id].push(v);
+    let d = 0; const next = () => { if (d) return; d = 1; pkWarming = false; setTimeout(pkWarm, 500); };
+    v.addEventListener('loadeddata', next, { once:true }); v.addEventListener('error', next, { once:true }); setTimeout(next, 8000);
+  };
+  const pkVideo = id => { const q = PRE[id] || (PRE[id] = []); const v = q.length ? q.shift() : pkMake(id); setTimeout(pkWarm, 1500); setTimeout(() => { try { if (v.readyState >= 2) v.currentTime = 0.001; } catch {} }, 30); return v; };
   /* Snoopy in der Auswahl = nur Standbild (erster Frame), nie abspielen */
   const pkMedia = it => {
     if (it.video) return pkVideo(it.video);
