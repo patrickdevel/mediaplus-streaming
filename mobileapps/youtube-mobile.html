@@ -144,13 +144,13 @@ body[data-tab=you]{--mt:calc(var(--sa) + 56px)}
 body.nh{--mb:calc(10px + var(--sb));--mt:calc(var(--sa) + 6px)}
 body.m #pl{display:block;right:10px;left:auto;bottom:var(--mb);top:auto;width:min(200px,50vw);padding:0;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.7);z-index:70;overflow:visible;touch-action:none;transition:bottom .3s cubic-bezier(.22,.8,.2,1),top .3s cubic-bezier(.22,.8,.2,1),transform .3s cubic-bezier(.22,.8,.2,1)}
 body.m.ml #pl{left:10px;right:auto}
-body.m.mt #pl{top:calc(var(--mt) + 6px);bottom:auto}
-body.m.mo #pl{transform:translateX(calc(100% + 10px))}
-body.m.mo.ml #pl{transform:translateX(calc(-100% - 10px))}
+body.m.mtop #pl{top:calc(var(--mt) + 6px);bottom:auto}
+body.m.mout #pl{transform:translateX(calc(100% + 10px))}
+body.m.mout.ml #pl{transform:translateX(calc(-100% - 10px))}
 body.m #pl.drag{transition:none !important}
 #mh{display:none;position:absolute;top:50%;margin-top:-26px;width:26px;height:52px;background:rgba(30,30,30,.92);color:#fff;align-items:center;justify-content:center;z-index:5;pointer-events:auto;left:-26px;border-radius:12px 0 0 12px}
 body.m.ml #mh{left:auto;right:-26px;border-radius:0 12px 12px 0}
-body.m.mo #mh{display:flex}
+body.m.mout #mh{display:flex}
 body.m.ml #mh svg{transform:scaleX(-1)}
 #mh svg{width:20px;height:20px}
 body.m #pv{border-radius:12px}
@@ -587,7 +587,7 @@ $('#pfs').onclick = () => {
   try { const r = (p.requestFullscreen || p.webkitRequestFullscreen).call(p); if (r && r.then) r.then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch {} }).catch(() => toast('Vollbild nicht verfügbar')); } catch { toast('Vollbild nicht verfügbar'); }
 };
 const MD = { moved:false };
-$('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mo'); };
+$('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mout'); };
 (() => { const pl = $('#pl'), t = $('#pt'); let sx, sy, on = false, r0;
   t.addEventListener('pointerdown', e => { if (!B.classList.contains('m')) return; on = true; MD.moved = false; sx = e.clientX; sy = e.clientY; r0 = pl.getBoundingClientRect(); try { t.setPointerCapture(e.pointerId); } catch {} });
   t.addEventListener('pointermove', e => { if (!on) return; const dx = e.clientX - sx, dy = e.clientY - sy;
@@ -597,12 +597,12 @@ $('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mo'); };
     const r = pl.getBoundingClientRect(), W = innerWidth, H = innerHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const left = cx < W / 2;
     const out = r.left < -r.width * .25 || r.right > W + r.width * .25;
-    B.classList.toggle('ml', left); B.classList.toggle('mt', cy < H / 2);
+    B.classList.toggle('ml', left); B.classList.toggle('mtop', cy < H / 2);
     pl.style.transform = ''; pl.classList.remove('drag');
     const r1 = pl.getBoundingClientRect();
     pl.style.transition = 'none'; pl.style.transform = `translate(${r.left - r1.left}px,${r.top - r1.top}px)`; void pl.offsetWidth;
     pl.style.transition = ''; pl.style.transform = '';
-    B.classList.toggle('mo', out);
+    B.classList.toggle('mout', out);
     setTimeout(() => { MD.moved = false; }, 60); };
   t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end); })();
 (() => { let last = 0, lx = 0, y0 = 0, tm;
@@ -666,11 +666,11 @@ function minCore() {
   flipPlayer(() => { B.classList.remove('w'); B.classList.add('m'); });
 }
 function expand() {
-  if (!S.cur) return; B.classList.remove('mo');
+  if (!S.cur) return; B.classList.remove('mout');
   flipPlayer(() => { B.classList.remove('m'); B.classList.add('w'); });
   pushH('watch'); setTimeout(showC, 320);
 }
-function killPl() { saveProg(true); fr.src = 'about:blank'; S.cur = null; PL.st = -1; B.classList.remove('w', 'm', 'mo'); document.title = 'YouTube'; }
+function killPl() { saveProg(true); fr.src = 'about:blank'; S.cur = null; PL.st = -1; B.classList.remove('w', 'm', 'mout', 'mtop'); document.title = 'YouTube'; }
 
 window.addEventListener('message', e => {
   if (e.origin !== 'https://www.youtube.com' || e.source !== fr.contentWindow) return;
