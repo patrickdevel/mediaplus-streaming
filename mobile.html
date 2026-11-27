@@ -766,8 +766,8 @@ body.overlay #bnav{z-index:80}
 .alg img{width:100%;height:100%;object-fit:cover;display:block}
 .alg.ph{background:linear-gradient(135deg,#3a3a46,#1f1f27)}
 .alg.ph svg{width:55%;height:55%}
-.astore{position:fixed;inset:0;z-index:120;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;transform:translateY(100%);opacity:0;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s}
-.astore.show{transform:none;opacity:1}
+.astore{position:fixed;inset:0;z-index:120;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:scale(.15);border-radius:30px;transition:transform .38s cubic-bezier(.2,.9,.25,1),opacity .25s,border-radius .38s}
+.astore.show{transform:none;opacity:1;border-radius:0}
 .ast-head{display:flex;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 8px;min-height:56px}
 .ast-head h2{margin:0;font-size:24px;font-weight:700}
 .ast-back{width:38px;height:38px;border-radius:50%;border:0;background:var(--bg-3);color:var(--fg);display:grid;place-items:center}
@@ -820,10 +820,36 @@ body.overlay #bnav{z-index:80}
 .awin{position:fixed;inset:0;z-index:130;background:#000;opacity:0;transform:scale(.15);border-radius:30px;overflow:hidden;transition:transform .38s cubic-bezier(.2,.9,.25,1),opacity .25s,border-radius .38s}
 .awin.full{opacity:1;transform:none;border-radius:0}
 .awin iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
-.asplash{position:absolute;inset:0;background:#000;display:grid;place-items:center;transition:opacity .35s;z-index:2}
+.asplash{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;transition:opacity .35s;z-index:2}
+.asplash .asp{position:absolute;left:50%;top:calc(50% + 74px);width:24px;height:24px;margin-left:-12px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:aspin .8s linear infinite}
+@keyframes aspin{to{transform:rotate(360deg)}}
 .asplash.out{opacity:0;pointer-events:none}
 .asplash .alg{width:96px;height:96px;border-radius:24px}
+.atut{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:24px;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(22px) saturate(1.2);backdrop-filter:blur(22px) saturate(1.2);color:#fff;text-align:center;opacity:0;transition:opacity .35s}
+.atut.on{opacity:1}
+.atut .stage{position:relative;width:240px;height:150px}
+.atut .tp{position:absolute;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.88);box-shadow:0 0 0 0 rgba(255,255,255,.5);opacity:0;animation:tpd 3.8s ease-in-out infinite}
+.atut .tp:nth-child(1){left:20%;margin-top:-47px}
+.atut .tp:nth-child(2){left:50%;animation-delay:.55s}
+.atut .tp:nth-child(3){left:80%;margin-top:-47px;animation-delay:1.1s}
+@keyframes tpd{0%{opacity:0;transform:scale(.3)}9%{opacity:1;transform:scale(1.1);box-shadow:0 0 0 0 rgba(255,255,255,.5)}14%{transform:scale(1)}55%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.55)}75%{opacity:1;transform:scale(.9);box-shadow:0 0 0 26px rgba(255,255,255,0)}88%,100%{opacity:0;transform:scale(.9)}}
+.atut h3{margin:0;font-size:21px}
+.atut p{margin:8px 0 0;font-size:15px;line-height:1.45;color:rgba(255,255,255,.82);max-width:300px}
+.atut .ok{border:0;border-radius:16px;padding:14px 44px;font-size:16px;font-weight:600;background:#fff;color:#000}
 .a3{position:absolute;left:0;right:0;bottom:0;height:26px;z-index:3;background:transparent}
+
+.astore .atut{z-index:9}
+.ahz{position:absolute;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 32px);z-index:5;touch-action:none}
+.ahd{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);width:88px;height:5px;margin-left:-44px;border-radius:99px;background:rgba(236,236,240,.92);box-shadow:0 1px 6px rgba(0,0,0,.45);transition:opacity .5s,transform .22s cubic-bezier(.34,1.56,.64,1)}
+.ahd.h{opacity:0}
+.ahd.p{transform:scale(1.2,1.9)}
+.atsc{position:absolute;inset:0;z-index:6;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s}
+.atmenu{position:absolute;left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);max-width:480px;margin:0 auto;z-index:7;padding:8px;border-radius:24px;background:rgba(28,28,32,.94);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1px solid rgba(255,255,255,.16);color:#fff;transform:translateY(-130%);transition:transform .32s cubic-bezier(.2,.8,.2,1);box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.atmenu.drag,.atsc.drag{transition:none}
+
+.atgrip{height:26px;margin:2px -8px -8px;display:grid;place-items:center;touch-action:none;cursor:grab}
+.atgrip i{width:44px;height:5px;border-radius:99px;background:rgba(236,236,240,.85);transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.atgrip.p i{transform:scale(1.2,1.8)}
 </style>
 </head>
 <body>
@@ -1291,6 +1317,34 @@ function AppsBar() {
   paint(); window._appsPaint = paint; main.append(wrap);
   fetchApps().then(() => { if (wrap.isConnected) paint(); });
 }
+function gripUp(grip, mn, scr, mh, openM, closeM) {
+  let y0 = 0, dy = 0, d = false;
+  grip.addEventListener('pointerdown', ev => { d = true; y0 = ev.clientY; dy = 0; try { grip.setPointerCapture(ev.pointerId); } catch {} grip.classList.add('p'); mn.classList.add('drag'); scr.classList.add('drag'); });
+  grip.addEventListener('pointermove', ev => { if (!d) return; dy = Math.max(0, y0 - ev.clientY); mn.style.transform = 'translateY(' + (-Math.min(dy, mh())) + 'px)'; scr.style.opacity = Math.max(0, 1 - dy / mh()); });
+  const up = () => { if (!d) return; d = false; grip.classList.remove('p'); mn.classList.remove('drag'); scr.classList.remove('drag'); if (dy > 50) closeM(); else openM(); };
+  grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', up);
+}
+function addPull(host, title, items, tf) {
+  const hd = h('i', { class:'ahd' }), hz = h('div', { class:'ahz' }, hd), scr = h('div', { class:'atsc' });
+  const grip = h('div', { class:'atgrip' }, h('i'));
+  const mn = h('div', { class:'atmenu' }, h('div', { class:'ost' }, title),
+    ...items.map(([l, fn, c]) => { const b = h('button', { class:'osb' + (c ? ' ' + c : ''), type:'button' }, l); b.onclick = () => { closeM(); fn && setTimeout(fn, 150); }; return b; }), grip);
+  host.append(hz, scr, mn);
+  let hideT = 0, mOpen = false, y0 = 0, dy = 0, drag = false;
+  const wake = () => { hd.classList.remove('h'); clearTimeout(hideT); hideT = setTimeout(() => { if (!drag && !mOpen && hd.isConnected) hd.classList.add('h'); }, 5000); };
+  const mh = () => mn.offsetHeight + 40;
+  const setP = d => { mn.style.transform = 'translateY(' + (-mh() + Math.min(d, mh())) + 'px)'; scr.style.opacity = Math.min(1, d / mh()); hd.style.opacity = Math.max(0, 1 - d / 50); };
+  const openM = () => { mOpen = true; mn.style.transform = 'translateY(0)'; scr.style.opacity = 1; scr.style.pointerEvents = 'auto'; hd.style.opacity = 0; };
+  function closeM() { mOpen = false; mn.style.transform = ''; scr.style.opacity = ''; scr.style.pointerEvents = ''; hd.style.opacity = ''; wake(); }
+  scr.onclick = () => closeM();
+  gripUp(grip, mn, scr, mh, openM, closeM);
+  hz.addEventListener('pointerdown', ev => { drag = true; y0 = ev.clientY; dy = 0; try { hz.setPointerCapture(ev.pointerId); } catch {} hd.classList.add('p'); wake(); mn.classList.add('drag'); scr.classList.add('drag'); });
+  hz.addEventListener('pointermove', ev => { if (!drag) return; dy = Math.max(0, ev.clientY - y0); if (dy > 4) setP(dy); });
+  const hu = () => { if (!drag) return; drag = false; hd.classList.remove('p'); mn.classList.remove('drag'); scr.classList.remove('drag'); if (dy > 70 || dy > mh() * .35) openM(); else closeM(); };
+  hz.addEventListener('pointerup', hu); hz.addEventListener('pointercancel', hu);
+  host.addEventListener('touchstart', wake, { passive:true });
+  wake();
+}
 function openStore(opener) {
   if (storeEl || appWin) return;
   let cat = store.get('appcat', APPS_FALLBACK), tab = 'start', det = null, q = '';
@@ -1347,9 +1401,20 @@ function openStore(opener) {
   document.addEventListener('touchstart', tf3, { capture:true, passive:false });
   back.onclick = () => { det = null; render(); };
   el._hide = close; document.addEventListener('mp-store-hide', () => document.removeEventListener('touchstart', tf3, true), { once:true });
+  if (opener && opener.isConnected) { const r = opener.getBoundingClientRect(); el.style.transformOrigin = (r.left + r.width / 2) + 'px ' + (r.top + r.height / 2) + 'px'; }
   document.body.append(el); storeEl = el; render(); pushLayer(close);
+  showTut(el, 'storeTut', 'So schließt du den Store', 'Tippe mit 3 Fingern gleichzeitig auf den Bildschirm, um den Store zu schließen.');
+  addPull(el, 'Apps', [['Zur Startseite des Stores', () => { det = null; tab = 'start'; render(); }], ['Store schließen', () => closeTop(), 'danger'], ['Abbrechen', null, 'cancel']]);
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
   fetchApps().then(l => { cat = l; if (!det && tab !== 'search') render(); });
+}
+function showTut(host, key, title, text) {
+  if (store.get(key, false)) return;
+  const ok = h('button', { class:'ok', type:'button' }, 'OK');
+  const tut = h('div', { class:'atut', role:'dialog' }, h('div', { class:'stage' }, h('i', { class:'tp' }), h('i', { class:'tp' }), h('i', { class:'tp' })),
+    h('div', {}, h('h3', {}, title), h('p', {}, text)), ok);
+  ok.onclick = () => { store.set(key, true); tut.classList.remove('on'); setTimeout(() => tut.remove(), 350); };
+  host.append(tut); requestAnimationFrame(() => requestAnimationFrame(() => tut.classList.add('on')));
 }
 function launchApp(a, from, fromStore) {
   if (appWin) return;
@@ -1358,11 +1423,32 @@ function launchApp(a, from, fromStore) {
   const fr = h('iframe', { title:a.name, allow:'autoplay; fullscreen; encrypted-media; clipboard-write', src:a.installslite });
   /* 3-Finger-Geste: schmale Fangleiste unten (funktioniert auch bei fremden Domains) */
   const strip = h('div', { class:'a3' });
-  const tf = ev => { if (ev.touches && ev.touches.length >= 3) { ev.preventDefault(); closeTop(); } };
+  const tf = ev => { if (win.querySelector('.atut')) return; if (ev.touches && ev.touches.length >= 3) { ev.preventDefault(); closeTop(); } };
   [strip, sp].forEach(n => n.addEventListener('touchstart', tf, { passive:false }));
   win.append(fr, sp, strip);
+  const hd = h('i', { class:'ahd' }), hz = h('div', { class:'ahz' }, hd), scr = h('div', { class:'atsc' });
+  const mkb = (l, fn, c) => { const b = h('button', { class:'osb' + (c ? ' ' + c : ''), type:'button' }, l); b.onclick = fn; return b; };
+  const grip = h('div', { class:'atgrip' }, h('i'));
+  const mn = h('div', { class:'atmenu' }, h('div', { class:'ost' }, a.name),
+    mkb('Neu laden', () => { closeM(); fr.src = a.installslite; }), mkb('App schließen', () => { closeM(); closeTop(); }, 'danger'), mkb('Abbrechen', () => closeM(), 'cancel'), grip);
+  win.append(hz, scr, mn);
+  let hideT = 0, mOpen = false, y0 = 0, dy = 0, drag = false;
+  const wake = () => { hd.classList.remove('h'); clearTimeout(hideT); hideT = setTimeout(() => { if (!drag && !mOpen) hd.classList.add('h'); }, 5000); };
+  const mh = () => mn.offsetHeight + 40;
+  const setP = d => { mn.style.transform = 'translateY(' + (-mh() + Math.min(d, mh())) + 'px)'; scr.style.opacity = Math.min(1, d / mh()); hd.style.opacity = Math.max(0, 1 - d / 50); };
+  const openM = () => { mOpen = true; mn.style.transform = 'translateY(0)'; scr.style.opacity = 1; scr.style.pointerEvents = 'auto'; hd.style.opacity = 0; };
+  function closeM() { mOpen = false; mn.style.transform = ''; scr.style.opacity = ''; scr.style.pointerEvents = ''; hd.style.opacity = ''; wake(); }
+  scr.onclick = () => closeM();
+  gripUp(grip, mn, scr, mh, openM, closeM);
+  hz.addEventListener('pointerdown', ev => { drag = true; y0 = ev.clientY; dy = 0; try { hz.setPointerCapture(ev.pointerId); } catch {} hd.classList.add('p'); wake(); mn.classList.add('drag'); scr.classList.add('drag'); });
+  hz.addEventListener('pointermove', ev => { if (!drag) return; dy = Math.max(0, ev.clientY - y0); if (dy > 4) setP(dy); });
+  const hu = () => { if (!drag) return; drag = false; hd.classList.remove('p'); mn.classList.remove('drag'); scr.classList.remove('drag'); if (dy > 70 || dy > mh() * .35) openM(); else closeM(); };
+  hz.addEventListener('pointerup', hu); hz.addEventListener('pointercancel', hu);
+  hz.addEventListener('touchstart', tf, { passive:false });
+  wake();
+  showTut(win, 'appTut', 'So schließt du Apps', 'Tippe mit 3 Fingern gleichzeitig auf den Bildschirm, um die App zu schließen.');
   if (from && from.isConnected) { const r = from.getBoundingClientRect(); win.style.transformOrigin = (r.left + r.width / 2) + 'px ' + (r.top + r.height / 2) + 'px'; }
-  const closeApp = () => { appWin = null; win.classList.remove('full'); setTimeout(() => win.remove(), 350); document.removeEventListener('touchstart', tf, true); };
+  const closeApp = () => { clearTimeout(hideT); appWin = null; win.classList.remove('full'); setTimeout(() => win.remove(), 350); document.removeEventListener('touchstart', tf, true); };
   document.body.append(win); appWin = win;
   if (fromStore && storeEl) { const s = storeEl; storeEl = null; document.dispatchEvent(new Event('mp-store-hide')); s.classList.remove('show'); setTimeout(() => s.remove(), 300); layers[layers.length - 1] = closeApp; }
   else pushLayer(closeApp);
@@ -1371,7 +1457,7 @@ function launchApp(a, from, fromStore) {
   const t0 = Date.now(), reveal = () => sp.classList.add('out');
   fr.addEventListener('load', () => {
     setTimeout(reveal, Math.max(0, 600 - (Date.now() - t0)));
-    try { fr.contentWindow.addEventListener('touchstart', tf, { capture:true, passive:false }); } catch {}   /* gleiche Domain: Geste überall */
+    try { fr.contentWindow.addEventListener('touchstart', tf, { capture:true, passive:false }); fr.contentWindow.addEventListener('touchstart', wake, { capture:true, passive:true }); } catch {}   /* gleiche Domain: Geste überall */
   });
   setTimeout(reveal, 8000);
 }
