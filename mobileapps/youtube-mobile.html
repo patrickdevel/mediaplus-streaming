@@ -322,6 +322,38 @@ const subsList = () => { const l = store.get('subs', []); regChans(l.map(c => ({
 const isSub = id => subsList().some(c => c.channelId === id);
 const hid = () => store.get('hide', { v:[], c:[] });
 const vis = l => { const x = hid(); return l.filter(v => !x.v.includes(v.videoId) && !x.c.includes(nm(v))); };
+/* Personalisierung: Interessenprofil aus Verlauf, Likes, Gespeichertem, Abos, Dislikes */
+function interest() {
+  const w = {}, c = {}, titles = {};
+  const add = (list, val) => list.forEach((v, i) => {
+    if (!v) return; titles[v.videoId] = v.title;
+    const f = val / (1 + i * .04);
+    toks(v.title).forEach(t => { w[t] = (w[t] || 0) + f; });
+    const n = nm(v); if (n) c[n] = (c[n] || 0) + f * 1.5;
+  });
+  add(getL('hist'), 1); add(getL('later'), 2.5); add(getL('liked'), 3.5);
+  const p = prog();
+  getL('hist').forEach(v => { const x = p[v.videoId]; if (x && x.d && x.t / x.d > .6) { toks(v.title).forEach(t => { w[t] = (w[t] || 0) + .8; }); const n = nm(v); if (n) c[n] = (c[n] || 0) + 1; } });
+  subsList().forEach(s => { if (s.channelName) c[s.channelName] = (c[s.channelName] || 0) + 4; });
+  store.get('dis', []).forEach(id => { if (titles[id]) toks(titles[id]).forEach(t => { w[t] = (w[t] || 0) - 3; }); });
+  return { w, c };
+}
+function score(v, I) {
+  const t = [...new Set(toks(v.title))]; let s = 0;
+  t.forEach(x => { s += I.w[x] || 0; });
+  s = t.length ? s / Math.sqrt(t.length) : 0;
+  s += Math.min(12, I.c[nm(v)] || 0);
+  const x = prog()[v.videoId]; if (x && x.d && x.t >= x.d - 15) s -= 8;
+  return s;
+}
+function rank(l, bonus) { const I = interest(); return l.map((v, i) => [v, score(v, I) + (l.length - i) * bonus]).sort((a, b) => b[1] - a[1]).map(a => a[0]); }
+function topQueries() {
+  const I = interest();
+  const ts = Object.entries(I.w).filter(e => e[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 6).map(a => a[0]);
+  const q = []; for (let i = 0; i + 1 < ts.length; i += 2) q.push(ts[i] + ' ' + ts[i + 1]);
+  const cs = Object.entries(I.c).filter(e => e[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 2).map(a => a[0]);
+  return { q: q.slice(0, 3), cs, has: ts.length > 0 };
+}
 function togL(k, v, a, b) {
   let l = getL(k);
   if (inL(k, v.videoId)) { l = l.filter(x => x.videoId !== v.videoId); toast(b); } else { l.unshift(slim(v)); toast(a); }
@@ -440,7 +472,14 @@ async function render(animate) {
   if (S.tab === 'subs') return renderSubs(m, tok);
   const q = S.tab === 'more' ? S.more[1] : TABS.find(t => t[0] === S.tab)[2];
   m.replaceChildren(...skel(4));
-  try { const r = await api(q); if (tok !== S.tok) return; const l = vis(r.videos); m.replaceChildren(...(l.length ? l.map(v => card(v)) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')])); tag(m); }
+  try { const r = await api(q); let l;
+    if (S.tab === 'home' && topQueries().has) {
+      const tq = topQueries(), extra = await Promise.all([...tq.q, ...tq.cs].map(x => api(x).then(z => z.videos, () => [])));
+      const seen = new Set(), all = [], lists = [...extra, r.videos];
+      for (let i = 0; i < 14; i++) lists.forEach(li => { const v = li[i]; if (v && !seen.has(v.videoId)) { seen.add(v.videoId); all.push(v); } });
+      l = rank(vis(all), .03);
+    } else l = vis(r.videos);
+    if (tok !== S.tok) return; m.replaceChildren(...(l.length ? l.map(v => card(v)) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')])); tag(m); }
   catch (e) { if (tok === S.tok) m.replaceChildren(apiErr(e, () => render(false))); }
 }
 const tag = m => m.querySelectorAll('[data-v]').forEach(e => { const t = e.querySelector('.mt span'); if (t) e.dataset.n = t.textContent; });
@@ -690,11 +729,11 @@ const STOP = new Set(['der', 'die', 'das', 'und', 'ein', 'eine', 'mit', 'von', '
 const toks = t => (String(t || '').toLowerCase().match(/[a-zäöüß0-9]{3,}/g) || []).filter(w => !STOP.has(w));
 async function loadRecs(v) {
   const tk = v.videoId, t = toks(v.title);
-  const jobs = [api(t.slice(0, 5).join(' ') || v.title).then(r => r.videos, () => []), v.author && v.author.id ? api('ch:' + v.author.id).then(r => r.videos, () => []) : (nm(v) ? api(nm(v)).then(r => r.videos.filter(x => nm(x) === nm(v)), () => []) : Promise.resolve([])), api('trending deutschland').then(r => r.videos, () => [])];
+  const jobs = [api(t.slice(0, 5).join(' ') || v.title).then(r => r.videos, () => []), v.author && v.author.id ? api('ch:' + v.author.id).then(r => r.videos, () => []) : (nm(v) ? api(nm(v)).then(r => r.videos.filter(x => nm(x) === nm(v)), () => []) : Promise.resolve([])), api('trending deutschland').then(r => r.videos, () => []), ...topQueries().q.slice(0, 1).map(x => api(x).then(r => r.videos, () => []))];
   const ls = await Promise.all(jobs); if (!S.cur || S.cur.videoId !== tk) return;
   WS.lists = ls.map(l => l.filter(x => x.videoId !== tk));
   const seen = new Set(), all = []; for (let i = 0; i < 14; i++) WS.lists.forEach(l => { const x = l[i]; if (x && !seen.has(x.videoId)) { seen.add(x.videoId); all.push(x); } });
-  WS.all = vis(all); REC = WS.all; drawRecs();
+  WS.all = rank(vis(all), .08); REC = WS.all; drawRecs();
 }
 function drawRecs() {
   if (!WS.rl) return; const l = vis(WS.mode === 1 ? WS.lists[1] : WS.mode === 2 ? WS.lists[0] : WS.all);
