@@ -2969,6 +2969,33 @@ const PLUS = (() => {
     const go = h('button', { class:'go', type:'button', onclick:() => { close(); store.set('tvTopic', code); toast('Mit TV gekoppelt'); location.hash = '#/remote'; } }, 'Einrichten');
     const el = h('div', { id:'suCard', onclick:ev => { if (ev.target === el) close(); } },
       h('div', { class:'su', role:'dialog', 'aria-label':'Media+ TV einrichten' }, x, h('h2', {}, 'Media+ TV einrichten'), h('div', { class:'box' }, h('div', { class:'mk' }, icon('plus', 'fill'))), go));
+    /* Liquid-Glass-Gefühl: Buttons lassen sich ein Stück ziehen (Gummiband) und federn zurück */
+    const rubber = (b, sc) => {
+      let sx = 0, sy = 0, on = false, mv = false, tm = 0;
+      const rb = d => Math.sign(d) * 26 * (1 - Math.exp(-Math.abs(d) / 55));
+      ['touchstart', 'touchmove'].forEach(n => b.addEventListener(n, ev => ev.stopPropagation(), { passive:true }));
+      b.addEventListener('pointerdown', ev => {
+        on = true; mv = false; sx = ev.clientX; sy = ev.clientY; clearTimeout(tm);
+        try { b.setPointerCapture(ev.pointerId); } catch {}
+        b.style.transition = 'transform .2s cubic-bezier(.2,.9,.25,1)';
+        b.style.transform = 'scale(' + sc + ')';
+      });
+      b.addEventListener('pointermove', ev => {
+        if (!on) return;
+        const dx = ev.clientX - sx, dy = ev.clientY - sy;
+        if (!mv && Math.hypot(dx, dy) > 6) { mv = true; b.style.transition = 'none'; }
+        if (mv) b.style.transform = 'translate(' + rb(dx) + 'px,' + rb(dy) + 'px) scale(' + sc + ')';
+      });
+      const up = () => {
+        if (!on) return; on = false;
+        b.style.transition = 'transform .55s cubic-bezier(.34,1.56,.64,1)'; b.style.transform = '';
+        if (mv) { b._drag = true; tm = setTimeout(() => { b._drag = false; }, 80); }
+      };
+      b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+      /* nach einem Zieh-Vorgang kein versehentlicher Klick */
+      b.addEventListener('click', ev => { if (b._drag) { b._drag = false; ev.stopImmediatePropagation(); ev.preventDefault(); } }, true);
+    };
+    rubber(x, 1.12); rubber(go, 1.04);
     /* Nach unten wischen schließt; Scrollen/Wischen im Hintergrund ebenfalls */
     const su = el.firstChild; let y0 = null, dy = 0;
     su.addEventListener('touchstart', ev => { y0 = ev.touches[0].clientY; dy = 0; su.style.transition = 'none'; }, { passive:true });
