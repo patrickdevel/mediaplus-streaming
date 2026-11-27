@@ -2981,16 +2981,38 @@ const PLUS = (() => {
   }
   const seenSetup = new Set();
   async function watchSetup() {
-    if (!window.EventSource) return;
     let tp; try { tp = await setupTopic(); } catch { return; }
-    const es2 = new EventSource('https://ntfy.sh/' + tp + '/sse?since=15s');
-    es2.onmessage = ev => { try {
-      const m = JSON.parse(ev.data); if (m.event !== 'message' || Date.now() / 1000 - m.time > 15) return;
-      const d = JSON.parse(m.message); if (d.t !== 'setup' || !d.c) return;
+    const onSetup = d => {
+      if (!d || d.t !== 'setup' || !d.c) return;
       if (d.c === store.get('tvTopic') || seenSetup.has(d.c) || document.getElementById('suCard')) return;
       seenSetup.add(d.c);   // pro TV-Code nur einmal pro Sitzung
       showSetupCard(d.c);
-    } catch {} };
+    };
+    /* 1) Relay-WebSocket (unabhängig von ntfy) – mit Wiederverbindung */
+    if (window.WebSocket) {
+      let ws = null, tr = 0, to = 0;
+      const open = () => {
+        if (ws && ws.readyState < 2) return;
+        try {
+          const w = ws = new WebSocket(RELAY + '/?t=' + encodeURIComponent(tp));
+          w.onopen = () => { tr = 0; };
+          w.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch { return; } onSetup(d); };
+          w.onclose = () => { if (ws === w) { ws = null; clearTimeout(to); to = setTimeout(open, Math.min(15000, 1000 * (++tr))); } };
+          w.onerror = () => { try { w.close(); } catch {} };
+        } catch {}
+      };
+      open();
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) open(); });
+      addEventListener('online', open);
+    }
+    /* 2) ntfy als Zusatz-Weg */
+    if (window.EventSource) {
+      const es2 = new EventSource('https://ntfy.sh/' + tp + '/sse?since=15s');
+      es2.onmessage = ev => { try {
+        const m = JSON.parse(ev.data); if (m.event !== 'message' || Date.now() / 1000 - m.time > 15) return;
+        onSetup(JSON.parse(m.message));
+      } catch {} };
+    }
   }
   function pairPage() {
     document.title = 'Koppeln – Media+';
