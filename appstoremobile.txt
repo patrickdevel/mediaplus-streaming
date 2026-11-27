@@ -1,6 +1,6 @@
-Name: YouTube for MediaOS
-Updated: 19.11.2026
-Description: Watch YouTube on MediaOS.
-Installslite: https://mediaplus-streaming.vercel.app/apps/youtube.html
+Name: YouTube
+Updated: 27.11.2026
+Description: Watch YT without any ADs.
+Installslite: https://mediaplus-streaming.vercel.app/mobileapps/youtube-mobile.html
 Logo: https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/youtube.png?raw=true
 ---
