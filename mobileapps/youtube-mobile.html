@@ -237,7 +237,14 @@ const p2 = n => String(n).padStart(2, '0');
 const fmtT = s => { s = Math.max(0, Math.floor(s || 0)); const hh = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return (hh ? hh + ':' + p2(m) : m) + ':' + p2(s % 60); };
 const nm = v => (v.author && v.author.name) || '';
 const thumb = v => 'https://i.ytimg.com/vi/' + v.videoId + '/hqdefault.jpg';
-const slim = v => ({ videoId:v.videoId, title:v.title, author:{ name:nm(v), id:v.author && v.author.id }, views:{ count:v.views && v.views.count }, publishedTime:v.publishedTime, duration:{ raw:v.duration && v.duration.raw }, isLive:v.isLive });
+function avatarSrc(v) {
+  const a = v && v.author ? v.author : (v || {});
+  let x = a.avatar || a.avatarUrl || a.thumbnail || a.thumbnailUrl || a.profilePicture || a.photo;
+  if (!x && Array.isArray(a.thumbnails) && a.thumbnails.length) x = a.thumbnails[a.thumbnails.length - 1];
+  if (!x && Array.isArray(a.avatarThumbnails) && a.avatarThumbnails.length) x = a.avatarThumbnails[a.avatarThumbnails.length - 1];
+  return typeof x === 'string' ? x : (x && (x.url || x.src)) || '';
+}
+const slim = v => ({ videoId:v.videoId, title:v.title, author:{ name:nm(v), id:v.author && v.author.id, avatar:avatarSrc(v) }, views:{ count:v.views && v.views.count }, publishedTime:v.publishedTime, duration:{ raw:v.duration && v.duration.raw }, isLive:v.isLive });
 
 const cache = new Map();
 async function api(q) {
@@ -280,7 +287,7 @@ function card(v, shelf) {
     h('div', { class:'th' }, h('img', { src:thumb(v), alt:'', loading:'lazy' }),
       v.isLive ? h('i', { class:'dur live' }, 'LIVE') : v.duration && v.duration.raw ? h('i', { class:'dur' }, v.duration.raw) : null,
       x && x.d && x.t > 5 ? h('div', { class:'pb' }, h('i', { style:'width:' + Math.min(100, x.t / x.d * 100) + '%' })) : null),
-    h('div', { class:'vm' }, shelf ? null : avatar(nm(v)), h('div', { class:'tx' }, h('div', { class:'ti' }, v.title), meta(v)),
+    h('div', { class:'vm' }, shelf ? null : avatar(nm(v), avatarSrc(v)), h('div', { class:'tx' }, h('div', { class:'ti' }, v.title), meta(v)),
       h('button', { class:'ib', type:'button', 'aria-label':'Weitere Optionen', onclick:e => { e.stopPropagation(); openMenu(v); } }, I('dots'))));
   return a;
 }
@@ -385,7 +392,7 @@ async function renderSubs(m, tok) {
   const row = h('div', { class:'stories' }, subs.slice(0, 8).map(c => h('button', { class:'st', type:'button', onclick:() => openChannel(c) }, avatar(c.channelName, c.avatar), h('span', {}, c.channelName))),
     h('button', { class:'all', type:'button', onclick:() => { const b = mkPage(pageTitle('Alle Abos')); b.append(...subsList().map(chanRow)); } }, 'Alle'));
   m.replaceChildren(row, ...skel(3));
-  const ls = await Promise.all(subs.slice(0, 6).map(c => api('ch:' + c.channelId).then(r => r.videos.map(v => v.author && v.author.name ? v : { ...v, author:{ name:c.channelName, id:c.channelId } }), () => [])));
+  const ls = await Promise.all(subs.slice(0, 6).map(c => api('ch:' + c.channelId).then(r => r.videos.map(v => v.author && v.author.name ? v : { ...v, author:{ name:c.channelName, id:c.channelId, avatar:c.avatar } }), () => [])));
   if (tok !== S.tok) return;
   const out = []; for (let i = 0; i < 8; i++) ls.forEach(l => l[i] && out.push(l[i]));
   const l = vis(out); m.replaceChildren(row, ...(l.length ? l.map(v => card(v)) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')])); tag(m);
@@ -438,7 +445,7 @@ async function openChannel(ch) {
   try {
     let list = []; if (ch.channelId) { try { list = (await api('ch:' + ch.channelId)).videos; } catch {} }
     if (!list.length) { const r = await api(ch.channelName || ch.handle); list = r.videos.filter(v => v.author && v.author.id === ch.channelId); if (!list.length) list = r.videos; }
-    list = vis(list.map(v => v.author && v.author.name ? v : { ...v, author:{ name:ch.channelName } }));
+    list = vis(list.map(v => v.author && v.author.name ? v : { ...v, author:{ name:ch.channelName, id:ch.channelId, avatar:ch.avatar } }));
     grid.replaceChildren(...(list.length ? list.map(v => card(v)) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')])); tag(grid);
   } catch (e) { grid.replaceChildren(apiErr(e, () => { history.back(); setTimeout(() => openChannel(ch), 80); })); }
 }
@@ -497,7 +504,7 @@ function play(v) {
   const p = prog()[v.videoId], st0 = p && p.t > 5 && p.d && p.t < p.d - 15 ? Math.floor(p.t) : 0;
   S.cur = v; PL.t = st0; PL.d = p && p.d || 0; PL.st = -1; PL.b = 0; REC = [];
   const yo = /^https?:$/.test(location.protocol) ? '&origin=' + encodeURIComponent(location.origin) : '';
-  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&start=' + st0 + '&controls=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
+  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=1&start=' + st0 + '&controls=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
   if (!B.classList.contains('w')) pushH('watch');
   B.classList.add('w'); B.classList.remove('m'); document.title = v.title + ' – YouTube';
   fillWatch(v); upd(); showC(); loadRecs(v);
@@ -511,7 +518,7 @@ window.addEventListener('message', e => {
   let d = e.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch { return; } }
   if (!d || !S.cur) return;
   if (d.event === 'onStateChange') { const st = typeof d.info === 'number' ? d.info : (d.info && d.info.playerState); if (st != null) { PL.st = st; if (st === 0) onEnd(); upd(); if (st === 1) showC(); } }
-  else if (d.event === 'onReady' || d.event === 'initialDelivery') { listen(); if (d.event === 'onReady' && PL.t > 0) cmd('seekTo', [PL.t, true]); }
+  else if (d.event === 'onReady' || d.event === 'initialDelivery') { listen(); if (d.event === 'onReady') { if (PL.t > 0) cmd('seekTo', [PL.t, true]); cmd('playVideo'); } }
   else if (d.event === 'infoDelivery' && d.info) {
     const i = d.info; if (i.currentTime != null && !PL.drag) PL.t = i.currentTime; if (i.duration > 0) PL.d = i.duration; if (i.playerState != null) PL.st = i.playerState; if (i.videoLoadedFraction != null) PL.b = i.videoLoadedFraction;
     saveProg(); upd();
@@ -526,7 +533,7 @@ function onEnd() {
 /* Watch-Seite */
 const WS = {};
 function fillWatch(v) {
-  const a = v.author || {}, ch = { channelId:a.id || a.name, channelName:a.name };
+  const a = v.author || {}, ch = { channelId:a.id || a.name, channelName:a.name, avatar:avatarSrc(v) };
   const sb = h('button', { class:'pill', type:'button' });
   const us = () => { const on = isSub(ch.channelId); sb.className = 'pill' + (on ? '' : ' w'); sb.replaceChildren(...(on ? [I('bell'), I('down')] : ['Abonnieren'])); };
   sb.onclick = () => { if (!ch.channelName) { toast('Kanal nicht verfügbar'); return; } const k = subsList().find(c => c.channelId === ch.channelId); toggleSub(k || ch); us(); }; us();
@@ -539,7 +546,7 @@ function fillWatch(v) {
   WS.mode = 0;
   $('#wi').replaceChildren(
     h('div', { id:'wt', onclick:() => descSheet(v) }, h('h1', {}, v.title), h('div', { class:'mt' }, nm(v) ? h('b', {}, nm(v)) : null, v.views && v.views.count != null ? h('span', {}, num(v.views.count) + ' Aufrufe') : null, v.publishedTime ? h('span', {}, ago(v.publishedTime)) : null, h('span', { class:'mo' }, 'mehr'))),
-    h('div', { class:'wa' }, h('button', { type:'button', onclick:() => openChannel(ch) }, avatar(a.name)), h('button', { class:'nm', type:'button', onclick:() => openChannel(ch) }, h('b', {}, a.name || 'Kanal')), sb),
+    h('div', { class:'wa' }, h('button', { type:'button', onclick:() => openChannel(ch) }, avatar(a.name, avatarSrc(v))), h('button', { class:'nm', type:'button', onclick:() => openChannel(ch) }, h('b', {}, a.name || 'Kanal')), sb),
     h('div', { class:'acts' }, WS.like, WS.dis, ib('share', () => share(v), 'Teilen'), WS.save, ib('dots', () => openMenu(v), 'Weitere Optionen')),
     chips, rl);
   $('#wi').scrollTop = 0; updActs();
@@ -552,7 +559,7 @@ function descSheet(v) {
   const a = v.author || {};
   sheet(h('div', { class:'dsc' }, h('h2', {}, v.title),
     h('div', { class:'stt' }, h('div', {}, h('b', {}, num(v.views && v.views.count) || '–'), h('span', {}, 'Aufrufe')), h('div', {}, h('b', {}, ago(v.publishedTime).replace(/^vor /, '') || '–'), h('span', {}, 'Hochgeladen')), h('div', {}, h('b', {}, (v.duration && v.duration.raw) || (v.isLive ? 'LIVE' : '–')), h('span', {}, 'Dauer'))),
-    h('div', { class:'wa', style:'padding:0' }, avatar(a.name), h('div', { class:'nm' }, h('b', {}, a.name || 'Kanal')), h('button', { class:'pill', type:'button', onclick:() => { const c = $('#sheet'); if (c) c.remove(); openChannel({ channelId:a.id || a.name, channelName:a.name }); } }, 'Zum Kanal'))));
+    h('div', { class:'wa', style:'padding:0' }, avatar(a.name, avatarSrc(v)), h('div', { class:'nm' }, h('b', {}, a.name || 'Kanal')), h('button', { class:'pill', type:'button', onclick:() => { const c = $('#sheet'); if (c) c.remove(); openChannel({ channelId:a.id || a.name, channelName:a.name, avatar:avatarSrc(v) }); } }, 'Zum Kanal'))));
 }
 const STOP = new Set(['der', 'die', 'das', 'und', 'ein', 'eine', 'mit', 'von', 'für', 'auf', 'ist', 'den', 'dem', 'des', 'wir', 'ich', 'du', 'the', 'and', 'for', 'aber', 'wie', 'was', 'nicht', 'bei', 'zum', 'zur', 'im', 'in', 'an']);
 const toks = t => (String(t || '').toLowerCase().match(/[a-zäöüß0-9]{3,}/g) || []).filter(w => !STOP.has(w));
