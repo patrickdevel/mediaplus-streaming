@@ -2969,13 +2969,14 @@ const PLUS = (() => {
     const go = h('button', { class:'go', type:'button', onclick:() => { close(); store.set('tvTopic', code); toast('Mit TV gekoppelt'); location.hash = '#/remote'; } }, 'Einrichten');
     const el = h('div', { id:'suCard', onclick:ev => { if (ev.target === el) close(); } },
       h('div', { class:'su', role:'dialog', 'aria-label':'Media+ TV einrichten' }, x, h('h2', {}, 'Media+ TV einrichten'), h('div', { class:'box' }, h('div', { class:'mk' }, icon('plus', 'fill'))), go));
-    /* Liquid-Glass-Gefühl: Buttons lassen sich ein Stück ziehen (Gummiband) und federn zurück */
+    /* Liquid-Glass-Gefühl: Buttons bleiben an ihrem Platz, dehnen sich aber in Zugrichtung (langziehen/breitziehen) und federn zurück */
     const rubber = (b, sc) => {
-      let sx = 0, sy = 0, on = false, mv = false, tm = 0;
-      const rb = d => Math.sign(d) * 26 * (1 - Math.exp(-Math.abs(d) / 55));
+      let sx = 0, sy = 0, w = 1, hh = 1, on = false, mv = false, tm = 0;
+      const rb = d => Math.sign(d) * 44 * (1 - Math.exp(-Math.abs(d) / 70));   /* zusätzliche Länge in px, max. ~44 */
       ['touchstart', 'touchmove'].forEach(n => b.addEventListener(n, ev => ev.stopPropagation(), { passive:true }));
       b.addEventListener('pointerdown', ev => {
         on = true; mv = false; sx = ev.clientX; sy = ev.clientY; clearTimeout(tm);
+        const r = b.getBoundingClientRect(); w = r.width || 1; hh = r.height || 1;
         try { b.setPointerCapture(ev.pointerId); } catch {}
         b.style.transition = 'transform .2s cubic-bezier(.2,.9,.25,1)';
         b.style.transform = 'scale(' + sc + ')';
@@ -2984,12 +2985,17 @@ const PLUS = (() => {
         if (!on) return;
         const dx = ev.clientX - sx, dy = ev.clientY - sy;
         if (!mv && Math.hypot(dx, dy) > 6) { mv = true; b.style.transition = 'none'; }
-        if (mv) b.style.transform = 'translate(' + rb(dx) + 'px,' + rb(dy) + 'px) scale(' + sc + ')';
+        if (!mv) return;
+        let kx = 1 + Math.abs(rb(dx)) / w, ky = 1 + Math.abs(rb(dy)) / hh;
+        const X = kx / Math.sqrt(ky), Y = ky / Math.sqrt(kx);     /* Volumen halten: quer zur Zugrichtung wird er schmaler */
+        b.style.transformOrigin = (dx > 0 ? '0%' : '100%') + ' ' + (dy > 0 ? '0%' : '100%');   /* wächst zum Finger hin, Gegenseite bleibt stehen */
+        b.style.transform = 'scale(' + (X * sc) + ',' + (Y * sc) + ')';
       });
       const up = () => {
         if (!on) return; on = false;
-        b.style.transition = 'transform .55s cubic-bezier(.34,1.56,.64,1)'; b.style.transform = '';
+        b.style.transition = 'transform .6s cubic-bezier(.34,1.56,.64,1)'; b.style.transform = '';
         if (mv) { b._drag = true; tm = setTimeout(() => { b._drag = false; }, 80); }
+        setTimeout(() => { if (!on) b.style.transformOrigin = ''; }, 650);
       };
       b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
       /* nach einem Zieh-Vorgang kein versehentlicher Klick */
