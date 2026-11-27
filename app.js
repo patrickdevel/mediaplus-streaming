@@ -74,6 +74,28 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem('mt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem('mt:' + k, JSON.stringify(v)); } catch {} }
 };
+/* Einrichtungs-Signal (wie Apple TV): solange ein Koppel-Bildschirm (.qrbox) offen ist, sendet der TV alle 6 s ein Signal.
+   Das Handy (mobile.html) zeigt daraufhin einmalig „Neuen TV einrichten“. Nähe = gleiche öffentliche IP (Topic = Hash der IP). */
+let _beaconIv = 0;
+function pairBeacon() {
+  if (typeof TV === 'undefined' || _beaconIv) return;
+  _beaconIv = -1;
+  const stop = () => { clearInterval(_beaconIv); _beaconIv = 0; };
+  (async () => {
+    let tp;
+    try {
+      const ip = ((await fetch('https://1.1.1.1/cdn-cgi/trace').then(r => r.text())).match(/^ip=(.+)$/m) || [])[1];
+      if (!ip) throw 0;
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('mpsetup|' + ip));
+      tp = 'mps' + [...new Uint8Array(buf)].slice(0, 10).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch { _beaconIv = 0; return; }
+    const ping = () => {
+      if (!document.querySelector('.qrbox') || !store.get('pairTopic')) return stop();
+      fetch('https://ntfy.sh/' + tp, { method:'POST', body:JSON.stringify({ t:'setup', c:store.get('pairTopic'), n:'Media + TV' }) }).catch(() => {});
+    };
+    ping(); if (_beaconIv === -1) _beaconIv = setInterval(ping, 6000);
+  })();
+}
 const secure = u => (u || '').replace(/^http:\/\//i, 'https://');
 const rtf = new Intl.RelativeTimeFormat('de', { numeric: 'auto' });
 function rel(ts) {
@@ -709,6 +731,7 @@ function openSettings(opener, opts) {
     qrOn = true; clearInterval(qrIv);
     list.className = 'slist fwd'; list.replaceChildren(); list.scrollTop = 0;
     const isSp = it.kind === 'spotify';
+    if (!isSp) pairBeacon();
     title.textContent = isSp ? 'Spotify verbinden' : 'Mit Handy koppeln'; pop(title);
     const back = row('Zurück', '', () => { qrOn = false; clearInterval(qrIv); draw('back', 0); }, 'bk', 0);
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
@@ -3075,6 +3098,7 @@ const Welcome = (() => {
   /* Schritt 1 (zuerst gezeigt): Handy als Fernbedienung koppeln */
   function s1() {
     const t = store.get('pairTopic') || '';
+    pairBeacon();
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
     const url = base + '?tv=' + t + '#/remote';
     const box = h('div', { class:'qrbox wz-qr' }, 'QR-Code wird erzeugt …');
@@ -3983,7 +4007,7 @@ const PLUS = (() => {
       h('p', { style:'word-break:break-all;color:var(--fg-3)' }, url),
       h('div', { class:'side-h', style:'padding:16px 0 6px' }, 'Adresse der Handy-Seite'), inp,
       h('div', { style:'padding-top:10px' }, h('button', { class:'btn', type:'button', onclick:() => { store.set('mobileUrl', inp.value.trim()); route(); } }, 'Speichern')));
-    listen();
+    listen(); pairBeacon();
   }
   /* Handy-Fernbedienung: Mute + Lautstärke (halten = wiederholen) – wirkt am TV auf jeder Seite */
   function remoteBar(big) {
