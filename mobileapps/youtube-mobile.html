@@ -38,7 +38,10 @@ body.m #main{padding-bottom:calc(170px + var(--sb))}
 
 #bn{position:fixed;left:0;right:0;bottom:0;z-index:30;height:calc(56px + var(--sb));padding-bottom:var(--sb);display:flex;background:rgba(15,15,15,.88);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);transition:transform .3s cubic-bezier(.22,.8,.2,1)}
 #bn button{flex:1;display:flex;align-items:center;justify-content:center}
-#bn svg{width:28px;height:28px;transition:width .22s,height .22s}
+#bn svg{width:28px;height:28px;transition:width .22s,height .22s,transform .3s cubic-bezier(.22,.8,.2,1),opacity .25s}
+#bn .me-av{transition:width .22s,height .22s,transform .3s cubic-bezier(.22,.8,.2,1),opacity .25s}
+#bn.hide svg,#bn.hide .me-av{transform:scale(.4);opacity:0}
+#bn.hide .me-av svg{transform:none;opacity:1}
 #bn.compact{height:calc(46px + var(--sb));background:rgba(15,15,15,.72)}
 #bn.compact svg{width:21px;height:21px}
 #bn.hide{transform:translateY(110%)}
@@ -501,15 +504,14 @@ function listPage(title, key, empty) {
   b.append(...(l.length ? l.map(v => card(v)) : [h('div', { class:'msg' }, empty)]));
 }
 function renderYou(m) {
-  const hs = getL('hist'), n = subsList().length;
-  const lib = (t, sub, k, empty) => { const f = getL(k)[0]; return h('button', { class:'lib', type:'button', onclick:() => listPage(t, k, empty) }, h('div', { class:'lt' }, f ? h('img', { src:thumb(f), alt:'' }) : I(k === 'liked' ? 'like' : 'later')), h('div', {}, h('b', {}, t), h('span', {}, sub + ' · ' + getL(k).length + ' Videos'))); };
+  const hs = vis(getL('hist'));
+  const pill = (t, ic, k, empty) => h('button', { class:'pill', type:'button', onclick:() => listPage(t, k, empty) }, I(ic), t + ' · ' + getL(k).length);
   m.replaceChildren(
-    h('div', { class:'you' }, h('div', { class:'av' }, I('user')), h('div', {}, h('b', {}, 'Du'), h('span', {}, n + (n === 1 ? ' Abo' : ' Abos')))),
-    h('button', { class:'sec', type:'button', onclick:() => listPage('Verlauf', 'hist', 'Noch nichts angesehen.') }, 'Verlauf', I('right')),
-    hs.length ? h('div', { class:'shelf', style:'margin-bottom:22px' }, hs.slice(0, 10).map(v => card(v, true))) : h('div', { class:'msg', style:'padding-top:0' }, 'Noch nichts angesehen.'),
-    h('div', { class:'sec' }, 'Mediathek'),
-    lib('Videos, die ich mag', 'Privat', 'liked', 'Noch keine Videos mit „Gefällt mir“.'),
-    lib('Später ansehen', 'Privat', 'later', 'Noch nichts gespeichert.'));
+    h('div', { style:'display:flex;gap:8px;padding:8px 12px 14px;overflow-x:auto' },
+      pill('Videos, die ich mag', 'like', 'liked', 'Noch keine Videos mit „Gefällt mir“.'),
+      pill('Später ansehen', 'later', 'later', 'Noch nichts gespeichert.')),
+    ...(hs.length ? hs.map(v => card(v)) : [h('div', { class:'msg' }, 'Noch nichts angesehen.')]));
+  tag(m);
 }
 $('#main').addEventListener('scroll', (() => {
   let y = 0;
