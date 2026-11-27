@@ -18,7 +18,7 @@ svg{fill:currentColor;width:24px;height:24px;flex:none}
 .ib{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
 .ib:active{background:rgba(255,255,255,.12)}
 
-#top{position:fixed;top:0;left:0;right:0;z-index:10;background:var(--bg);padding-top:var(--sa);transition:transform .28s cubic-bezier(.22,.8,.2,1)}
+#top{position:fixed;top:0;left:0;right:0;z-index:10;background:var(--bg);padding-top:var(--sa);transition:transform .3s cubic-bezier(.22,.8,.2,1)}
 #top.hide{transform:translateY(-110%)}
 #hd{height:56px;display:flex;align-items:center;padding:0 4px 0 12px}
 .logo{display:flex;align-items:center;gap:3px;flex:1}
@@ -30,19 +30,25 @@ svg{fill:currentColor;width:24px;height:24px;flex:none}
 body[data-tab=you] #tabs{display:none}
 #main{position:fixed;inset:0;overflow-y:auto;padding:calc(var(--sa) + 104px) 0 calc(64px + var(--sb))}
 body[data-tab=you] #main{padding-top:calc(var(--sa) + 56px)}
-body.m #main{padding-bottom:calc(180px + var(--sb))}
+body.m #main{padding-bottom:calc(170px + var(--sb))}
 
+/* Tab-Wechsel: leichte Swipe-Animation */
 #main.tab-in > *{animation:tabIn .24s cubic-bezier(.22,.8,.2,1) both}
 @keyframes tabIn{from{opacity:0;transform:translateX(18px)}}
 
-#bn{position:fixed;left:0;right:0;bottom:0;z-index:30;height:calc(56px + var(--sb));padding-bottom:var(--sb);display:flex;background:rgba(15,15,15,.88);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);transition:transform .3s cubic-bezier(.22,.8,.2,1),background .25s}
+#bn{position:fixed;left:0;right:0;bottom:0;z-index:30;height:calc(56px + var(--sb));padding-bottom:var(--sb);display:flex;background:rgba(15,15,15,.88);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);transition:transform .3s cubic-bezier(.22,.8,.2,1)}
 #bn button{flex:1;display:flex;align-items:center;justify-content:center}
-#bn svg{width:28px;height:28px}
+#bn svg{width:28px;height:28px;transition:width .22s,height .22s}
+#bn.compact{height:calc(46px + var(--sb));background:rgba(15,15,15,.72)}
+#bn.compact svg{width:21px;height:21px}
 #bn.hide{transform:translateY(110%)}
-.me-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6a5a4a,#222);display:flex;align-items:center;justify-content:center}
+.me-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6a5a4a,#222);display:flex;align-items:center;justify-content:center;transition:width .22s,height .22s}
 .me-av svg{width:18px;height:18px;color:#aaa}
+#bn.compact .me-av{width:22px;height:22px}
+#bn.compact .me-av svg{width:14px;height:14px}
 #bn .on .me-av{box-shadow:0 0 0 2px #0f0f0f,0 0 0 3.5px #fff}
 
+/* Karten */
 .vc{display:block;cursor:pointer;margin-bottom:18px}
 .th{position:relative;aspect-ratio:16/9;background:var(--s);overflow:hidden}
 .th img{width:100%;height:100%;object-fit:cover;display:block}
@@ -70,12 +76,14 @@ body.m #main{padding-bottom:calc(180px + var(--sb))}
 .pill{height:36px;padding:0 16px;border-radius:18px;background:rgba(255,255,255,.1);font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .pill.w{background:#f1f1f1;color:#0f0f0f}
 
+/* Abos */
 .stories{display:flex;gap:12px;padding:4px 12px 14px;overflow-x:auto;align-items:flex-start}
 .st{flex:none;width:72px;text-align:center;font-size:12px}
 .st .av{width:64px;height:64px;margin:0 auto 6px;font-size:24px}
 .st span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .all{color:#3ea6ff;font-size:14px;font-weight:500;align-self:center;padding:0 4px 18px 8px;flex:none}
 
+/* Du */
 .you{display:flex;gap:16px;align-items:center;padding:8px 16px 20px}
 .you .av{width:72px;height:72px}.you .av svg{width:44px;height:44px;color:#aaa}
 .you b{display:block;font-size:24px;font-weight:700}.you span{color:var(--t2)}
@@ -86,6 +94,7 @@ body.m #main{padding-bottom:calc(180px + var(--sb))}
 .lib .lt img{width:100%;height:100%;object-fit:cover}
 .lib b{display:block;font-size:16px;font-weight:500}.lib span{color:var(--t2);font-size:13px}
 
+/* Seiten */
 .page{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;padding-top:var(--sa);transform:translateX(0);transition:transform .28s cubic-bezier(.22,.8,.2,1);will-change:transform;touch-action:pan-y}
 .page.page-under{transform:translateX(-24%);pointer-events:none}
 .page.page-enter{transform:translateX(100%)}
@@ -130,19 +139,20 @@ body.m #main{padding-bottom:calc(180px + var(--sb))}
 body.w #pl{display:block;top:0;left:0;width:100%}
 body.w #wi{display:block}
 body.w #bn,body.w #top{visibility:hidden}
-
-/* Mini player – frei positionierbar via transform */
-body.m #pl{
-  display:block;
-  top:0;left:0;right:auto;bottom:auto;
-  width:min(180px,46vw);
-  padding:0;border-radius:12px;overflow:hidden;
-  box-shadow:0 6px 24px rgba(0,0,0,.7);z-index:70;
-  touch-action:none;
-  transition:transform .3s cubic-bezier(.22,.8,.2,1);
-  will-change:transform;
-  user-select:none;-webkit-user-select:none;
-}
+body{--mb:calc(66px + var(--sb));--mt:calc(var(--sa) + 104px)}
+body[data-tab=you]{--mt:calc(var(--sa) + 56px)}
+body.nh{--mb:calc(10px + var(--sb));--mt:calc(var(--sa) + 6px)}
+body.m #pl{display:block;right:10px;left:auto;bottom:var(--mb);top:auto;width:min(200px,50vw);padding:0;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.7);z-index:70;overflow:visible;touch-action:none;transition:bottom .3s cubic-bezier(.22,.8,.2,1),top .3s cubic-bezier(.22,.8,.2,1),transform .3s cubic-bezier(.22,.8,.2,1)}
+body.m.ml #pl{left:10px;right:auto}
+body.m.mt #pl{top:calc(var(--mt) + 6px);bottom:auto}
+body.m.mo #pl{transform:translateX(calc(100% + 10px))}
+body.m.mo.ml #pl{transform:translateX(calc(-100% - 10px))}
+body.m #pl.drag{transition:none !important}
+#mh{display:none;position:absolute;top:50%;margin-top:-26px;width:26px;height:52px;background:rgba(30,30,30,.92);color:#fff;align-items:center;justify-content:center;z-index:5;pointer-events:auto;left:-26px;border-radius:12px 0 0 12px}
+body.m.ml #mh{left:auto;right:-26px;border-radius:0 12px 12px 0}
+body.m.mo #mh{display:flex}
+body.m.ml #mh svg{transform:scaleX(-1)}
+#mh svg{width:20px;height:20px}
 body.m #pv{border-radius:12px}
 body.m .mc{display:flex}body.m #pc,body.m #cg,body.m #tm,body.m .fc{display:none}
 body.m #sk{height:3px;pointer-events:none}
@@ -150,28 +160,9 @@ body.m #fr{pointer-events:none !important}
 body.m #pt{pointer-events:auto !important;touch-action:none}
 body.m #pv{pointer-events:none}
 body.m #mpp,body.m #mx{pointer-events:auto !important}
-#mpp{position:absolute;left:6px;top:6px;z-index:4;width:38px;height:38px;align-items:center;justify-content:center}
-#mpp svg{width:30px;height:30px}
-#mx{position:absolute;right:6px;top:6px;z-index:4;width:38px;height:38px;align-items:center;justify-content:center}
-#mx svg{width:20px;height:20px}
-
-/* Wenn Miniplayer aus dem Bild geschoben wurde */
-body.m.mp-collapsed #pl{display:none !important}
-body.m.mp-collapsed #mp-arrow{display:flex !important}
-
-#mp-arrow{
-  display:none;position:fixed;left:0;top:0;z-index:71;
-  width:44px;height:44px;border-radius:50%;
-  background:rgba(40,40,40,.92);color:#f1f1f1;
-  align-items:center;justify-content:center;
-  box-shadow:0 4px 14px rgba(0,0,0,.6);
-  font-size:18px;font-weight:700;
-  will-change:transform;
-  transition:transform .28s cubic-bezier(.22,.8,.2,1),opacity .2s;
-  border:1px solid rgba(255,255,255,.08);
-}
-#mp-arrow:active{background:rgba(70,70,70,.95)}
-
+#mpp{position:absolute;left:4px;top:4px;z-index:4;width:38px;height:38px;align-items:center;justify-content:center}
+#mpp svg{width:28px;height:28px}
+#mx{position:absolute;right:4px;top:4px;z-index:4;width:38px;height:38px;align-items:center;justify-content:center}
 #pl:fullscreen{padding:0;display:flex;align-items:center;background:#000}
 #pl:fullscreen #pv{height:100%;aspect-ratio:auto}
 #pl:-webkit-full-screen{padding:0;display:flex;align-items:center}
@@ -215,10 +206,10 @@ body.m.mp-collapsed #mp-arrow{display:flex !important}
   <div id="pc"><button class="cb fc" id="pmin" aria-label="Minimieren"></button>
     <div id="cg"><button class="cb sk10" id="rw" aria-label="10 Sekunden zurück"></button><button class="cb" id="bp" aria-label="Wiedergabe"></button><button class="cb sk10" id="ff" aria-label="10 Sekunden vor"></button></div>
     <div id="tm">0:00 / 0:00</div><button class="cb fc" id="pfs" aria-label="Vollbild"></button></div>
+  <button id="mh" aria-label="Miniplayer öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
   <button class="mc" id="mpp" aria-label="Pause"></button><button class="mc" id="mx" aria-label="Schließen"></button>
   <div id="sk"><div class="trk"><div id="bf"></div><div id="sg"></div><b id="kn"></b></div></div>
 </div></div>
-<button id="mp-arrow" aria-label="Miniplayer wiederherstellen">▶</button>
 <div id="toast"></div>
 <script>
 (() => {
@@ -232,14 +223,6 @@ function h(tag, p, ...kids) {
 }
 const store = { get(k, d) { try { const v = localStorage.getItem('yt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem('yt:' + k, JSON.stringify(v)); } catch {} } };
 let tt; const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); };
-
-/* Mobile-Erkennung für Autoplay */
-const isMobile = (() => {
-  const ua = navigator.userAgent || '';
-  if (/Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return true;
-  if (navigator.maxTouchPoints > 1 && /Mac/i.test(ua)) return true;
-  return false;
-})();
 
 const ICO = {
   search:'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
@@ -281,7 +264,7 @@ const fmtT = s => { s = Math.max(0, Math.floor(s || 0)); const hh = Math.floor(s
 const nm = v => (v.author && v.author.name) || '';
 const thumb = v => 'https://i.ytimg.com/vi/' + v.videoId + '/hqdefault.jpg';
 
-/* Globale Avatar-Quelle */
+/* Globale Avatar-Quelle – verhält sich wie auf Kanalseiten */
 const chanCache = new Map();
 function regChans(list) {
   (list || []).forEach(c => {
@@ -448,7 +431,7 @@ function drawTabs() {
     h('button', { type:'button', class:S.tab !== 'you' ? 'on' : '', 'aria-label':'Startseite', onclick:() => setTab('home') }, I(S.tab !== 'you' ? 'home' : 'homeo')),
     h('button', { type:'button', class:S.tab === 'you' ? 'on' : '', 'aria-label':'Du', onclick:() => setTab('you') }, h('div', { class:'me-av' }, I('user'))));
 }
-function setTab(t) { dismissPages(); $('#bn').classList.remove('hide'); S.tab = t; render(true); }
+function setTab(t) { dismissPages(); $('#bn').classList.remove('hide', 'compact'); B.classList.remove('nh'); S.tab = t; render(true); }
 function dismissPages() { document.querySelectorAll('.page').forEach(p => { const i = ST.findIndex(x => x.el === p); if (i >= 0) ST.splice(i, 1); p.remove(); }); }
 async function render(animate) {
   const m = $('#main'), tok = ++S.tok; B.dataset.tab = S.tab === 'you' ? 'you' : 'x'; drawTabs(); m.scrollTop = 0; $('#top').classList.remove('hide');
@@ -487,157 +470,16 @@ function renderYou(m) {
     lib('Videos, die ich mag', 'Privat', 'liked', 'Noch keine Videos mit „Gefällt mir“.'),
     lib('Später ansehen', 'Privat', 'later', 'Noch nichts gespeichert.'));
 }
-
-/* ======================================================
-   Scroll: Navbar ein/aus + Miniplayer mitbewegen
-   ====================================================== */
-let bnHidden = false;
 $('#main').addEventListener('scroll', (() => {
   let y = 0;
   return e => {
-    const t = e.target.scrollTop;
-    const bn = $('#bn');
+    const t = e.target.scrollTop, bn = $('#bn');
     const down = t > y + 6, up = t < y - 6;
-    if (down && t > 40 && !bnHidden) {
-      $('#top').classList.add('hide'); bn.classList.add('hide');
-      bnHidden = true;
-      if (B.classList.contains('m')) updateMP();
-      if (MP.collapsed) posArrow();
-    } else if ((up || t < 30) && bnHidden) {
-      $('#top').classList.remove('hide'); bn.classList.remove('hide');
-      bnHidden = false;
-      if (B.classList.contains('m')) updateMP();
-      if (MP.collapsed) posArrow();
-    }
+    if (down && t > 40) { $('#top').classList.add('hide'); bn.classList.add('hide'); B.classList.add('nh'); }
+    if (up || t < 30) { $('#top').classList.remove('hide'); bn.classList.remove('hide'); B.classList.remove('nh'); }
     y = t;
   };
 })(), { passive:true });
-
-/* ======================================================
-   Safe-Area-Messung + Miniplayer-Positionierung & Drag
-   ====================================================== */
-const SAFE = (() => {
-  const s = document.createElement('div');
-  s.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;visibility:hidden;';
-  document.body.append(s);
-  s.style.height = 'env(safe-area-inset-top,0px)';
-  const t = s.offsetHeight;
-  s.style.height = 'env(safe-area-inset-bottom,0px)';
-  const b = s.offsetHeight;
-  s.remove();
-  return { t, b };
-})();
-const MP = { corner: store.get('mpcorner', 'br'), collapsed:false, edge:null };
-if (MP.corner !== 'tl' && MP.corner !== 'tr' && MP.corner !== 'bl' && MP.corner !== 'br') MP.corner = 'br';
-
-function navH() { return bnHidden ? 0 : 56; }
-
-function updateMP() {
-  if (!B.classList.contains('m') || MP.collapsed) return;
-  const pl = $('#pl');
-  const w = pl.offsetWidth, h = pl.offsetHeight;
-  const pad = 8, nav = navH();
-  let x, y;
-  switch (MP.corner) {
-    case 'tl': x = pad; y = pad + SAFE.t; break;
-    case 'tr': x = innerWidth - w - pad; y = pad + SAFE.t; break;
-    case 'bl': x = pad; y = innerHeight - h - pad - SAFE.b - nav; break;
-    default:   x = innerWidth - w - pad; y = innerHeight - h - pad - SAFE.b - nav; break;
-  }
-  pl.style.transform = `translate(${x}px,${y}px)`;
-}
-
-/* Drag */
-let mpDrag = null, lastDragMoved = false;
-const plEl = $('#pl');
-
-function startDrag(e) {
-  if (!B.classList.contains('m') || MP.collapsed) return;
-  if (e.target.closest('button')) return;
-  const rect = plEl.getBoundingClientRect();
-  mpDrag = { sx:e.clientX, sy:e.clientY, ox:rect.left, oy:rect.top, moved:false, id:e.pointerId };
-  plEl.style.transition = 'none';
-  try { plEl.setPointerCapture(e.pointerId); } catch {}
-}
-function moveDrag(e) {
-  if (!mpDrag || e.pointerId !== mpDrag.id) return;
-  const dx = e.clientX - mpDrag.sx, dy = e.clientY - mpDrag.sy;
-  if (!mpDrag.moved && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-  mpDrag.moved = true;
-  plEl.style.transform = `translate(${mpDrag.ox + dx}px,${mpDrag.oy + dy}px)`;
-  e.preventDefault();
-}
-function endDrag(e) {
-  if (!mpDrag || e.pointerId !== mpDrag.id) return;
-  const d = mpDrag; mpDrag = null;
-  try { plEl.releasePointerCapture(e.pointerId); } catch {}
-  plEl.style.transition = '';
-  if (!d.moved) return;
-  lastDragMoved = true;
-  setTimeout(() => { lastDragMoved = false; }, 90);
-  snapMP();
-}
-function snapMP() {
-  const rect = plEl.getBoundingClientRect();
-  const visL = Math.max(0, rect.left), visR = Math.min(innerWidth, rect.right);
-  const visT = Math.max(0, rect.top), visB = Math.min(innerHeight, rect.bottom);
-  const visW = Math.max(0, visR - visL), visH = Math.max(0, visB - visT);
-  const ratio = (visW * visH) / Math.max(1, rect.width * rect.height);
-  if (ratio < 0.4) {
-    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-    const dL = cx, dR = innerWidth - cx, dT = cy, dB = innerHeight - cy;
-    const m = Math.min(dL, dR, dT, dB);
-    MP.edge = m === dL ? 'left' : m === dR ? 'right' : m === dT ? 'top' : 'bottom';
-    MP.collapsed = true;
-    applyCollapsed();
-    return;
-  }
-  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-  MP.corner = (cy < innerHeight / 2 ? 't' : 'b') + (cx < innerWidth / 2 ? 'l' : 'r');
-  MP.collapsed = false;
-  store.set('mpcorner', MP.corner);
-  B.classList.remove('mp-collapsed');
-  updateMP();
-}
-
-plEl.addEventListener('pointerdown', startDrag);
-plEl.addEventListener('pointermove', moveDrag);
-plEl.addEventListener('pointerup', endDrag);
-plEl.addEventListener('pointercancel', endDrag);
-
-/* Collapse-Edge-Arrow */
-const ARROW_CHAR = { left:'▶', right:'◀', top:'▼', bottom:'▲' };
-function applyCollapsed() {
-  if (!MP.collapsed) { B.classList.remove('mp-collapsed'); return; }
-  B.classList.add('mp-collapsed');
-  posArrow();
-}
-function posArrow() {
-  const a = $('#mp-arrow');
-  const sz = 44, pad = 12, nav = navH();
-  let x, y;
-  switch (MP.edge) {
-    case 'left':   x = pad; y = innerHeight / 2 - sz / 2; break;
-    case 'right':  x = innerWidth - sz - pad; y = innerHeight / 2 - sz / 2; break;
-    case 'top':    x = innerWidth / 2 - sz / 2; y = pad + SAFE.t; break;
-    default:       x = innerWidth / 2 - sz / 2; y = innerHeight - sz - pad - SAFE.b - nav; break;
-  }
-  a.style.transform = `translate(${x}px,${y}px)`;
-  a.textContent = ARROW_CHAR[MP.edge] || '▶';
-}
-function restoreFromCollapsed() {
-  MP.collapsed = false;
-  const map = { left:'bl', right:'br', top:'tl', bottom:'bl' };
-  MP.corner = map[MP.edge] || 'br';
-  store.set('mpcorner', MP.corner);
-  B.classList.remove('mp-collapsed');
-  updateMP();
-}
-$('#mp-arrow').addEventListener('click', restoreFromCollapsed);
-
-window.addEventListener('resize', () => {
-  if (B.classList.contains('m')) { updateMP(); if (MP.collapsed) posArrow(); }
-});
 
 /* Suche */
 function openSearch() {
@@ -677,10 +519,8 @@ async function openChannel(ch) {
 }
 
 /* Player */
-const PL = { t:0, d:0, st:-1, b:0, sv:0, hide:0, drag:false }, fr = $('#fr');
+const PL = { t:0, d:0, st:-1, b:0, sv:0, hide:0, drag:false, unmuteTries:0 }, fr = $('#fr');
 let REC = [];
-let mobileUnmuteHandlers = null;
-
 const cmd = (f, a = []) => { try { fr.contentWindow.postMessage(JSON.stringify({ event:'command', func:f, args:a }), '*'); } catch {} };
 const listen = () => { try { fr.contentWindow.postMessage(JSON.stringify({ event:'listening', id:1, channel:'widget' }), '*'); } catch {} };
 fr.addEventListener('load', () => { listen(); [300, 800, 1500, 2800, 4500].forEach(t => setTimeout(listen, t)); });
@@ -707,151 +547,105 @@ $('#pfs').onclick = () => {
   const p = $('#pl'); if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
   try { const r = (p.requestFullscreen || p.webkitRequestFullscreen).call(p); if (r && r.then) r.then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch {} }).catch(() => toast('Vollbild nicht verfügbar')); } catch { toast('Vollbild nicht verfügbar'); }
 };
-
-/* Tap/Doppeltap im Player */
+const MD = { moved:false };
+$('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mo'); };
+(() => { const pl = $('#pl'), t = $('#pt'); let sx, sy, on = false, r0;
+  t.addEventListener('pointerdown', e => { if (!B.classList.contains('m')) return; on = true; MD.moved = false; sx = e.clientX; sy = e.clientY; r0 = pl.getBoundingClientRect(); try { t.setPointerCapture(e.pointerId); } catch {} });
+  t.addEventListener('pointermove', e => { if (!on) return; const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (!MD.moved && Math.hypot(dx, dy) > 8) { MD.moved = true; pl.classList.add('drag'); }
+    if (MD.moved) pl.style.transform = `translate(${dx}px,${dy}px)`; });
+  const end = () => { if (!on) return; on = false; if (!MD.moved) return;
+    const r = pl.getBoundingClientRect(), W = innerWidth, H = innerHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const left = cx < W / 2;
+    const out = r.left < -r.width * .25 || r.right > W + r.width * .25;
+    B.classList.toggle('ml', left); B.classList.toggle('mt', cy < H / 2);
+    pl.style.transform = ''; pl.classList.remove('drag');
+    const r1 = pl.getBoundingClientRect();
+    pl.style.transition = 'none'; pl.style.transform = `translate(${r.left - r1.left}px,${r.top - r1.top}px)`; void pl.offsetWidth;
+    pl.style.transition = ''; pl.style.transform = '';
+    B.classList.toggle('mo', out);
+    setTimeout(() => { MD.moved = false; }, 60); };
+  t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end); })();
 (() => { let last = 0, lx = 0, y0 = 0, tm;
   const t = $('#pt');
   t.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; }, { passive:true });
   t.addEventListener('touchend', e => { if (B.classList.contains('w') && !document.fullscreenElement && e.changedTouches[0].clientY - y0 > 90) { history.back(); } }, { passive:true });
   t.addEventListener('click', e => {
-    if (lastDragMoved) return;
-    if (B.classList.contains('m')) {
-      if (MP.collapsed) return;
-      expand(); return;
-    }
+    if (B.classList.contains('m')) { if (MD.moved) { MD.moved = false; return; } expand(); return; }
     const r = t.getBoundingClientRect(), x = e.clientX - r.left, now = Date.now();
     if (now - last < 320 && Math.abs(x - lx) < 120 && (x < r.width * .35 || x > r.width * .65)) { clearTimeout(tm); seekBy(x < r.width / 2 ? -10 : 10); toast(x < r.width / 2 ? '−10 Sekunden' : '+10 Sekunden'); last = 0; return; }
     last = now; lx = x; clearTimeout(tm);
     tm = setTimeout(() => { if ($('#pc').classList.contains('on')) $('#pc').classList.remove('on'); else showC(); }, 300);
   });
 })();
-
-/* Fortschrittsbalken */
 (() => { const sk = $('#sk'), fr_ = e => { const r = sk.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); };
   sk.addEventListener('pointerdown', e => { if (B.classList.contains('m')) return; PL.drag = true; sk.classList.add('drag'); try { sk.setPointerCapture(e.pointerId); } catch {} PL.t = fr_(e) * PL.d; upd(); });
   sk.addEventListener('pointermove', e => { if (PL.drag) { PL.t = fr_(e) * PL.d; upd(); } });
   const end = e => { if (!PL.drag) return; PL.drag = false; sk.classList.remove('drag'); cmd('seekTo', [PL.t, true]); showC(); };
   sk.addEventListener('pointerup', end); sk.addEventListener('pointercancel', () => { PL.drag = false; sk.classList.remove('drag'); }); })();
 
-/* Mobile: Unmute-Listener */
-function attachMobileUnmute() {
-  if (!isMobile || mobileUnmuteHandlers) return;
-  mobileUnmuteHandlers = [];
-  const g = () => { cmd('unMute'); cmd('setVolume', [100]); };
-  ['touchstart', 'touchend', 'click'].forEach(ev => {
-    const opts = { capture:true, passive:true };
-    document.addEventListener(ev, g, opts);
-    mobileUnmuteHandlers.push([ev, g, opts]);
-  });
-}
-function detachMobileUnmute() {
-  if (!mobileUnmuteHandlers) return;
-  mobileUnmuteHandlers.forEach(([ev, g, opts]) => document.removeEventListener(ev, g, opts));
-  mobileUnmuteHandlers = null;
-}
-
 function play(v) {
   if (S.cur && S.cur.videoId === v.videoId) { if (!B.classList.contains('w')) expand(); return; }
   saveProg(true);
   const hs = getL('hist').filter(x => x.videoId !== v.videoId); hs.unshift(slim(v)); store.set('hist', hs.slice(0, 40));
   const p = prog()[v.videoId], st0 = p && p.t > 5 && p.d && p.t < p.d - 15 ? Math.floor(p.t) : 0;
-  S.cur = v; PL.t = st0; PL.d = p && p.d || 0; PL.st = -1; PL.b = 0; REC = [];
+  S.cur = v; PL.t = st0; PL.d = p && p.d || 0; PL.st = -1; PL.b = 0; PL.unmuteTries = 0; REC = [];
   const yo = /^https?:$/.test(location.protocol) ? '&origin=' + encodeURIComponent(location.origin) : '';
-  // WICHTIG: Auf Mobilgeräten starten wir stumm, damit Autoplay überhaupt erlaubt wird.
-  const muteParam = isMobile ? 1 : 0;
-  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=' + muteParam + '&start=' + st0 + '&controls=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
+  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=1&start=' + st0 + '&controls=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
   if (!B.classList.contains('w')) pushH('watch');
-  B.classList.add('w'); B.classList.remove('m', 'mp-collapsed');
-  MP.collapsed = false;
-  document.title = v.title + ' – YouTube';
+  B.classList.add('w'); B.classList.remove('m'); document.title = v.title + ' – YouTube';
   fillWatch(v); upd(); showC(); loadRecs(v);
-  // Unmute-Versuche (Desktop sofort, Mobile über Gesten-Listener)
-  [400, 900, 1600, 2600, 4000].forEach(t => setTimeout(() => {
-    if (S.cur && S.cur.videoId === v.videoId) { cmd('unMute'); cmd('setVolume', [100]); }
-  }, t));
-  if (isMobile) {
-    attachMobileUnmute();
-    toast('Tippen für Ton');
-  }
+  // Ton zuverlässig einschalten
+  [400, 900, 1600, 2600, 4000].forEach(t => setTimeout(() => { if (S.cur && S.cur.videoId === v.videoId && PL.unmuteTries < 20) { cmd('playVideo'); cmd('unMute'); cmd('setVolume', [100]); PL.unmuteTries++; } }, t));
 }
-
-/* FLIP-Animation Vollbild ↔ Miniplayer */
-function minCore() {
-  if (!S.cur) { B.classList.remove('w'); return; }
-  if (document.fullscreenElement) try { document.exitFullscreen(); } catch {}
-  if (MP.collapsed) { B.classList.remove('w'); B.classList.add('m'); applyCollapsed(); return; }
-  const pv = $('#pv'), pl = plEl;
-  pl.style.transition = 'none';
+/* FLIP-Animation zwischen Vollbild und Miniplayer */
+function flipPlayer(changeState) {
+  const pv = $('#pv'), pl = $('#pl');
   const r0 = pv.getBoundingClientRect();
-  B.classList.remove('w'); B.classList.add('m');
-  updateMP();
-  void pl.offsetWidth;
+  changeState();
   const r1 = pv.getBoundingClientRect();
-  if (!r0.width || !r1.width) { pl.style.transition = ''; return; }
+  if (!r0.width || !r1.width) return;
   const dx = r0.left - r1.left, dy = r0.top - r1.top;
   const sw = r0.width / r1.width, sh = r0.height / r1.height;
   pv.style.transition = 'none';
   pv.style.transform = `translate(${dx}px,${dy}px) scale(${sw},${sh})`;
+  pv.style.willChange = 'transform';
+  pl.style.overflow = 'visible';
   void pv.offsetWidth;
   pv.style.transition = 'transform .32s cubic-bezier(.22,.8,.2,1)';
   pv.style.transform = '';
   setTimeout(() => {
-    pv.style.transition = ''; pv.style.transform = '';
-    pl.style.transition = '';
+    pv.style.transition = '';
+    pv.style.transform = '';
+    pv.style.willChange = '';
+    pl.style.overflow = '';
   }, 340);
 }
+function minCore() {
+  if (document.fullscreenElement) try { document.exitFullscreen(); } catch {}
+  if (!S.cur) { B.classList.remove('w'); return; }
+  flipPlayer(() => { B.classList.remove('w'); B.classList.add('m'); });
+}
 function expand() {
-  if (!S.cur) return;
-  B.classList.remove('mp-collapsed');
-  const pv = $('#pv'), pl = plEl;
-  pl.style.transition = 'none';
-  const r0 = pv.getBoundingClientRect();
-  B.classList.remove('m'); B.classList.add('w');
-  pl.style.transform = '';
-  void pl.offsetWidth;
-  const r1 = pv.getBoundingClientRect();
-  if (r0.width && r1.width) {
-    const dx = r0.left - r1.left, dy = r0.top - r1.top;
-    const sw = r0.width / r1.width, sh = r0.height / r1.height;
-    pv.style.transition = 'none';
-    pv.style.transform = `translate(${dx}px,${dy}px) scale(${sw},${sh})`;
-    void pv.offsetWidth;
-    pv.style.transition = 'transform .32s cubic-bezier(.22,.8,.2,1)';
-    pv.style.transform = '';
-    setTimeout(() => { pv.style.transition = ''; pv.style.transform = ''; pl.style.transition = ''; }, 340);
-  } else {
-    pl.style.transition = '';
-  }
+  if (!S.cur) return; B.classList.remove('mo');
+  flipPlayer(() => { B.classList.remove('m'); B.classList.add('w'); });
   pushH('watch'); setTimeout(showC, 320);
 }
-function killPl() { saveProg(true); fr.src = 'about:blank'; S.cur = null; PL.st = -1; B.classList.remove('w', 'm', 'mp-collapsed'); document.title = 'YouTube'; }
+function killPl() { saveProg(true); fr.src = 'about:blank'; S.cur = null; PL.st = -1; B.classList.remove('w', 'm', 'mo'); document.title = 'YouTube'; }
 
 window.addEventListener('message', e => {
   if (e.origin !== 'https://www.youtube.com' || e.source !== fr.contentWindow) return;
   let d = e.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch { return; } }
   if (!d || !S.cur) return;
-  if (d.event === 'onStateChange') {
-    const st = typeof d.info === 'number' ? d.info : (d.info && d.info.playerState);
-    if (st != null) {
-      PL.st = st;
-      if (st === 1) { cmd('unMute'); cmd('setVolume', [100]); showC(); }
-      if (st === 0) onEnd();
-      upd();
-    }
-  } else if (d.event === 'onReady' || d.event === 'initialDelivery') {
-    listen();
-    if (d.event === 'onReady') {
-      if (PL.t > 0) cmd('seekTo', [PL.t, true]);
-      cmd('unMute'); cmd('setVolume', [100]); cmd('playVideo');
-    }
-  } else if (d.event === 'infoDelivery' && d.info) {
+  if (d.event === 'onStateChange') { const st = typeof d.info === 'number' ? d.info : (d.info && d.info.playerState); if (st != null) { PL.st = st; if (st === 1) { cmd('unMute'); cmd('setVolume', [100]); showC(); } if (st === 0) onEnd(); upd(); } }
+  else if (d.event === 'onReady' || d.event === 'initialDelivery') { listen(); if (d.event === 'onReady') { if (PL.t > 0) cmd('seekTo', [PL.t, true]); cmd('unMute'); cmd('setVolume', [100]); cmd('playVideo'); } }
+  else if (d.event === 'infoDelivery' && d.info) {
     const i = d.info;
     if (i.currentTime != null && !PL.drag) PL.t = i.currentTime;
     if (i.duration > 0) PL.d = i.duration;
     if (i.playerState != null) PL.st = i.playerState;
     if (i.videoLoadedFraction != null) PL.b = i.videoLoadedFraction;
-    if (i.muted === false) detachMobileUnmute();
-    else if (i.muted === true && isMobile) attachMobileUnmute();
+    if (i.muted === true && PL.unmuteTries < 20) { cmd('unMute'); cmd('setVolume', [100]); PL.unmuteTries++; }
     saveProg(); upd();
   }
 });
