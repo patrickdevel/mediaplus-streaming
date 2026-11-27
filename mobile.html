@@ -774,10 +774,23 @@ body.overlay #bnav{z-index:80}
 .ast-back[hidden]{display:none}
 .ast-back svg{width:20px;height:20px}
 .ast-main{flex:1;overflow-y:auto;padding:6px 16px 24px;-webkit-overflow-scrolling:touch}
-.ast-tabs{display:flex;border-top:1px solid var(--border,rgba(128,128,128,.25));background:var(--bg);padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px)}
-.ast-tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--fg-3);font-size:11px;font-weight:500;padding:6px 0}
-.ast-tabs button.on{color:var(--accent)}
-.ast-tabs svg{width:22px;height:22px}
+.ast-tabs{position:absolute;left:14px;right:14px;max-width:480px;margin:0 auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;height:56px;padding:6px;gap:4px;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(250,250,252,.72);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1px solid rgba(127,127,127,.28);border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+:root[data-theme="dark"] .ast-tabs{background:rgba(16,16,20,.68);border-color:rgba(255,255,255,.16)}
+.ast-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:none;color:var(--fg-3);font-size:11px;font-weight:500;border-radius:22px;transition:color .12s,background .12s}
+.ast-tabs button.on{color:var(--fg);background:rgba(127,127,127,.22);font-weight:600}
+.ast-tabs svg{width:22px;height:22px;display:block}
+.ast-main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+.osheet{position:fixed;inset:0;z-index:150}
+.osc{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .25s}
+.oss{position:absolute;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:480px;margin:0 auto;padding:8px;border-radius:24px;background:rgba(250,250,252,.92);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1px solid rgba(127,127,127,.28);transform:translateY(120%);transition:transform .3s cubic-bezier(.2,.8,.2,1);color:#111}
+:root[data-theme="dark"] .oss{background:rgba(24,24,28,.92);color:#fff;border-color:rgba(255,255,255,.16)}
+.osheet.on .osc{opacity:1}.osheet.on .oss{transform:none}
+.ost{padding:10px 12px 8px;font-size:13px;font-weight:600;text-align:center;opacity:.65}
+.osb{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border:0;border-radius:16px;background:none;color:inherit;font-size:16px;font-weight:500;text-align:left}
+.osb:active{background:rgba(127,127,127,.2)}
+.osb span{display:grid;width:22px}.osb svg{width:22px;height:22px}
+.osb.danger{color:#ff453a}
+.osb.cancel{justify-content:center;margin-top:4px;background:rgba(127,127,127,.16);font-weight:600}
 .ash{display:flex;align-items:baseline;justify-content:space-between;margin:18px 2px 10px}
 .ash h3{margin:0;font-size:17px}.ash span{font-size:12px;color:var(--fg-3)}
 .agrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -1244,14 +1257,32 @@ function appTile(a, onOpen) {
   const b = h('button', { class:'atile', type:'button', 'aria-label':a.name }, Logo(a), h('span', { class:'an' }, a.name));
   b.onclick = () => { if (b._lp) { b._lp = false; return; } onOpen(a, b); };
   if (a.installslite) { let t; const stop = () => clearTimeout(t);
-    b.addEventListener('touchstart', () => { t = setTimeout(() => { b._lp = true; askUninstall(a); }, 650); }, { passive:true });
+    const opts = () => { b._lp = true; setTimeout(() => { b._lp = false; }, 600); openAppOptions(a, b); };
+    b.addEventListener('touchstart', ev => { if (ev.touches.length === 1) t = setTimeout(opts, 520); }, { passive:true });
     ['touchend', 'touchmove', 'touchcancel'].forEach(e => b.addEventListener(e, stop, { passive:true }));
-    b.addEventListener('contextmenu', ev => { ev.preventDefault(); askUninstall(a); }); }
+    b.addEventListener('contextmenu', ev => { ev.preventDefault(); if (!b._lp) opts(); }); }
   return b;
 }
-function askUninstall(a) {
-  if (!store.get('apps', []).some(x => appKey(x) === appKey(a))) return;
-  if (confirm(a.name + ' deinstallieren?')) { store.set('apps', store.get('apps', []).filter(x => appKey(x) !== appKey(a))); window._appsPaint && window._appsPaint(); toast(a.name + ' deinstalliert'); }
+/* Bottom-Sheet: Optionen / Bestätigung (wie das Optionsmenü auf dem TV) */
+let sheetEl = null;
+function openSheet(title, items) {
+  if (sheetEl) return;
+  const close = () => { if (!sheetEl) return; const e = sheetEl; sheetEl = null; e.classList.remove('on'); setTimeout(() => e.remove(), 250); };
+  const ico = { open:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>', trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V4h6v3"/>' };
+  const btns = items.map(it => { const b = h('button', { class:'osb' + (it.danger ? ' danger' : ''), type:'button' }, h('span', {}), it.label);
+    if (it.icon) b.firstChild.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ico[it.icon] + '</svg>';
+    b.onclick = () => { close(); setTimeout(it.fn, 120); }; return b; });
+  const cancel = h('button', { class:'osb cancel', type:'button' }, 'Abbrechen'); cancel.onclick = close;
+  const sc = h('div', { class:'osc' }); sc.onclick = close;
+  const sh2 = h('div', { class:'oss' }, h('div', { class:'ost' }, title), ...btns, cancel);
+  const el = h('div', { class:'osheet' }, sc, sh2);
+  document.body.append(el); sheetEl = el; requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+}
+function uninstallApp(a) {
+  openSheet(a.name + ' deinstallieren?', [{ label:'Deinstallieren', icon:'trash', danger:true, fn:() => { store.set('apps', store.get('apps', []).filter(x => appKey(x) !== appKey(a))); window._appsPaint && window._appsPaint(); toast(a.name + ' deinstalliert'); window._appsAfter && window._appsAfter(a); } }]);
+}
+function openAppOptions(a, tile) {
+  openSheet(a.name, [{ label:'Öffnen', icon:'open', fn:() => tile.click() }, { label:'Deinstallieren', icon:'trash', danger:true, fn:() => uninstallApp(a) }]);
 }
 function AppsBar() {
   const row = h('div', { class:'arow' });
@@ -1292,7 +1323,7 @@ function openStore(opener) {
     body.scrollTop = 0; back.hidden = !det; title.textContent = det ? '' : 'Apps';
     if (det) {
       const a = det, del = h('button', { class:'abtn adel', type:'button', hidden:!isIn(a) }, h('em', {}, 'Deinstallieren'));
-      del.onclick = () => { if (confirm(a.name + ' deinstallieren?')) { store.set('apps', store.get('apps', []).filter(x => appKey(x) !== appKey(a))); window._appsPaint && window._appsPaint(); det = null; render(); } };
+      del.onclick = () => { window._appsAfter = () => { det = null; render(); window._appsAfter = null; }; uninstallApp(a); };
       const more = cat.filter(x => appKey(x) !== appKey(a));
       return body.replaceChildren(h('div', { class:'adet' }, Logo(a), h('h2', {}, a.name),
         h('div', { class:'meta' }, h('span', {}, 'Kostenlos'), a.updated ? h('span', {}, 'Aktualisiert ' + a.updated) : null),
@@ -1311,9 +1342,11 @@ function openStore(opener) {
       inp.addEventListener('input', () => { q = inp.value; draw(); }); body.replaceChildren(inp, res); draw();
     }
   }
-  const close = () => { el.classList.remove('show'); storeEl = null; setTimeout(() => el.remove(), 300); };
+  const close = () => { el.classList.remove('show'); storeEl = null; setTimeout(() => el.remove(), 300); document.removeEventListener('touchstart', tf3, true); };
+  const tf3 = ev => { if (ev.touches && ev.touches.length >= 3 && storeEl === el && !sheetEl) { ev.preventDefault(); closeTop(); } };
+  document.addEventListener('touchstart', tf3, { capture:true, passive:false });
   back.onclick = () => { det = null; render(); };
-  el._hide = close;
+  el._hide = close; document.addEventListener('mp-store-hide', () => document.removeEventListener('touchstart', tf3, true), { once:true });
   document.body.append(el); storeEl = el; render(); pushLayer(close);
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
   fetchApps().then(l => { cat = l; if (!det && tab !== 'search') render(); });
@@ -1331,7 +1364,7 @@ function launchApp(a, from, fromStore) {
   if (from && from.isConnected) { const r = from.getBoundingClientRect(); win.style.transformOrigin = (r.left + r.width / 2) + 'px ' + (r.top + r.height / 2) + 'px'; }
   const closeApp = () => { appWin = null; win.classList.remove('full'); setTimeout(() => win.remove(), 350); document.removeEventListener('touchstart', tf, true); };
   document.body.append(win); appWin = win;
-  if (fromStore && storeEl) { const s = storeEl; storeEl = null; s.classList.remove('show'); setTimeout(() => s.remove(), 300); layers[layers.length - 1] = closeApp; }
+  if (fromStore && storeEl) { const s = storeEl; storeEl = null; document.dispatchEvent(new Event('mp-store-hide')); s.classList.remove('show'); setTimeout(() => s.remove(), 300); layers[layers.length - 1] = closeApp; }
   else pushLayer(closeApp);
   document.addEventListener('touchstart', tf, true);
   void win.offsetWidth; requestAnimationFrame(() => win.classList.add('full'));
