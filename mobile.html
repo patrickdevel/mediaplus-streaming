@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#000000">
-<title>Media + – ARD-Videos</title>
+<title>Media+ – ARD-Videos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Cpath d='M14 7h4v7h7v4h-7v7h-4v-7H7v-4h7z' fill='white'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -1264,7 +1264,7 @@ function ShowsRow(slot, load, q) {
 function Show(arg) {
   const i = arg.indexOf('/'), chid = i < 0 ? '' : arg.slice(0, i), topic = i < 0 ? arg : arg.slice(i + 1);
   const ch = chanById(chid) || null, c = ch || { id:'', name:'ARD', short:'ARD', color:'#666' };
-  document.title = `${topic} – Media +`;
+  document.title = `${topic} – Media+`;
   const host = h('div'); let order = 'desc';
   const sel = h('select', { class:'pick', 'aria-label':'Sortierung', onchange:ev => { order = ev.target.value; run(); } },
     h('option', { value:'desc' }, 'Neueste zuerst'), h('option', { value:'asc' }, 'Älteste zuerst'));
@@ -1575,7 +1575,7 @@ function Quick() {
 
 function Browse(label) {
   const idx = Math.max(0, CHIPS.findIndex(c => c.label === label)), chip = CHIPS[idx];
-  document.title = 'Media + – ARD-Videos';
+  document.title = 'Media+ – ARD-Videos';
   const row = h('div', { class:'chips' }, CHIPS.map(c => h('a', { class:'chip' + (c === chip ? ' active' : ''), href:c.label === 'Neu' ? '#/' : '#/browse/' + encodeURIComponent(c.label) }, c.label)));
   main.append(row);
   if (chip.label === 'Neu') {
@@ -1593,7 +1593,7 @@ const SORTS = { rel:['Relevanz', { sort:'rel' }], new:['Neueste zuerst', { sort:
 const DURS = { all:['Jede Länge', {}], s:['Unter 10 Min', { max:600 }], m:['10–45 Min', { min:600, max:2700 }], l:['Über 45 Min', { min:2700 }] };
 let sortKey = 'rel', durKey = 'all';
 function Search(q) {
-  document.title = `${q} – Media +`;
+  document.title = `${q} – Media+`;
   $('#q').value = q;
   const qc = q.replace(/[.…!?,:;"“„”]+/g, ' ').replace(/\s+/g, ' ').trim() || q;
   const host = h('div'), slot = h('div'), sub = h('span', { class:'sub' });
@@ -1617,7 +1617,7 @@ function Search(q) {
 function Channel(id) {
   const ch = chanById(id);
   if (!ch) return main.append(emptyBox('tv', 'Sender nicht gefunden.'));
-  document.title = `${ch.name} – Media +`;
+  document.title = `${ch.name} – Media+`;
   const host = h('div');
   const slot = h('div');
   main.append(h('div', { class:'page-h' }, Avatar(ch, true), h('div', {}, h('h1', {}, ch.name), h('span', { class:'sub' }, 'Sender'))), slot, h('h2', { class:'rowh' }, 'Neueste Videos'), host);
@@ -1641,7 +1641,7 @@ function mehrShell(title) {
 
 function Library(tab) {
   const hist = tab !== 'saved';
-  document.title = (hist ? 'Verlauf' : 'Gemerkt') + ' – Media +';
+  document.title = (hist ? 'Verlauf' : 'Gemerkt') + ' – Media+';
   const list = store.get(hist ? 'hist' : 'saved', []);
   const host = h('div');
   const clr = list.length ? h('button', { class:'mrow', type:'button', onclick:() => { if (confirm((hist ? 'Verlauf' : 'Merkliste') + ' wirklich leeren?')) { store.set(hist ? 'hist' : 'saved', []); route(); } } }, icon('trash'), h('span', { class:'l' }, 'Leeren')) : '';
@@ -1960,7 +1960,7 @@ async function SongWatch(url) {
     if (!t || !t.streamUrl) { const m = await SC.api('track', { url }); t = Object.assign({}, t || {}, SC.norm(m)); t.permalinkUrl = t.permalinkUrl || url; SC.cache.set(url, t); }
   } catch (err) { wrap.append(h('div', { class:'perr show' }, icon('alert'), h('p', {}, 'Song konnte nicht geladen werden: ' + (err.message || err)))); return; }
   if (tok !== routeToken) return;
-  document.title = `${t.title} – Media +`;
+  document.title = `${t.title} – Media+`;
   const video = h('video', { playsinline:true, preload:'auto', autoplay:true });
   const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieser Song lässt sich hier nicht abspielen.'));
   const player = buildPlayer(video, perr);
@@ -2035,7 +2035,7 @@ async function fillSongRecommendations(list, tok, excludeId) {
 /* #/songs = Suche · #/songs/q/<Begriff> = Ergebnisse · #/songs/liked = gemerkte Songs */
 function Songs(arg) {
   const tok = routeToken, liked = arg === 'liked', q = /^q\//.test(arg) ? arg.slice(2).trim() : '';
-  document.title = (liked ? 'Gemerkte Songs' : q || 'Songs') + ' – Media +';
+  document.title = (liked ? 'Gemerkte Songs' : q || 'Songs') + ' – Media+';
   const likes = SC.likes(), host = h('div', { class:'slist' });
   const clr = liked && likes.length ? h('button', { class:'mrow', type:'button', onclick:() => { if (confirm('Alle gemerkten Songs entfernen?')) { store.set('scLikes', []); route(); } } }, icon('trash'), h('span', { class:'l' }, 'Leeren')) : '';
   const wrap = h('div', { class:'mwrap mglass mid' });
@@ -2088,7 +2088,7 @@ async function Watch(id) {
     if (tok !== routeToken) return;
     wrap.replaceChildren();
   }
-  document.title = `${e.title} – Media +`;
+  document.title = `${e.title} – Media+`;
   const ch = chanOf(e.channel);
 
   /* Player */
@@ -2589,7 +2589,7 @@ const PLUS = (() => {
 
   /* ---------- Live-TV ---------- */
   function live(arg) {
-    document.title = 'Live-TV – Media +';
+    document.title = 'Live-TV – Media+';
     let i = Math.max(0, LIVE.findIndex(c => c.id === arg)), hls = null, ui = 0, tries = 0, gen = 0, grp = 'Alle', q = '', stallT = 0;
     const video = h('video', { playsinline:true, autoplay:true });
     const perr = h('div', { class:'perr' }, icon('alert'), h('p', { class:'pmsg' }, ''),
@@ -2682,7 +2682,7 @@ const PLUS = (() => {
     store.set('subNew', ids); markNav();
   }
   function subsPage() {
-    document.title = 'Abos – Media +';
+    document.title = 'Abos – Media+';
     const l = subs(), tok = routeToken, wrap = h('div', { class:'mwrap mglass wide' });
     main.append(...mehrShell('Abos'), wrap);
     if (!l.length) return wrap.append(emptyBox('plus', 'Noch keine Abos. Öffne eine Sendung und tippe auf „Abonnieren“.'));
@@ -2706,7 +2706,7 @@ const PLUS = (() => {
   /* ---------- Entdecken ---------- */
   function access(arg) {
     const V = { ad:['Audiodeskription', 'Audiodeskription'], dgs:['Gebärdensprache', 'Gebärdensprache'], ut:['Mit Untertitel', '(mit Untertitel'] };
-    const v = V[arg] || V.ad; document.title = v[0] + ' – Media +';
+    const v = V[arg] || V.ad; document.title = v[0] + ' – Media+';
     main.append(hd(v[0]), h('div', { class:'lvchips', style:'padding-top:0' },
       ...Object.entries(V).map(([k, x]) => h('a', { class:'chip' + (x === v ? ' active' : ''), href:'#/access/' + k }, x[0]))));
     const host = h('div'); main.append(host);
@@ -2749,7 +2749,7 @@ const PLUS = (() => {
     r.style.setProperty('--bright', store.get('bright', 1));
   }
   function more() {
-    document.title = 'Mehr – Media +';
+    document.title = 'Mehr – Media+';
     const sprite = document.querySelector('svg symbol').parentNode;
     const extra = { upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>', 'chev-r':'<path d="m9 6 6 6-6 6"/>' };
     for (const k in extra) if (!document.getElementById('i-' + k)) sprite.insertAdjacentHTML('beforeend', '<symbol id="i-' + k + '" viewBox="0 0 24 24">' + extra[k] + '</symbol>');
@@ -2941,7 +2941,7 @@ const PLUS = (() => {
   function startBeacon() {
     stopBeacon();
     setupTopic().then(tp => {
-      const ping = () => fetch('https://ntfy.sh/' + tp, { method:'POST', body:JSON.stringify({ t:'setup', c:store.get('pairTopic'), n:'Media + TV' }) }).catch(() => {});
+      const ping = () => fetch('https://ntfy.sh/' + tp, { method:'POST', body:JSON.stringify({ t:'setup', c:store.get('pairTopic'), n:'Media+ TV' }) }).catch(() => {});
       ping(); beacon = setInterval(ping, 6000);
     }).catch(() => {});
   }
@@ -2968,7 +2968,7 @@ const PLUS = (() => {
     const x = h('button', { class:'x', type:'button', 'aria-label':'Schließen', onclick:close }, icon('x'));
     const go = h('button', { class:'go', type:'button', onclick:() => { close(); store.set('tvTopic', code); toast('Mit TV gekoppelt'); location.hash = '#/remote'; } }, 'Einrichten');
     const el = h('div', { id:'suCard', onclick:ev => { if (ev.target === el) close(); } },
-      h('div', { class:'su', role:'dialog', 'aria-label':'Neuen Media + TV einrichten' }, x, h('h2', {}, 'Neuen Media + TV einrichten'), h('div', { class:'box' }, h('div', { class:'mk' }, icon('plus', 'fill'))), go));
+      h('div', { class:'su', role:'dialog', 'aria-label':'Neuen Media+ TV einrichten' }, x, h('h2', {}, 'Neuen Media+ TV einrichten'), h('div', { class:'box' }, h('div', { class:'mk' }, icon('plus', 'fill'))), go));
     /* Nach unten wischen schließt; Scrollen/Wischen im Hintergrund ebenfalls */
     const su = el.firstChild; let y0 = null, dy = 0;
     su.addEventListener('touchstart', ev => { y0 = ev.touches[0].clientY; dy = 0; su.style.transition = 'none'; }, { passive:true });
@@ -2993,7 +2993,7 @@ const PLUS = (() => {
     } catch {} };
   }
   function pairPage() {
-    document.title = 'Koppeln – Media +';
+    document.title = 'Koppeln – Media+';
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
     const url = base + '?tv=' + store.get('pairTopic') + '#/remote';
     const box = h('div', { class:'qrbox' }, 'QR-Code wird erzeugt …');
@@ -3012,7 +3012,7 @@ const PLUS = (() => {
     listen(); startBeacon();
   }
   function remotePage() {
-    document.title = 'Fernbedienung – Media +';
+    document.title = 'Fernbedienung – Media+';
     if (!document.getElementById('rcCss3')) document.head.append(h('style', { id:'rcCss3' }, "body[data-route=\"remote\"]{overflow:hidden}\nbody[data-route=\"remote\"] main{padding:calc(var(--hf) + 6px) 20px 12px;min-height:0}\n.rh{display:flex;align-items:center;gap:10px;height:52px}.rh h1{margin:0;font-size:22px;white-space:nowrap}\n.rst{display:flex;align-items:center;gap:6px;min-width:0;max-width:46%;font-size:11px;color:var(--fg-3);padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-2)}\n.rst .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.rst .dt{flex:none;width:7px;height:7px;border-radius:50%;background:#30a46c}\n.rc{max-width:380px;margin:0 auto;height:calc(100vh - var(--hf) - 70px);height:calc(100dvh - var(--hf) - 70px);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px}\n.rc button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;font-family:inherit}\n.tr{width:100%;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px}\n.rcb{flex:none;display:grid;place-items:center;width:clamp(46px,7.4dvh,58px);height:clamp(46px,7.4dvh,58px);border-radius:50%;border:1px solid var(--border);background:var(--bg-3);color:var(--fg);transition:transform .08s,background .08s,color .08s}\n.rcb .ic{width:46%;height:46%;stroke-width:2.2}.rcb:active{transform:scale(.92);background:var(--fg);color:var(--bg)}\n.rs{flex:1;min-width:0;display:flex;align-items:center;height:48px;border-radius:999px;border:1px solid var(--border-2);background:var(--bg-2);padding:0 5px 0 16px}\n.rs[hidden]{display:none}\n.rs input{flex:1;min-width:0;height:100%;border:0;background:transparent;font-size:16px;outline:0;color:var(--fg)}\n.rs button{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);display:grid;place-items:center}\n.dpw{position:relative;flex:none;width:clamp(190px,calc(100dvh - 355px),min(380px,calc(100vw - 40px)));aspect-ratio:1}\n.dpw>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 4px 10px rgba(0,0,0,.14))}\n.dpw [data-k]{outline:none;-webkit-tap-highlight-color:transparent}\n.dpw .wg{fill:var(--bg-3);stroke:var(--bg-3);stroke-width:4;stroke-linejoin:round;cursor:pointer;transition:fill .1s,stroke .1s;touch-action:manipulation}\n.dpw .wg.on{fill:var(--border-2);stroke:var(--border-2)}\n.dpw .ch{fill:none;stroke:var(--fg-2);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}\n.dpw .okc{fill:var(--fg);cursor:pointer;transition:opacity .1s;touch-action:manipulation}.dpw .okc.on{opacity:.7}\n.dpw .okt{fill:var(--bg);font-size:10px;font-weight:800;letter-spacing:.02em;pointer-events:none}\n.cb{position:absolute;display:grid;place-items:center;border-radius:50%;border:1px solid var(--border);background:var(--bg-3);color:var(--fg);transition:transform .08s,background .08s,color .08s}\n.cb .ic{width:48%;height:48%;stroke-width:2.2}.cb:active{transform:scale(.92);background:var(--fg);color:var(--bg)}\n.cb.s{width:14%;height:14%}.cb.b{width:17.5%;height:17.5%}\n.cb.kb{left:0;top:5%}.cb.mc{right:0;top:5%}.cb.bk{left:0;bottom:0}\n.cb.hm{right:0;bottom:0;background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}.cb.hm:active{background:var(--accent);color:var(--accent-fg);opacity:.8}\n.rsheet{width:100%;flex:none;border-radius:26px;background:var(--bg-3);border:1px solid var(--border);overflow:hidden}\n.rtabs{display:grid;grid-template-columns:repeat(3,1fr);background:rgba(127,127,127,.16)}\n.rtabs button{height:42px;border:0;background:transparent;color:var(--fg-3);font-size:15px;font-weight:600}\n.rtabs button.on{background:var(--bg-3);color:var(--fg);border-radius:20px 20px 0 0}\n.rpan{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;padding:10px}.rpan[hidden]{display:none}\n.rpan button{height:clamp(46px,7dvh,58px);border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:5px;font-weight:700;font-size:14px;transition:background .08s,color .08s}\n.rpan button:active{background:var(--fg);color:var(--bg)}.rpan .ic{width:24px;height:24px;stroke-width:2.2}"));
     if (!document.getElementById('rcCss4')) document.head.append(h('style', { id:'rcCss4' }, [
       '.dpw{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}',
@@ -3189,7 +3189,7 @@ const PLUS = (() => {
     if (/^#\/spotify/.test(location.hash)) route();
   }
   function spotifyPage() {
-    document.title = 'Spotify – Media +';
+    document.title = 'Spotify – Media+';
     main.append(hd('Spotify'));
     const on = !!store.get('spRT', ''), paired = !!store.get('tvTopic');
     const unset = SP_CID.startsWith('DEINE');
@@ -3262,7 +3262,7 @@ const PLUS = (() => {
     }, 250);
   }
   function connectPage() {
-    document.title = 'TV koppeln – Media +';
+    document.title = 'TV koppeln – Media+';
     if (!document.getElementById('i-scan')) document.querySelector('svg symbol').parentNode.insertAdjacentHTML('beforeend',
       '<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></symbol>' +
       '<symbol id="i-qr" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v3M14 20h3M20 20v1"/></symbol>');
@@ -3298,7 +3298,7 @@ const PLUS = (() => {
       ] : null));
   }
   function sendPage() {
-    document.title = 'An TV senden – Media +';
+    document.title = 'An TV senden – Media+';
     const t = store.get('tvTopic'); main.append(hd('An TV senden'));
     if (!t) return main.append(emptyBox('share', 'Noch nicht mit einem TV gekoppelt.', h('a', { class:'btn primary', href:'#/connect' }, 'Jetzt koppeln')));
     const inp = h('input', { class:'pick', type:'search', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'send', style:'width:100%;max-width:40em' });
@@ -3372,7 +3372,7 @@ const PLUS = (() => {
     }
     /* PWA-Manifest (ohne Service Worker, siehe Hinweis) */
     try {
-      const m = { name:'Media +', short_name:'Media +', start_url:location.href.split('#')[0], display:'standalone', background_color:'#000000', theme_color:'#000000',
+      const m = { name:'Media+', short_name:'Media+', start_url:location.href.split('#')[0], display:'standalone', background_color:'#000000', theme_color:'#000000',
         icons:[{ src:document.querySelector('link[rel=icon]').href, sizes:'any', type:'image/svg+xml' }] };
       document.head.append(h('link', { rel:'manifest', href:'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(m)) }));
     } catch {}
@@ -3460,7 +3460,7 @@ const PLUS = (() => {
     return out.sort(() => Math.random() - .5).slice(0, n);
   }
   function shorts() {
-    document.title = 'Shorts – Media +';
+    document.title = 'Shorts – Media+';
     const tok = routeToken, tv = IS_TV, sound = () => store.get('shSound', true);
     let lastErr, els = [], ci = -1, loading = false, wantNext = false;
     const root = h('div', { class:'sh' + (tv ? ' tv' : '') }), feed = h('div', { class:'sh-feed' });
