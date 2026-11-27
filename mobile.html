@@ -754,6 +754,63 @@ body.overlay #bnav{z-index:80}
     transform:translateY(28px) scale(.9);opacity:0;visibility:hidden;pointer-events:none;box-shadow:none;
     transition:transform .28s cubic-bezier(.4,0,1,1),opacity .2s,visibility 0s .28s}
 }
+/* ===== Apps-Leiste + Appstore (mobil) ===== */
+.happs{margin:0 0 18px;padding:10px 0 12px;border-radius:22px;color:#fff;background:rgba(10,10,14,.9);border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.18);overflow:hidden}
+.happs .rowh{margin:0 0 8px 14px;font-size:13px;font-weight:600;letter-spacing:.03em;color:rgba(255,255,255,.88)}
+.arow{display:flex;gap:14px;overflow-x:auto;padding:2px 14px 2px;scrollbar-width:none;scroll-snap-type:x proximity}
+.arow::-webkit-scrollbar{display:none}
+.atile{flex:0 0 68px;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;color:#fff;scroll-snap-align:start;-webkit-tap-highlight-color:transparent}
+.atile:active .alg{transform:scale(.92)}
+.atile .an{width:100%;font-size:11px;font-weight:500;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.85)}
+.alg{width:60px;height:60px;border-radius:15px;overflow:hidden;background:#1c1c22;display:grid;place-items:center;transition:transform .15s;flex:none}
+.alg img{width:100%;height:100%;object-fit:cover;display:block}
+.alg.ph{background:linear-gradient(135deg,#3a3a46,#1f1f27)}
+.alg.ph svg{width:55%;height:55%}
+.astore{position:fixed;inset:0;z-index:120;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;transform:translateY(100%);opacity:0;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s}
+.astore.show{transform:none;opacity:1}
+.ast-head{display:flex;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 8px;min-height:56px}
+.ast-head h2{margin:0;font-size:24px;font-weight:700}
+.ast-back{width:38px;height:38px;border-radius:50%;border:0;background:var(--bg-3);color:var(--fg);display:grid;place-items:center}
+.ast-back[hidden]{display:none}
+.ast-back svg{width:20px;height:20px}
+.ast-main{flex:1;overflow-y:auto;padding:6px 16px 24px;-webkit-overflow-scrolling:touch}
+.ast-tabs{display:flex;border-top:1px solid var(--border,rgba(128,128,128,.25));background:var(--bg);padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px)}
+.ast-tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--fg-3);font-size:11px;font-weight:500;padding:6px 0}
+.ast-tabs button.on{color:var(--accent)}
+.ast-tabs svg{width:22px;height:22px}
+.ash{display:flex;align-items:baseline;justify-content:space-between;margin:18px 2px 10px}
+.ash h3{margin:0;font-size:17px}.ash span{font-size:12px;color:var(--fg-3)}
+.agrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.xtile{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:14px;border-radius:18px;border:1px solid var(--border,rgba(128,128,128,.25));background:var(--bg-2);color:var(--fg);min-width:0}
+.xtile .alg{width:56px;height:56px}
+.xtile b{font-size:14px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xtile span{font-size:12px;color:var(--fg-3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.xtile i{font-style:normal;font-size:11px;color:var(--accent);font-weight:600}
+.ahero{display:flex;align-items:center;gap:14px;width:100%;padding:18px;border:0;border-radius:22px;text-align:left;color:#fff;background:linear-gradient(135deg,#1d2a4a,#0b0b12)}
+.ahero .alg{width:84px;height:84px;border-radius:20px}
+.ahero div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ahero b{font-size:19px}.ahero span{font-size:12.5px;color:rgba(255,255,255,.75)}
+.ahero .chip{align-self:flex-start;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.18)}
+.adet{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding-top:6px}
+.adet .alg{width:110px;height:110px;border-radius:26px}
+.adet h2{margin:6px 0 0;font-size:22px}
+.adet .meta{display:flex;gap:10px;font-size:12px;color:var(--fg-3)}
+.adet p{margin:4px 0 10px;color:var(--fg-2);font-size:14px;line-height:1.5}
+.acts{display:flex;flex-direction:column;gap:10px;width:100%}
+.abtn{position:relative;overflow:hidden;border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:600;background:var(--bg-3);color:var(--fg)}
+.abtn[hidden]{display:none}
+.abtn.pri{background:var(--accent);color:var(--accent-fg)}
+.abtn i{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.28);transition:width .12s linear}
+.abtn em{position:relative;font-style:normal}
+.asq{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:14px;border:1px solid var(--border,rgba(128,128,128,.3));background:var(--bg-2);color:var(--fg);font-size:16px;margin-bottom:8px}
+.aempty{padding:40px 0;text-align:center;color:var(--fg-3)}
+.awin{position:fixed;inset:0;z-index:130;background:#000;opacity:0;transform:scale(.15);border-radius:30px;overflow:hidden;transition:transform .38s cubic-bezier(.2,.9,.25,1),opacity .25s,border-radius .38s}
+.awin.full{opacity:1;transform:none;border-radius:0}
+.awin iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.asplash{position:absolute;inset:0;background:#000;display:grid;place-items:center;transition:opacity .35s;z-index:2}
+.asplash.out{opacity:0;pointer-events:none}
+.asplash .alg{width:96px;height:96px;border-radius:24px}
+.a3{position:absolute;left:0;right:0;bottom:0;height:26px;z-index:3;background:transparent}
 </style>
 </head>
 <body>
@@ -1152,6 +1209,141 @@ function Show(arg) {
   run();
 }
 
+/* ===== Apps (Leiste, Store, Start, 3-Finger-Schließen) – wie auf dem TV, Quelle: appstoremobile.txt ===== */
+const APPS_LOGO = 'https://github.com/patrickdevel/mediaplus-streaming/blob/main/applogo/apps.png?raw=true';
+const APPS_SRCS = ['https://raw.githubusercontent.com/patrickdevel/mediaplus-streaming/main/appstoremobile.txt', 'https://github.com/patrickdevel/mediaplus-streaming/raw/main/appstoremobile.txt', 'https://mediaplus-streaming.vercel.app/appstoremobile.txt', 'appstoremobile.txt'];
+const APPS_FALLBACK = [{ name:'sona. (SoundCloud Edition)', updated:'16.11.2026', description:'Stream your favorite music from everywhere!', installslite:'https://mediaplus-streaming.vercel.app/apps/sona.html/', logo:APPS_LOGO }];
+const appKey = a => a.installslite || a.name;
+const installedApps = () => { const cat = store.get('appcat', []); return store.get('apps', []).map(a => { const c = cat.find(x => appKey(x) === appKey(a)); return c ? { name:a.name, installslite:a.installslite, ...c } : { name:a.name, installslite:a.installslite }; }); };
+async function fetchApps() {
+  try {
+    let t = null;
+    for (const u of APPS_SRCS) { try { const r = await fetch(u + (u.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache:'no-store' }); if (r.ok) { t = await r.text(); break; } } catch {} }
+    if (!t) throw 0;
+    if (/<\w+[^>]*>/.test(t)) { t = t.replace(/<br\s*\/?>|<\/(p|div|li|pre|tr|h\d)>/gi, '\n'); const ta = document.createElement('textarea'); ta.innerHTML = t.replace(/<[^>]+>/g, ''); t = ta.value; }
+    const list = t.split(/^\s*-{3,}\s*$/m).map(b => { const o = {}; b.split('\n').forEach(l => { const m = l.match(/^\s*([A-Za-z]+)\s*:\s*(.+?)\s*$/); if (m) o[m[1].toLowerCase()] = m[2]; }); return o; }).filter(o => o.name && o.installslite);
+    if (!list.length) throw 0;
+    store.set('appcat', list); return list;
+  } catch { return store.get('appcat', APPS_FALLBACK); }
+}
+const PICSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-8 9"/></svg>';
+const GRIDSVG = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>';
+function Logo(a) {
+  const w = h('div', { class:'alg' });
+  if (!a.logo && a.name !== 'Apps') { w.classList.add('ph'); w.innerHTML = PICSVG; return w; }
+  const im = h('img', { src:a.logo || APPS_LOGO, alt:'', loading:'lazy' });
+  im.onerror = () => { w.classList.add('ph'); w.innerHTML = a.name === 'Apps' ? GRIDSVG : PICSVG; };
+  w.append(im); return w;
+}
+/* Ebenen (Store / App) + Zurück-Taste des Handys */
+const layers = []; let skipPop = 0, storeEl = null, appWin = null;
+function pushLayer(fn) { layers.push(fn); history.pushState({ mpL:layers.length }, ''); }
+function closeTop() { const fn = layers.pop(); if (!fn) return; fn(); skipPop++; history.back(); }
+window.addEventListener('popstate', () => { if (skipPop) { skipPop--; return; } const fn = layers.pop(); if (fn) fn(); });
+function appTile(a, onOpen) {
+  const b = h('button', { class:'atile', type:'button', 'aria-label':a.name }, Logo(a), h('span', { class:'an' }, a.name));
+  b.onclick = () => { if (b._lp) { b._lp = false; return; } onOpen(a, b); };
+  if (a.installslite) { let t; const stop = () => clearTimeout(t);
+    b.addEventListener('touchstart', () => { t = setTimeout(() => { b._lp = true; askUninstall(a); }, 650); }, { passive:true });
+    ['touchend', 'touchmove', 'touchcancel'].forEach(e => b.addEventListener(e, stop, { passive:true }));
+    b.addEventListener('contextmenu', ev => { ev.preventDefault(); askUninstall(a); }); }
+  return b;
+}
+function askUninstall(a) {
+  if (!store.get('apps', []).some(x => appKey(x) === appKey(a))) return;
+  if (confirm(a.name + ' deinstallieren?')) { store.set('apps', store.get('apps', []).filter(x => appKey(x) !== appKey(a))); window._appsPaint && window._appsPaint(); toast(a.name + ' deinstalliert'); }
+}
+function AppsBar() {
+  const row = h('div', { class:'arow' });
+  const wrap = h('section', { class:'happs' }, h('h2', { class:'rowh' }, 'Apps'), row);
+  const paint = () => row.replaceChildren(appTile({ name:'Apps', logo:APPS_LOGO }, (a, b) => openStore(b)), ...installedApps().map(a => appTile(a, (x, b) => launchApp(x, b))));
+  paint(); window._appsPaint = paint; main.append(wrap);
+  fetchApps().then(() => { if (wrap.isConnected) paint(); });
+}
+function openStore(opener) {
+  if (storeEl || appWin) return;
+  let cat = store.get('appcat', APPS_FALLBACK), tab = 'start', det = null, q = '';
+  const isIn = a => store.get('apps', []).some(x => appKey(x) === appKey(a));
+  const body = h('div', { class:'ast-main' });
+  const title = h('h2', {}, 'Apps');
+  const back = h('button', { class:'ast-back', type:'button', 'aria-label':'Zurück' }); back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+  const TABS = [['start', 'Start', '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'], ['installed', 'Installiert', '<path d="m5 12 5 5L20 7"/>'], ['discover', 'Entdecken', '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'], ['search', 'Suche', '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>']];
+  const bar = h('nav', { class:'ast-tabs' }, TABS.map(([k, l, p]) => { const b = h('button', { type:'button', 'data-t':k }, h('span', {}), l); b.firstChild.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>'; b.onclick = () => { det = null; tab = k; render(); }; return b; }));
+  const el = h('div', { class:'astore', role:'dialog', 'aria-label':'Apps' }, h('header', { class:'ast-head' }, back, title), body, bar);
+  const tile = a => { const b = h('button', { class:'xtile', type:'button', 'aria-label':a.name }, Logo(a), h('b', {}, a.name), h('span', {}, a.description || ''), isIn(a) ? h('i', {}, '✓ Installiert') : null); b.onclick = () => { det = a; render(); }; return b; };
+  const grid = l => l.length ? h('div', { class:'agrid' }, l.map(tile)) : h('div', { class:'aempty' }, 'Nichts gefunden.');
+  const sh = (t, n) => h('div', { class:'ash' }, h('h3', {}, t), n == null ? null : h('span', {}, String(n)));
+  const instBtn = a => {
+    const lbl = h('em'), bar2 = h('i'), btn = h('button', { class:'abtn pri', type:'button' }, bar2, lbl); let busy = false;
+    const upd = () => { bar2.style.width = '0'; lbl.textContent = isIn(a) ? 'Öffnen' : 'Installieren'; };
+    btn.onclick = () => {
+      if (busy) return;
+      if (isIn(a)) return launchApp(a, null, true);
+      busy = true; let p = 0;
+      const t = setInterval(() => {
+        p = Math.min(100, p + 3 + Math.random() * 9); bar2.style.width = p + '%'; lbl.textContent = Math.floor(p) + ' %';
+        if (p >= 100) { clearInterval(t); store.set('apps', [...store.get('apps', []), { name:a.name, installslite:a.installslite }]); busy = false; upd(); window._appsPaint && window._appsPaint(); toast(a.name + ' installiert'); const d = body.querySelector('.adel'); if (d) d.hidden = false; }
+      }, 120);
+    };
+    upd(); return btn;
+  };
+  function render() {
+    bar.querySelectorAll('button').forEach(b => b.classList.toggle('on', !det && b.dataset.t === tab));
+    body.scrollTop = 0; back.hidden = !det; title.textContent = det ? '' : 'Apps';
+    if (det) {
+      const a = det, del = h('button', { class:'abtn adel', type:'button', hidden:!isIn(a) }, h('em', {}, 'Deinstallieren'));
+      del.onclick = () => { if (confirm(a.name + ' deinstallieren?')) { store.set('apps', store.get('apps', []).filter(x => appKey(x) !== appKey(a))); window._appsPaint && window._appsPaint(); det = null; render(); } };
+      const more = cat.filter(x => appKey(x) !== appKey(a));
+      return body.replaceChildren(h('div', { class:'adet' }, Logo(a), h('h2', {}, a.name),
+        h('div', { class:'meta' }, h('span', {}, 'Kostenlos'), a.updated ? h('span', {}, 'Aktualisiert ' + a.updated) : null),
+        h('p', {}, a.description || ''), h('div', { class:'acts' }, instBtn(a), del)), ...(more.length ? [sh('Das könnte dir auch gefallen', more.length), grid(more.slice(0, 12))] : []));
+    }
+    if (tab === 'start') {
+      const f = cat[0], ins = cat.filter(isIn), rest = cat.filter(a => !isIn(a));
+      const hero = f ? h('button', { class:'ahero', type:'button' }, Logo(f), h('div', {}, h('span', { class:'chip' }, 'Empfohlen'), h('b', {}, f.name), h('span', {}, f.description || ''))) : null;
+      if (hero) hero.onclick = () => { det = f; render(); };
+      body.replaceChildren(...[hero, ins.length ? sh('Installiert', ins.length) : null, ins.length ? grid(ins.slice(0, 6)) : null, sh('Entdecken', rest.length), grid(rest.slice(0, 12))].filter(Boolean));
+    } else if (tab === 'installed') { const l = installedApps(); body.replaceChildren(sh('Installiert', l.length), grid(l)); }
+    else if (tab === 'discover') body.replaceChildren(sh('Entdecken', cat.length), grid(cat));
+    else {
+      const res = h('div'), inp = h('input', { class:'asq', type:'search', placeholder:'Apps suchen …', value:q, autocomplete:'off' });
+      const draw = () => res.replaceChildren(grid(cat.filter(a => !q || a.name.toLowerCase().includes(q.toLowerCase()))));
+      inp.addEventListener('input', () => { q = inp.value; draw(); }); body.replaceChildren(inp, res); draw();
+    }
+  }
+  const close = () => { el.classList.remove('show'); storeEl = null; setTimeout(() => el.remove(), 300); };
+  back.onclick = () => { det = null; render(); };
+  el._hide = close;
+  document.body.append(el); storeEl = el; render(); pushLayer(close);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  fetchApps().then(l => { cat = l; if (!det && tab !== 'search') render(); });
+}
+function launchApp(a, from, fromStore) {
+  if (appWin) return;
+  const win = h('div', { class:'awin' });
+  const sp = h('div', { class:'asplash' }, Logo(a), h('div', { class:'asp' }));
+  const fr = h('iframe', { title:a.name, allow:'autoplay; fullscreen; encrypted-media; clipboard-write', src:a.installslite });
+  /* 3-Finger-Geste: schmale Fangleiste unten (funktioniert auch bei fremden Domains) */
+  const strip = h('div', { class:'a3' });
+  const tf = ev => { if (ev.touches && ev.touches.length >= 3) { ev.preventDefault(); closeTop(); } };
+  [strip, sp].forEach(n => n.addEventListener('touchstart', tf, { passive:false }));
+  win.append(fr, sp, strip);
+  if (from && from.isConnected) { const r = from.getBoundingClientRect(); win.style.transformOrigin = (r.left + r.width / 2) + 'px ' + (r.top + r.height / 2) + 'px'; }
+  const closeApp = () => { appWin = null; win.classList.remove('full'); setTimeout(() => win.remove(), 350); document.removeEventListener('touchstart', tf, true); };
+  document.body.append(win); appWin = win;
+  if (fromStore && storeEl) { const s = storeEl; storeEl = null; s.classList.remove('show'); setTimeout(() => s.remove(), 300); layers[layers.length - 1] = closeApp; }
+  else pushLayer(closeApp);
+  document.addEventListener('touchstart', tf, true);
+  void win.offsetWidth; requestAnimationFrame(() => win.classList.add('full'));
+  const t0 = Date.now(), reveal = () => sp.classList.add('out');
+  fr.addEventListener('load', () => {
+    setTimeout(reveal, Math.max(0, 600 - (Date.now() - t0)));
+    try { fr.contentWindow.addEventListener('touchstart', tf, { capture:true, passive:false }); } catch {}   /* gleiche Domain: Geste überall */
+  });
+  setTimeout(reveal, 8000);
+}
+window.addEventListener('message', ev => { const d = ev.data; if (d && d.type === 'mp-app-close' && appWin && ev.source === appWin.querySelector('iframe').contentWindow) closeTop(); });
+
 function Continue(target) {
   const p = store.get('prog', {});
   const items = Object.entries(p).filter(([, v]) => v.pos > 15 && v.dur && v.pos < v.dur - 30).sort((a, b) => b[1].t - a[1].t)
@@ -1243,7 +1435,7 @@ function Browse(label) {
     const hdr = () => B.toggle('hdr-clear', window.scrollY < 40);
     window.addEventListener('scroll', hdr, { passive:true }); hdr();
     cleanups.push(() => { window.removeEventListener('scroll', hdr); B.remove('home', 'hdr-clear'); });
-    const hero = Hero(); Continue(hero); Quick(); Rows();
+    const hero = Hero(); Continue(hero); AppsBar(); Quick(); Rows();
   }
   Feed(main, off => search({ text:chip.q, min:chip.min, offset:off }), { emptyText:'Dazu gibt es gerade nichts.' });
 }
