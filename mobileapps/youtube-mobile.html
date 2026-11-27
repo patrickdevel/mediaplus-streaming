@@ -175,7 +175,8 @@ body.m #mpp,body.m #mx{pointer-events:auto !important}
 .wa .nm{flex:1;min-width:0}.wa .nm b{display:block;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wa .nm span{font-size:12px;color:var(--t2)}
 .acts{display:flex;justify-content:space-between;padding:6px 8px 10px;max-width:420px}
 .acts .ib.on{color:#3ea6ff}
-.chips{display:flex;gap:8px;padding:6px 12px 14px;overflow-x:auto;border-bottom:1px solid #222}
+.chips{display:flex;gap:8px;padding:8px 12px 10px;overflow-x:auto;border-bottom:1px solid #222;position:sticky;top:0;z-index:5;background:var(--bg)}
+.chips.pre{visibility:hidden}
 .chip{height:32px;padding:0 12px;border-radius:8px;background:var(--s);font-weight:500;white-space:nowrap;flex:none}
 .chip.on{background:#f1f1f1;color:#0f0f0f}
 #rl{padding-top:16px}
@@ -206,10 +207,11 @@ body.m #mpp,body.m #mx{pointer-events:auto !important}
   <div id="pc"><button class="cb fc" id="pmin" aria-label="Minimieren"></button>
     <div id="cg"><button class="cb sk10" id="rw" aria-label="10 Sekunden zurück"></button><button class="cb" id="bp" aria-label="Wiedergabe"></button><button class="cb sk10" id="ff" aria-label="10 Sekunden vor"></button></div>
     <div id="tm">0:00 / 0:00</div><button class="cb fc" id="pfs" aria-label="Vollbild"></button></div>
-  <button id="mh" aria-label="Miniplayer öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
   <button class="mc" id="mpp" aria-label="Pause"></button><button class="mc" id="mx" aria-label="Schließen"></button>
   <div id="sk"><div class="trk"><div id="bf"></div><div id="sg"></div><b id="kn"></b></div></div>
-</div></div>
+</div>
+<button id="mh" aria-label="Miniplayer öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+</div>
 <div id="toast"></div>
 <script>
 (() => {
@@ -603,6 +605,7 @@ $('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mout'); };
     pl.style.transition = 'none'; pl.style.transform = `translate(${r.left - r1.left}px,${r.top - r1.top}px)`; void pl.offsetWidth;
     pl.style.transition = ''; pl.style.transform = '';
     B.classList.toggle('mout', out);
+    if (out) { cmd('pauseVideo'); PL.st = 2; upd(); }
     setTimeout(() => { MD.moved = false; }, 60); };
   t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end); })();
 (() => { let last = 0, lx = 0, y0 = 0, tm;
@@ -706,7 +709,7 @@ function fillWatch(v) {
   WS.dis.firstChild.setAttribute('class', 'flip');
   WS.save = ib('save', () => togL('later', v, 'In „Später ansehen“ gespeichert', 'Aus „Später ansehen“ entfernt'), 'Speichern');
   const rl = h('div', { id:'rl' }, ...skel(2)); WS.rl = rl;
-  const chips = h('div', { class:'chips' }, ['Alle', nm(v) ? 'Von ' + nm(v) : null, 'Ähnlich'].filter(Boolean).map((t, i, arr) => h('button', { class:'chip' + (i === 0 ? ' on' : ''), type:'button', onclick:e => { WS.mode = arr.length === 3 ? i : (i ? 2 : 0); [...chips.children].forEach(c => c.classList.remove('on')); e.currentTarget.classList.add('on'); drawRecs(); } }, t)));
+  const chips = h('div', { class:'chips pre' }, ['Alle', nm(v) ? 'Von ' + nm(v) : null, 'Ähnlich'].filter(Boolean).map((t, i, arr) => h('button', { class:'chip' + (i === 0 ? ' on' : ''), type:'button', onclick:e => { WS.mode = arr.length === 3 ? i : (i ? 2 : 0); [...chips.children].forEach(c => c.classList.remove('on')); e.currentTarget.classList.add('on'); drawRecs(); } }, t)));
   WS.mode = 0;
   $('#wi').replaceChildren(
     h('div', { id:'wt', onclick:() => descSheet(v) }, h('h1', {}, v.title), h('div', { class:'mt' }, nm(v) ? h('b', {}, nm(v)) : null, v.views && v.views.count != null ? h('span', {}, num(v.views.count) + ' Aufrufe') : null, v.publishedTime ? h('span', {}, ago(v.publishedTime)) : null, h('span', { class:'mo' }, 'mehr'))),
@@ -739,6 +742,7 @@ function drawRecs() {
   if (!WS.rl) return; const l = vis(WS.mode === 1 ? WS.lists[1] : WS.mode === 2 ? WS.lists[0] : WS.all);
   WS.rl.replaceChildren(...(l.length ? l.map(v => card(v)) : [h('div', { class:'msg' }, 'Keine Videos gefunden.')])); tag(WS.rl);
 }
+$('#wi').addEventListener('scroll', () => { const w = $('#wi'), c = w.querySelector('.chips'); if (c) c.classList.toggle('pre', w.scrollTop < c.offsetTop - 1); }, { passive:true });
 window.addEventListener('pagehide', () => saveProg(true));
 
 render(true);
