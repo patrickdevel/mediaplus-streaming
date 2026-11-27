@@ -157,8 +157,6 @@ body.m #pv{border-radius:12px}
 body.m .mc{display:flex}body.m #pc,body.m #cg,body.m #tm,body.m .fc{display:none}
 body.m #sk{height:3px;pointer-events:none}
 body.m #fr{pointer-events:none !important}
-body.w.gate #pt{pointer-events:none}
-body.w.gate #fr{pointer-events:auto !important}
 body.m #pt{pointer-events:auto !important;touch-action:none}
 body.m #pv{pointer-events:none}
 body.m #mpp,body.m #mx{pointer-events:auto !important}
@@ -604,7 +602,7 @@ function play(v) {
   const p = prog()[v.videoId], st0 = p && p.t > 5 && p.d && p.t < p.d - 15 ? Math.floor(p.t) : 0;
   S.cur = v; PL.t = st0; PL.d = p && p.d || 0; PL.st = -1; PL.b = 0; PL.unmuteTries = 0; PL.retried = false; REC = [];
   const yo = /^https?:$/.test(location.protocol) ? '&origin=' + encodeURIComponent(location.origin) : '';
-  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=0&start=' + st0 + '&controls=' + (TOUCH ? 0 : 1) + '&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
+  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=0&start=' + st0 + '&controls=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
   if (!B.classList.contains('w')) pushH('watch');
   B.classList.add('w'); B.classList.remove('m'); document.title = v.title + ' – YouTube';
   fillWatch(v); upd(); showC(); loadRecs(v);
@@ -662,7 +660,7 @@ window.addEventListener('message', e => {
   else if (d.event === 'onReady' || d.event === 'initialDelivery') { listen(); if (d.event === 'onReady') { if (!TOUCH) unm(); cmd('playVideo'); } }
   else if (d.event === 'infoDelivery' && d.info) {
     const i = d.info;
-    if (TOUCH && i.muted === true && i.playerState === 1 && !PL.gated) { PL.gated = true; B.classList.add('gate'); toast('Einmal aufs Video tippen für Ton'); }
+    if (TOUCH && i.muted === true && i.playerState === 1 && !PL.gated) { PL.gated = true; B.classList.add('gate'); toast('Tippen für Ton'); }
     if (i.currentTime != null && !PL.drag) PL.t = i.currentTime;
     if (i.duration > 0) PL.d = i.duration;
     if (i.playerState != null) PL.st = i.playerState;
