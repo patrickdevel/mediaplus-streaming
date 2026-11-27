@@ -157,6 +157,8 @@ body.m #pv{border-radius:12px}
 body.m .mc{display:flex}body.m #pc,body.m #cg,body.m #tm,body.m .fc{display:none}
 body.m #sk{height:3px;pointer-events:none}
 body.m #fr{pointer-events:none !important}
+body.w.gate #pt{pointer-events:none}
+body.w.gate #fr{pointer-events:auto !important}
 body.m #pt{pointer-events:auto !important;touch-action:none}
 body.m #pv{pointer-events:none}
 body.m #mpp,body.m #mx{pointer-events:auto !important}
@@ -167,6 +169,13 @@ body.m #mpp,body.m #mx{pointer-events:auto !important}
 #pl:fullscreen #pv{height:100%;aspect-ratio:auto}
 #pl:-webkit-full-screen{padding:0;display:flex;align-items:center}
 #pl:-webkit-full-screen #pv{height:100%;aspect-ratio:auto}
+
+/* Touch: Taps gehen direkt an den YouTube-Player (echte Geste -> Play/Ton funktionieren) */
+body.w.tc #fr{pointer-events:auto !important}
+body.w.tc #pt{pointer-events:none}
+body.w.tc #pc{opacity:1;background:transparent}
+body.w.tc #cg,body.w.tc #tm,body.w.tc #pfs,body.w.tc #sk{display:none}
+body.w.tc #pmin{pointer-events:auto;background:rgba(0,0,0,.45);width:40px;height:40px}
 
 #wt{padding:12px 12px 0}
 #wt h1{font-size:18px;line-height:24px;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -522,6 +531,7 @@ async function openChannel(ch) {
 const PL = { t:0, d:0, st:-1, b:0, sv:0, hide:0, drag:false, unmuteTries:0 }, fr = $('#fr');
 let REC = [];
 const TOUCH = matchMedia('(pointer:coarse)').matches;
+if (TOUCH) B.classList.add('tc');
 const unm = () => { cmd('unMute'); cmd('setVolume', [100]); };
 const cmd = (f, a = []) => { try { fr.contentWindow.postMessage(JSON.stringify({ event:'command', func:f, args:a }), '*'); } catch {} };
 const listen = () => { try { fr.contentWindow.postMessage(JSON.stringify({ event:'listening', id:1, channel:'widget' }), '*'); } catch {} };
@@ -592,13 +602,16 @@ function play(v) {
   saveProg(true);
   const hs = getL('hist').filter(x => x.videoId !== v.videoId); hs.unshift(slim(v)); store.set('hist', hs.slice(0, 40));
   const p = prog()[v.videoId], st0 = p && p.t > 5 && p.d && p.t < p.d - 15 ? Math.floor(p.t) : 0;
-  S.cur = v; PL.t = st0; PL.d = p && p.d || 0; PL.st = -1; PL.b = 0; PL.unmuteTries = 0; REC = [];
+  S.cur = v; PL.t = st0; PL.d = p && p.d || 0; PL.st = -1; PL.b = 0; PL.unmuteTries = 0; PL.retried = false; REC = [];
   const yo = /^https?:$/.test(location.protocol) ? '&origin=' + encodeURIComponent(location.origin) : '';
-  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=' + (TOUCH ? 1 : 0) + '&start=' + st0 + '&controls=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
+  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=0&start=' + st0 + '&controls=' + (TOUCH ? 0 : 1) + '&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
   if (!B.classList.contains('w')) pushH('watch');
   B.classList.add('w'); B.classList.remove('m'); document.title = v.title + ' – YouTube';
   fillWatch(v); upd(); showC(); loadRecs(v);
   // Listener-Handshake wiederholen, bis der Player antwortet (am Handy lädt er langsamer)
+  B.classList.remove('gate'); PL.gated = false; PL.url = fr.src;
+  // Direkt mit Ton versuchen (der Tipp auf die Karte ist die Geste). Klappt es nicht, stumm neu laden + Tipp-Hinweis.
+  if (TOUCH) setTimeout(() => { if (S.cur && S.cur.videoId === v.videoId && PL.st !== 1 && PL.st !== 2 && !PL.retried) { PL.retried = true; fr.src = PL.url.replace('mute=0', 'mute=1'); PL.ready = false; } }, 2500);
   PL.ready = false; let n = 0; const iv = setInterval(() => { if (PL.ready || !S.cur || S.cur.videoId !== v.videoId || ++n > 40) { clearInterval(iv); return; } listen(); }, 250);
   if (!TOUCH) [400, 900, 1600, 2600, 4000].forEach(t => setTimeout(() => { if (S.cur && S.cur.videoId === v.videoId && PL.unmuteTries < 20) { unm(); PL.unmuteTries++; } }, t));
 }
@@ -635,7 +648,11 @@ function expand() {
   flipPlayer(() => { B.classList.remove('m'); B.classList.add('w'); });
   pushH('watch'); setTimeout(showC, 320);
 }
-function killPl() { saveProg(true); fr.src = 'about:blank'; S.cur = null; PL.st = -1; B.classList.remove('w', 'm', 'mo'); document.title = 'YouTube'; }
+window.addEventListener('blur', () => { if (!B.classList.contains('gate') || document.activeElement !== fr) return;
+  B.classList.remove('gate');
+  [60, 400, 1000].forEach(t => setTimeout(() => { unm(); cmd('playVideo'); PL.st = 1; upd(); }, t));
+  setTimeout(() => { try { window.focus(); } catch {} }, 100); });
+function killPl() { B.classList.remove('gate'); saveProg(true); fr.src = 'about:blank'; S.cur = null; PL.st = -1; B.classList.remove('w', 'm', 'mo'); document.title = 'YouTube'; }
 
 window.addEventListener('message', e => {
   if (e.origin !== 'https://www.youtube.com' || e.source !== fr.contentWindow) return;
@@ -645,6 +662,7 @@ window.addEventListener('message', e => {
   else if (d.event === 'onReady' || d.event === 'initialDelivery') { listen(); if (d.event === 'onReady') { if (!TOUCH) unm(); cmd('playVideo'); } }
   else if (d.event === 'infoDelivery' && d.info) {
     const i = d.info;
+    if (TOUCH && i.muted === true && i.playerState === 1 && !PL.gated) { PL.gated = true; B.classList.add('gate'); toast('Einmal aufs Video tippen für Ton'); }
     if (i.currentTime != null && !PL.drag) PL.t = i.currentTime;
     if (i.duration > 0) PL.d = i.duration;
     if (i.playerState != null) PL.st = i.playerState;
