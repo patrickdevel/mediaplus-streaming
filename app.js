@@ -96,6 +96,33 @@ function pairBeacon() {
     ping(); if (_beaconIv === -1) _beaconIv = setInterval(ping, 6000);
   })();
 }
+/* Werkseinstellungen: nach 1 s schlagartig schwarz → weißes „Reset...“ → Android-Spinner → alles löschen → Neustart */
+async function factoryReset() {
+  if (window._frOn) return; window._frOn = true;
+  await new Promise(r => setTimeout(r, 1000));
+  if (!document.getElementById('frCss')) document.head.append(h('style', { id:'frCss' },
+    '#fr{position:fixed;inset:0;z-index:2147483647;background:#000;color:#fff;display:grid;place-items:center;cursor:none;font:500 5vh/1 -apple-system,"Roboto","Segoe UI",system-ui,sans-serif;letter-spacing:.02em}' +
+    '#fr *{grid-area:1/1;transition:opacity .4s ease}#fr .t{opacity:1}#fr .sp{opacity:0;width:9vh;height:9vh;animation:frRot 1.4s linear infinite}' +
+    '#fr .sp circle{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;animation:frDash 1.4s ease-in-out infinite}' +
+    '@keyframes frRot{to{transform:rotate(360deg)}}' +
+    '@keyframes frDash{0%{stroke-dasharray:1,150;stroke-dashoffset:0}50%{stroke-dasharray:90,150;stroke-dashoffset:-35}100%{stroke-dasharray:90,150;stroke-dashoffset:-124}}'));
+  const sp = h('div', { class:'sp' }); sp.innerHTML = '<svg viewBox="0 0 48 48" width="100%" height="100%"><circle cx="24" cy="24" r="20"/></svg>';
+  const ov = h('div', { id:'fr', tabindex:'-1' }, h('div', { class:'t' }, 'Reset...'), sp);
+  ['keydown','keyup','keypress','click','pointerdown','wheel','touchstart'].forEach(e => ov.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); }, true));
+  document.body.append(ov); ov.focus();
+  document.querySelectorAll('video,audio').forEach(m => { try { m.pause(); m.muted = true; } catch {} });
+  await new Promise(r => setTimeout(r, 2000));
+  ov.querySelector('.t').style.opacity = '0';
+  await new Promise(r => setTimeout(r, 700));
+  sp.style.opacity = '1';
+  try { localStorage.clear(); sessionStorage.clear(); } catch {}
+  try { document.cookie.split(';').forEach(c => { const n = c.split('=')[0].trim(); if (n) document.cookie = n + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'; }); } catch {}
+  try { const dbs = await (indexedDB.databases ? indexedDB.databases() : []); dbs.forEach(d => d.name && indexedDB.deleteDatabase(d.name)); } catch {}
+  try { (await caches.keys()).forEach(k => caches.delete(k)); } catch {}
+  try { (await navigator.serviceWorker.getRegistrations()).forEach(r => r.unregister()); } catch {}
+  await new Promise(r => setTimeout(r, 3500));
+  location.replace(location.href.split('#')[0].split('?')[0]);
+}
 const secure = u => (u || '').replace(/^http:\/\//i, 'https://');
 const rtf = new Intl.RelativeTimeFormat('de', { numeric: 'auto' });
 function rel(ts) {
@@ -714,7 +741,8 @@ function openSettings(opener, opts) {
       A('Exportieren (JSON)', () => PLUS.exportData()),
       A('Importieren …', () => file.click()),
       wipe('hist', 'Verlauf löschen'), wipe('saved', 'Gemerkte Videos löschen'),
-      A('Alles zurücksetzen', async () => { if (await askConfirm('Alle Einstellungen und Daten zurücksetzen?', 'Zurücksetzen')) { try { Object.keys(localStorage).filter(k => k.startsWith('mt:')).forEach(k => localStorage.removeItem(k)); } catch {} location.reload(); } }, true)]],
+      A('Alles zurücksetzen', async () => { if (await askConfirm('Alle Einstellungen und Daten zurücksetzen?', 'Zurücksetzen')) { try { Object.keys(localStorage).filter(k => k.startsWith('mt:')).forEach(k => localStorage.removeItem(k)); } catch {} location.reload(); } }, true),
+      A('Auf Werkseinstellungen zurücksetzen', async () => { if (await askConfirm('Auf Werkseinstellungen zurücksetzen? Alles wird gelöscht und der TV startet neu.', 'Zurücksetzen')) factoryReset(); }, true)]],
     ['Info', [
       I('Verlauf', () => String(store.get('hist', []).length)), I('Gemerkt', () => String(store.get('saved', []).length)),
       I('Netzwerk', () => navigator.onLine ? 'Verbunden' : 'Offline', () => devTap()),
