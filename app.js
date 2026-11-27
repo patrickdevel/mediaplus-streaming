@@ -91,7 +91,7 @@ function pairBeacon() {
     } catch { _beaconIv = 0; return; }
     const ping = () => {
       if (!document.querySelector('.qrbox') || !store.get('pairTopic')) return stop();
-      fetch('https://ntfy.sh/' + tp, { method:'POST', body:JSON.stringify({ t:'setup', c:store.get('pairTopic'), n:'Media + TV' }) }).catch(() => {});
+      fetch('https://ntfy.sh/' + tp, { method:'POST', body:JSON.stringify({ t:'setup', c:store.get('pairTopic'), n:'Media+ TV' }) }).catch(() => {});
     };
     ping(); if (_beaconIv === -1) _beaconIv = setInterval(ping, 6000);
   })();
@@ -361,7 +361,7 @@ function ShowsRow(slot, load, q) {
 function Show(arg) {
   const i = arg.indexOf('/'), chid = i < 0 ? '' : arg.slice(0, i), topic = i < 0 ? arg : arg.slice(i + 1);
   const ch = chanById(chid) || null, c = ch || { id:'', name:'ARD', short:'ARD', color:'#666' };
-  document.title = `${topic} – Media +`;
+  document.title = `${topic} – Media+`;
   const host = h('div'); let order = 'desc';
   const sel = h('select', { class:'pick', 'aria-label':'Sortierung', onchange:ev => { order = ev.target.value; run(); } },
     h('option', { value:'desc' }, 'Neueste zuerst'), h('option', { value:'asc' }, 'Älteste zuerst'));
@@ -1179,7 +1179,7 @@ function Rows() {
 
 function Browse(label) {
   const idx = Math.max(0, CHIPS.findIndex(c => c.label === label)), chip = CHIPS[idx];
-  document.title = 'Media + – ARD-Videos';
+  document.title = 'Media+ – ARD-Videos';
   const row = h('div', { class:'chips' }, CHIPS.map(c => h('a', { class:'chip' + (c === chip ? ' active' : ''), href:c.label === 'Neu' ? '#/' : '#/browse/' + encodeURIComponent(c.label) }, c.label)));
   if (chip.label === 'Neu') {
     document.body.classList.add('home');
@@ -1222,7 +1222,7 @@ let sortKey = 'rel', durKey = 'all';
    Suchscreen
    ========================================================= */
 function SearchScreen(q0) {
-  document.title = 'Suche – Media +';
+  document.title = 'Suche – Media+';
   let q = q0 || '', t = 0;
 
   const disp = h('div', { class:'sdisp' });
@@ -1291,7 +1291,7 @@ function SearchScreen(q0) {
 function Channel(id) {
   const ch = chanById(id);
   if (!ch) return main.append(emptyBox('tv', 'Sender nicht gefunden.'));
-  document.title = `${ch.name} – Media +`;
+  document.title = `${ch.name} – Media+`;
   const host = h('div');
   const slot = h('div');
   main.append(h('div', { class:'page-h' }, Avatar(ch, true), h('div', {}, h('h1', {}, ch.name), h('span', { class:'sub' }, 'Sender'))), slot, h('h2', { class:'rowh' }, 'Neueste Videos'), host);
@@ -1301,7 +1301,7 @@ function Channel(id) {
 
 function Library(tab) {
   const hist = tab !== 'saved';
-  document.title = (hist ? 'Verlauf' : 'Gemerkt') + ' – Media +';
+  document.title = (hist ? 'Verlauf' : 'Gemerkt') + ' – Media+';
   const list = store.get(hist ? 'hist' : 'saved', []);
   const host = h('div');
   main.append(h('div', { class:'page-h' },
@@ -1597,7 +1597,7 @@ async function Watch(id) {
     if (tok !== routeToken) return;
     wrap.replaceChildren();
   }
-  document.title = `${e.title} – Media +`;
+  document.title = `${e.title} – Media+`;
   const ch = chanOf(e.channel);
 
   const video = h('video', { playsinline:true, preload:'auto', autoplay:true });
@@ -2088,7 +2088,7 @@ const Spotify = (() => {
     store.set('spRT', d.rt); store.set('spCid', d.cid); tok = ''; exp = 0; toast('Spotify verbunden');
   }
   function page() {
-    document.title = 'Spotify – Media +';
+    document.title = 'Spotify – Media+';
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
     const url = base + '?tv=' + store.get('pairTopic') + '#/spotify';
     const box = h('div', { class:'qrbox' }, 'QR-Code wird erzeugt …');
@@ -3629,7 +3629,7 @@ const PLUS = (() => {
   let cur = null, sleepT = 0, sleepMin = 0, wl = null, es = null;
 
   function live(arg) {
-    document.title = 'Live-TV – Media +';
+    document.title = 'Live-TV – Media+';
     let i = Math.max(0, LIVE.findIndex(c => c.id === arg)), hls = null;
     const video = h('video', { playsinline:true, autoplay:true });
     const perr = h('div', { class:'perr' }, icon('alert'), h('p', {}, 'Dieser Livestream lässt sich hier nicht abspielen.'),
@@ -3671,7 +3671,7 @@ const PLUS = (() => {
     store.set('subNew', ids); markNav();
   }
   function subsPage() {
-    document.title = 'Abos – Media +'; main.append(hd('Abos'));
+    document.title = 'Abos – Media+'; main.append(hd('Abos'));
     const l = subs(), tok = routeToken;
     if (!l.length) return main.append(emptyBox('plus', 'Noch keine Abos. Öffne eine Sendung und tippe auf „Abonnieren“.'));
     l.forEach(s => {
@@ -3693,7 +3693,7 @@ const PLUS = (() => {
 
   function access(arg) {
     const V = { ad:['Audiodeskription', 'Audiodeskription'], dgs:['Gebärdensprache', 'Gebärdensprache'], ut:['Mit Untertitel', '(mit Untertitel'] };
-    const v = V[arg] || V.ad; document.title = v[0] + ' – Media +';
+    const v = V[arg] || V.ad; document.title = v[0] + ' – Media+';
     const chips = Object.entries(V).map(([k, x]) => h('a', { class:'chip' + (x === v ? ' active' : ''), href:'#/access/' + k }, x[0]));
     main.append(hd(v[0]), h('div', { class:'lvchips', style:'padding-top:0' }, ...chips));
     const host = h('div'); main.append(host);
@@ -4017,7 +4017,7 @@ const PLUS = (() => {
     } catch {} };
   }
   function pairPage() {
-    document.title = 'Koppeln – Media +';
+    document.title = 'Koppeln – Media+';
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
     const url = base + '?tv=' + store.get('pairTopic') + '#/remote';
     const box = h('div', { class:'qrbox' }, 'QR-Code wird erzeugt …');
@@ -4057,7 +4057,7 @@ const PLUS = (() => {
     window.addEventListener('hashchange', paint); paint(); setInterval(paint, 3000);
   }
   function sendPage() {
-    document.title = 'An TV senden – Media +';
+    document.title = 'An TV senden – Media+';
     const t = store.get('tvTopic'); main.append(hd('An TV senden'));
     if (!t) return main.append(emptyBox('share', 'Nicht gekoppelt. Scanne am TV unter „Einstellungen → Kopplung“ den QR-Code.'));
     const inp = h('input', { class:'pick', type:'search', autocomplete:'off', autocorrect:'off', autocapitalize:'off', spellcheck:'false', placeholder:'Am TV suchen …', 'aria-label':'Suchbegriff für den TV', enterkeyhint:'send', style:'width:100%;max-width:40em' });
@@ -4131,7 +4131,7 @@ const PLUS = (() => {
         try { const r = new SR(); r.lang = 'de-DE'; r.onresult = ev => { $('#q').value = ev.results[0][0].transcript; $('#sf').requestSubmit(); }; r.onerror = () => toast('Sprachsuche nicht möglich'); r.start(); toast('Sprich jetzt …'); } catch { toast('Sprachsuche nicht möglich'); } } }, icon('mic')));
     }
     try {
-      const m = { name:'Media +', short_name:'Media +', start_url:location.href.split('#')[0], display:'standalone', background_color:'#000000', theme_color:'#000000',
+      const m = { name:'Media+', short_name:'Media+', start_url:location.href.split('#')[0], display:'standalone', background_color:'#000000', theme_color:'#000000',
         icons:[{ src:document.querySelector('link[rel=icon]').href, sizes:'any', type:'image/svg+xml' }] };
       document.head.append(h('link', { rel:'manifest', href:'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(m)) }));
     } catch {}
@@ -4214,7 +4214,7 @@ const PLUS = (() => {
     return out.sort(() => Math.random() - .5).slice(0, n);
   }
   function shorts() {
-    document.title = 'Shorts – Media +';
+    document.title = 'Shorts – Media+';
     const tok = routeToken, tv = IS_TV, sound = () => store.get('shSound', true);
     let lastErr, els = [], ci = -1, loading = false, wantNext = false;
     const root = h('div', { class:'sh' + (tv ? ' tv' : '') }), feed = h('div', { class:'sh-feed' });
