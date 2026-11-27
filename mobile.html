@@ -780,6 +780,34 @@ body.overlay #bnav{z-index:80}
 .ast-tabs button.on{color:var(--fg);background:rgba(127,127,127,.22);font-weight:600}
 .ast-tabs svg{width:22px;height:22px;display:block}
 .ast-main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+/* App-Store Animationen */
+@keyframes axIn{from{opacity:0;transform:translateY(22px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes axPop{0%{opacity:0;transform:scale(.5) rotate(-8deg)}65%{transform:scale(1.08) rotate(2deg)}100%{opacity:1;transform:none}}
+@keyframes axFade{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes axShine{0%{transform:translateX(-120%) skewX(-20deg)}60%,100%{transform:translateX(260%) skewX(-20deg)}}
+@keyframes axFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes axPulse{0%{box-shadow:0 0 0 0 rgba(120,160,255,.55)}100%{box-shadow:0 0 0 16px rgba(120,160,255,0)}}
+@keyframes axTab{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.ast-main>*{animation:axFade .4s cubic-bezier(.2,.8,.2,1) both}
+.agrid>.xtile{animation:axIn .5s cubic-bezier(.2,.9,.25,1) both;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .2s}
+.agrid>.xtile:nth-child(1){animation-delay:0.09s}.agrid>.xtile:nth-child(2){animation-delay:0.13s}.agrid>.xtile:nth-child(3){animation-delay:0.17s}.agrid>.xtile:nth-child(4){animation-delay:0.21s}.agrid>.xtile:nth-child(5){animation-delay:0.25s}.agrid>.xtile:nth-child(6){animation-delay:0.29s}.agrid>.xtile:nth-child(7){animation-delay:0.33s}.agrid>.xtile:nth-child(8){animation-delay:0.37s}.agrid>.xtile:nth-child(9){animation-delay:0.41s}.agrid>.xtile:nth-child(10){animation-delay:0.45s}.agrid>.xtile:nth-child(11){animation-delay:0.49s}.agrid>.xtile:nth-child(12){animation-delay:0.53s}.agrid>.xtile:nth-child(13){animation-delay:0.57s}.agrid>.xtile:nth-child(14){animation-delay:0.61s}.agrid>.xtile:nth-child(15){animation-delay:0.65s}.agrid>.xtile:nth-child(16){animation-delay:0.69s}
+.xtile:active{transform:scale(.95);box-shadow:0 2px 14px rgba(0,0,0,.18)}
+.xtile .alg{transition:transform .25s cubic-bezier(.2,.9,.25,1)}.xtile:active .alg{transform:scale(1.1) rotate(-4deg)}
+.ahero{position:relative;overflow:hidden;animation:axIn .55s cubic-bezier(.2,.9,.25,1) both;transition:transform .18s}
+.ahero:active{transform:scale(.97)}
+.ahero::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);animation:axShine 4.5s ease-in-out 1s infinite;pointer-events:none}
+.ahero .alg{animation:axFloat 3.2s ease-in-out infinite}
+.adet>*{animation:axIn .5s cubic-bezier(.2,.9,.25,1) both}
+.adet>.alg{animation:axPop .6s cubic-bezier(.2,.9,.25,1) both}
+.adet>:nth-child(2){animation-delay:.08s}.adet>:nth-child(3){animation-delay:.14s}.adet>:nth-child(4){animation-delay:.2s}.adet>:nth-child(5){animation-delay:.26s}
+.abtn{transition:transform .15s,filter .15s}.abtn:active{transform:scale(.96);filter:brightness(.92)}
+.abtn.pri:not(:disabled){animation:axPulse 2.2s ease-out 1s infinite}
+.ast-tabs button{transition:color .2s,background .25s,transform .2s}
+.ast-tabs button:active{transform:scale(.9)}
+.ast-tabs button.on svg{animation:axTab .4s cubic-bezier(.2,.9,.25,1)}
+.ast-back{transition:transform .15s}.ast-back:active{transform:scale(.88)}
+.ast-head h2{animation:axFade .45s .1s both}
+@media (prefers-reduced-motion:reduce){.ast-main>*,.agrid>.xtile,.ahero,.ahero::after,.ahero .alg,.adet>*,.abtn.pri{animation:none!important}}
 .osheet{position:fixed;inset:0;z-index:150}
 .osc{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .25s}
 .oss{position:absolute;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:480px;margin:0 auto;padding:8px;border-radius:24px;background:rgba(250,250,252,.92);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1px solid rgba(127,127,127,.28);transform:translateY(120%);transition:transform .3s cubic-bezier(.2,.8,.2,1);color:#111}
