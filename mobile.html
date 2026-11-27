@@ -2961,8 +2961,8 @@ const PLUS = (() => {
       '#suCard .box{flex:1;display:grid;place-items:center;width:100%}' +
       '#suCard .mk{width:132px;height:132px;border-radius:30px;background:var(--fg);color:var(--bg);display:grid;place-items:center;box-shadow:0 14px 28px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.18)}' +
       '#suCard .mk svg{width:64px;height:64px;fill:currentColor;stroke:none}' +
-      '#suCard .go{width:100%;height:52px;border-radius:999px;background:#8ecbff;color:#0a3a5f;font-size:17px;font-weight:600;box-shadow:0 4px 14px rgba(110,180,240,.35)}' +
-      '#suCard .go:active{opacity:.6}'));
+      '#suCard .go{width:100%;height:52px;border-radius:999px;background:#007aff;color:#fff;font-size:17px;font-weight:600;box-shadow:none}' +
+      '#suCard .go:active{background:#0062cc}'));
     let gone = false;
     const close = () => { if (gone) return; gone = true; const su = el.firstChild; su.style.transition = ''; su.style.transform = ''; el.classList.remove('on'); setTimeout(() => el.remove(), 400); };
     const x = h('button', { class:'x', type:'button', 'aria-label':'Schließen', onclick:close }, icon('x'));
