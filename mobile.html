@@ -1006,9 +1006,11 @@ function icon(name, cls = '') {
   s.append(u);
   return s;
 }
+/* Apps liegen getrennt: Handy-Seite und TV-Seite teilen sich auf demselben Gerät/Browser denselben localStorage */
+const SK = k => 'mt:' + ((k === 'apps' || k === 'appcat') && typeof TV === 'undefined' ? 'm' : '') + k;
 const store = {
-  get(k, d) { try { const v = localStorage.getItem('mt:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem('mt:' + k, JSON.stringify(v)); } catch {} }
+  get(k, d) { try { const v = localStorage.getItem(SK(k)); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(SK(k), JSON.stringify(v)); } catch {} }
 };
 const secure = u => (u || '').replace(/^http:\/\//i, 'https://');
 const rtf = new Intl.RelativeTimeFormat('de', { numeric: 'auto' });
@@ -2927,6 +2929,37 @@ const PLUS = (() => {
       toast('Vom Handy: ' + (d.n || d.v));
     } catch {} };
   }
+
+  /* ---------- Einrichtungs-Signal (wie Apple TV): TV sendet nur auf der Koppel-Seite, Handy zeigt einmalig ein Sheet ---------- */
+  const setupTopic = async () => {
+    const ip = await fetch('https://1.1.1.1/cdn-cgi/trace').then(r => r.text()).then(t => (t.match(/^ip=(.+)$/m) || [])[1] || '');
+    if (!ip) throw 0;
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('mpsetup|' + ip));
+    return 'mps' + [...new Uint8Array(buf)].slice(0, 10).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+  let beacon = 0;
+  function startBeacon() {
+    stopBeacon();
+    setupTopic().then(tp => {
+      const ping = () => fetch('https://ntfy.sh/' + tp, { method:'POST', body:JSON.stringify({ t:'setup', c:store.get('pairTopic'), n:'Media + TV' }) }).catch(() => {});
+      ping(); beacon = setInterval(ping, 6000);
+    }).catch(() => {});
+  }
+  function stopBeacon() { clearInterval(beacon); beacon = 0; }
+  window.addEventListener('hashchange', () => { if (beacon && !/^#\/pair/.test(location.hash)) stopBeacon(); });
+  const seenSetup = new Set();
+  async function watchSetup() {
+    if (!window.EventSource) return;
+    let tp; try { tp = await setupTopic(); } catch { return; }
+    const es2 = new EventSource('https://ntfy.sh/' + tp + '/sse?since=15s');
+    es2.onmessage = ev => { try {
+      const m = JSON.parse(ev.data); if (m.event !== 'message' || Date.now() / 1000 - m.time > 15) return;
+      const d = JSON.parse(m.message); if (d.t !== 'setup' || !d.c) return;
+      if (d.c === store.get('tvTopic') || seenSetup.has(d.c) || sheetEl) return;
+      seenSetup.add(d.c);   // pro TV-Code nur einmal pro Sitzung
+      openSheet('Neuen TV einrichten', [{ label:'Einrichten', icon:'open', fn:() => { store.set('tvTopic', d.c); toast('Mit TV gekoppelt'); location.hash = '#/remote'; } }]);
+    } catch {} };
+  }
   function pairPage() {
     document.title = 'Koppeln – Media +';
     const base = store.get('mobileUrl') || location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, 'mobile.html');
@@ -2944,7 +2977,7 @@ const PLUS = (() => {
       h('p', { style:'word-break:break-all;color:var(--fg-3)' }, url),
       h('div', { class:'side-h', style:'padding:16px 0 6px' }, 'Adresse der Handy-Seite'), inp,
       h('div', { style:'padding-top:10px' }, h('button', { class:'btn', type:'button', onclick:() => { store.set('mobileUrl', inp.value.trim()); route(); } }, 'Speichern')));
-    listen();
+    listen(); startBeacon();
   }
   function remotePage() {
     document.title = 'Fernbedienung – Media +';
@@ -3340,7 +3373,7 @@ const PLUS = (() => {
     }, true);
     /* Kopplung */
     if (IS_TV) { if (!store.get('pairTopic')) store.set('pairTopic', 'mp' + Math.random().toString(36).slice(2, 12)); listen(); }
-    else { const p = new URLSearchParams(location.search).get('tv'); if (p) { store.set('tvTopic', p.replace(/[^\w-]/g, '')); history.replaceState(null, '', location.pathname + (/^#\/spotify/.test(location.hash) ? '#/spotify' : '#/remote')); window.dispatchEvent(new Event('hashchange')); } if (store.get('tvTopic')) { relayPhone(); setTimeout(() => phoneConn().catch(() => {}), 500); } document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) { relayPhone(); phoneConn().catch(() => {}); } });
+    else { watchSetup(); const p = new URLSearchParams(location.search).get('tv'); if (p) { store.set('tvTopic', p.replace(/[^\w-]/g, '')); history.replaceState(null, '', location.pathname + (/^#\/spotify/.test(location.hash) ? '#/spotify' : '#/remote')); window.dispatchEvent(new Event('hashchange')); } if (store.get('tvTopic')) { relayPhone(); setTimeout(() => phoneConn().catch(() => {}), 500); } document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('tvTopic')) { relayPhone(); phoneConn().catch(() => {}); } });
       /* Herzschlag: erkennt tote P2P-Leitungen, bevor die nächste Taste verloren geht */
       setInterval(() => { if (!store.get('tvTopic') || document.hidden) return; sendP2P({ t:'ping' }, 2500).catch(() => {}); }, 5000); }
     setTimeout(refreshBadge, 3000); setInterval(refreshBadge, 600000);
