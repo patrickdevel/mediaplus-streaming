@@ -2947,6 +2947,29 @@ const PLUS = (() => {
   }
   function stopBeacon() { clearInterval(beacon); beacon = 0; }
   window.addEventListener('hashchange', () => { if (beacon && !/^#\/pair/.test(location.hash)) stopBeacon(); });
+  /* Einrichtungs-Karte im Stil von „Neuen Apple TV einrichten“ (hell/dunkel über die Theme-Variablen) */
+  function showSetupCard(code) {
+    if (document.getElementById('suCard')) return;
+    if (!document.getElementById('suCss')) document.head.append(h('style', { id:'suCss' },
+      '#suCard{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0);transition:background .3s;display:flex;align-items:flex-end;justify-content:center;padding:0 8px calc(8px + env(safe-area-inset-bottom))}' +
+      '#suCard.on{background:rgba(0,0,0,.45)}' +
+      '#suCard .su{position:relative;width:100%;max-width:440px;height:min(62vh,560px);background:var(--bg);color:var(--fg);border-radius:38px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;padding:30px 26px 26px;transform:translateY(110%);transition:transform .4s cubic-bezier(.2,.9,.25,1)}' +
+      '#suCard.on .su{transform:none}' +
+      '#suCard h2{margin:6px 40px 0;font-size:25px;font-weight:500;text-align:center;color:var(--fg-3);letter-spacing:-.01em}' +
+      '#suCard .x{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:var(--bg-3);color:var(--fg-2);display:grid;place-items:center}' +
+      '#suCard .x svg{width:14px;height:14px;stroke-width:2.4}' +
+      '#suCard .box{flex:1;display:grid;place-items:center;width:100%}' +
+      '#suCard .mk{width:132px;height:132px;border-radius:30px;background:var(--fg);color:var(--bg);display:grid;place-items:center;box-shadow:0 14px 28px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.18)}' +
+      '#suCard .mk svg{width:64px;height:64px;fill:currentColor;stroke:none}' +
+      '#suCard .go{width:100%;height:50px;border-radius:14px;background:var(--bg-3);color:var(--fg);font-size:17px;font-weight:600}' +
+      '#suCard .go:active{opacity:.6}'));
+    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 350); };
+    const x = h('button', { class:'x', type:'button', 'aria-label':'Schließen', onclick:close }, icon('x'));
+    const go = h('button', { class:'go', type:'button', onclick:() => { close(); store.set('tvTopic', code); toast('Mit TV gekoppelt'); location.hash = '#/remote'; } }, 'Einrichten');
+    const el = h('div', { id:'suCard', onclick:ev => { if (ev.target === el) close(); } },
+      h('div', { class:'su', role:'dialog', 'aria-label':'Neuen Media + TV einrichten' }, x, h('h2', {}, 'Neuen Media + TV einrichten'), h('div', { class:'box' }, h('div', { class:'mk' }, icon('plus', 'fill'))), go));
+    document.body.append(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+  }
   const seenSetup = new Set();
   async function watchSetup() {
     if (!window.EventSource) return;
@@ -2955,9 +2978,9 @@ const PLUS = (() => {
     es2.onmessage = ev => { try {
       const m = JSON.parse(ev.data); if (m.event !== 'message' || Date.now() / 1000 - m.time > 15) return;
       const d = JSON.parse(m.message); if (d.t !== 'setup' || !d.c) return;
-      if (d.c === store.get('tvTopic') || seenSetup.has(d.c) || sheetEl) return;
+      if (d.c === store.get('tvTopic') || seenSetup.has(d.c) || document.getElementById('suCard')) return;
       seenSetup.add(d.c);   // pro TV-Code nur einmal pro Sitzung
-      openSheet('Neuen TV einrichten', [{ label:'Einrichten', icon:'open', fn:() => { store.set('tvTopic', d.c); toast('Mit TV gekoppelt'); location.hash = '#/remote'; } }]);
+      showSetupCard(d.c);
     } catch {} };
   }
   function pairPage() {
