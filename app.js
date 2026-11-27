@@ -80,7 +80,8 @@ let _beaconIv = 0;
 function pairBeacon() {
   if (typeof TV === 'undefined' || _beaconIv) return;
   _beaconIv = -1;
-  const stop = () => { clearInterval(_beaconIv); _beaconIv = 0; };
+  let sw = null;
+  const stop = () => { clearInterval(_beaconIv); _beaconIv = 0; try { sw && sw.close(); } catch {} sw = null; };
   (async () => {
     let tp;
     try {
@@ -91,7 +92,13 @@ function pairBeacon() {
     } catch { _beaconIv = 0; return; }
     const ping = () => {
       if (!document.querySelector('.qrbox') || !store.get('pairTopic')) return stop();
-      fetch('https://ntfy.sh/' + tp, { method:'POST', body:JSON.stringify({ t:'setup', c:store.get('pairTopic'), n:'Media+ TV' }) }).catch(() => {});
+      const payload = JSON.stringify({ t:'setup', c:store.get('pairTopic'), n:'Media+ TV' });
+      /* Relay-WebSocket (unabhängig von ntfy) + ntfy als Zusatz-Weg */
+      try {
+        if (!sw || sw.readyState > 1) { const w = sw = new WebSocket('wss://relay.patrick4real.workers.dev/?t=' + encodeURIComponent(tp)); w.onclose = () => { if (sw === w) sw = null; }; w.onerror = () => { try { w.close(); } catch {} }; }
+        if (sw && sw.readyState === 1) sw.send(payload);
+      } catch {}
+      fetch('https://ntfy.sh/' + tp, { method:'POST', body:payload }).catch(() => {});
     };
     ping(); if (_beaconIv === -1) _beaconIv = setInterval(ping, 6000);
   })();
