@@ -2968,7 +2968,7 @@ const PLUS = (() => {
     const x = h('button', { class:'x', type:'button', 'aria-label':'Schließen', onclick:close }, icon('x'));
     const go = h('button', { class:'go', type:'button', onclick:() => { close(); store.set('tvTopic', code); toast('Mit TV gekoppelt'); location.hash = '#/remote'; } }, 'Einrichten');
     const el = h('div', { id:'suCard', onclick:ev => { if (ev.target === el) close(); } },
-      h('div', { class:'su', role:'dialog', 'aria-label':'Neuen Media+ TV einrichten' }, x, h('h2', {}, 'Neuen Media+ TV einrichten'), h('div', { class:'box' }, h('div', { class:'mk' }, icon('plus', 'fill'))), go));
+      h('div', { class:'su', role:'dialog', 'aria-label':'Media+ TV einrichten' }, x, h('h2', {}, 'Media+ TV einrichten'), h('div', { class:'box' }, h('div', { class:'mk' }, icon('plus', 'fill'))), go));
     /* Nach unten wischen schließt; Scrollen/Wischen im Hintergrund ebenfalls */
     const su = el.firstChild; let y0 = null, dy = 0;
     su.addEventListener('touchstart', ev => { y0 = ev.touches[0].clientY; dy = 0; su.style.transition = 'none'; }, { passive:true });
