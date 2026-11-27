@@ -206,10 +206,10 @@ body.m #mpp,body.m #mx{pointer-events:auto !important}
   <div id="pc"><button class="cb fc" id="pmin" aria-label="Minimieren"></button>
     <div id="cg"><button class="cb sk10" id="rw" aria-label="10 Sekunden zurück"></button><button class="cb" id="bp" aria-label="Wiedergabe"></button><button class="cb sk10" id="ff" aria-label="10 Sekunden vor"></button></div>
     <div id="tm">0:00 / 0:00</div><button class="cb fc" id="pfs" aria-label="Vollbild"></button></div>
-  <button id="mh" aria-label="Miniplayer öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-  <button class="mc" id="mpp" aria-label="Pause"></button><button class="mc" id="mx" aria-label="Schließen"></button>
+    <button class="mc" id="mpp" aria-label="Pause"></button><button class="mc" id="mx" aria-label="Schließen"></button>
   <div id="sk"><div class="trk"><div id="bf"></div><div id="sg"></div><b id="kn"></b></div></div>
-</div></div>
+</div>
+<button id="mh" aria-label="Miniplayer öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button></div>
 <div id="toast"></div>
 <script>
 (() => {
@@ -521,6 +521,8 @@ async function openChannel(ch) {
 /* Player */
 const PL = { t:0, d:0, st:-1, b:0, sv:0, hide:0, drag:false, unmuteTries:0 }, fr = $('#fr');
 let REC = [];
+const TOUCH = matchMedia('(pointer:coarse)').matches;
+const unm = () => { cmd('unMute'); cmd('setVolume', [100]); };
 const cmd = (f, a = []) => { try { fr.contentWindow.postMessage(JSON.stringify({ event:'command', func:f, args:a }), '*'); } catch {} };
 const listen = () => { try { fr.contentWindow.postMessage(JSON.stringify({ event:'listening', id:1, channel:'widget' }), '*'); } catch {} };
 fr.addEventListener('load', () => { listen(); [300, 800, 1500, 2800, 4500].forEach(t => setTimeout(listen, t)); });
@@ -534,7 +536,7 @@ function upd() {
   const k = PL.st === 0 ? 'rep' : playing() ? 'pause' : 'play'; setIc($('#bp'), k); setIc($('#mpp'), k === 'rep' ? 'play' : k);
 }
 function showC() { $('#pc').classList.add('on'); clearTimeout(PL.hide); PL.hide = setTimeout(() => { if (playing() && !PL.drag) $('#pc').classList.remove('on'); }, 3500); }
-function toggle() { if (PL.st === 0) { cmd('seekTo', [0, true]); cmd('playVideo'); PL.st = 1; } else { cmd(playing() ? 'pauseVideo' : 'playVideo'); PL.st = playing() ? 2 : 1; } upd(); showC(); }
+function toggle() { unm(); if (PL.st === 0) { cmd('seekTo', [0, true]); cmd('playVideo'); PL.st = 1; } else { cmd(playing() ? 'pauseVideo' : 'playVideo'); PL.st = playing() ? 2 : 1; } upd(); showC(); }
 function seekBy(d) { PL.t = Math.max(0, Math.min(PL.d || 1e9, PL.t + d)); cmd('seekTo', [PL.t, true]); upd(); showC(); }
 function saveProg(force) {
   const v = S.cur; if (!v || !PL.d) return; const now = Date.now(); if (!force && now - PL.sv < 4000) return; PL.sv = now;
@@ -548,7 +550,7 @@ $('#pfs').onclick = () => {
   try { const r = (p.requestFullscreen || p.webkitRequestFullscreen).call(p); if (r && r.then) r.then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch {} }).catch(() => toast('Vollbild nicht verfügbar')); } catch { toast('Vollbild nicht verfügbar'); }
 };
 const MD = { moved:false };
-$('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mo'); };
+$('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mo'); cmd('playVideo'); PL.st = 1; upd(); };
 (() => { const pl = $('#pl'), t = $('#pt'); let sx, sy, on = false, r0;
   t.addEventListener('pointerdown', e => { if (!B.classList.contains('m')) return; on = true; MD.moved = false; sx = e.clientX; sy = e.clientY; r0 = pl.getBoundingClientRect(); try { t.setPointerCapture(e.pointerId); } catch {} });
   t.addEventListener('pointermove', e => { if (!on) return; const dx = e.clientX - sx, dy = e.clientY - sy;
@@ -563,7 +565,7 @@ $('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mo'); };
     const r1 = pl.getBoundingClientRect();
     pl.style.transition = 'none'; pl.style.transform = `translate(${r.left - r1.left}px,${r.top - r1.top}px)`; void pl.offsetWidth;
     pl.style.transition = ''; pl.style.transform = '';
-    B.classList.toggle('mo', out);
+    B.classList.toggle('mo', out); if (out) { cmd('pauseVideo'); PL.st = 2; upd(); }
     setTimeout(() => { MD.moved = false; }, 60); };
   t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end); })();
 (() => { let last = 0, lx = 0, y0 = 0, tm;
@@ -571,6 +573,7 @@ $('#mh').onclick = e => { e.stopPropagation(); B.classList.remove('mo'); };
   t.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; }, { passive:true });
   t.addEventListener('touchend', e => { if (B.classList.contains('w') && !document.fullscreenElement && e.changedTouches[0].clientY - y0 > 90) { history.back(); } }, { passive:true });
   t.addEventListener('click', e => {
+    unm();
     if (B.classList.contains('m')) { if (MD.moved) { MD.moved = false; return; } expand(); return; }
     const r = t.getBoundingClientRect(), x = e.clientX - r.left, now = Date.now();
     if (now - last < 320 && Math.abs(x - lx) < 120 && (x < r.width * .35 || x > r.width * .65)) { clearTimeout(tm); seekBy(x < r.width / 2 ? -10 : 10); toast(x < r.width / 2 ? '−10 Sekunden' : '+10 Sekunden'); last = 0; return; }
@@ -591,12 +594,13 @@ function play(v) {
   const p = prog()[v.videoId], st0 = p && p.t > 5 && p.d && p.t < p.d - 15 ? Math.floor(p.t) : 0;
   S.cur = v; PL.t = st0; PL.d = p && p.d || 0; PL.st = -1; PL.b = 0; PL.unmuteTries = 0; REC = [];
   const yo = /^https?:$/.test(location.protocol) ? '&origin=' + encodeURIComponent(location.origin) : '';
-  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=1&start=' + st0 + '&controls=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
+  fr.src = 'https://www.youtube.com/embed/' + v.videoId + '?autoplay=1&mute=' + (TOUCH ? 1 : 0) + '&start=' + st0 + '&controls=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=0&enablejsapi=1&cc_load_policy=0&fs=1&hl=de' + yo;
   if (!B.classList.contains('w')) pushH('watch');
   B.classList.add('w'); B.classList.remove('m'); document.title = v.title + ' – YouTube';
   fillWatch(v); upd(); showC(); loadRecs(v);
-  // Ton zuverlässig einschalten
-  [400, 900, 1600, 2600, 4000].forEach(t => setTimeout(() => { if (S.cur && S.cur.videoId === v.videoId && PL.unmuteTries < 20) { cmd('playVideo'); cmd('unMute'); cmd('setVolume', [100]); PL.unmuteTries++; } }, t));
+  // Listener-Handshake wiederholen, bis der Player antwortet (am Handy lädt er langsamer)
+  PL.ready = false; let n = 0; const iv = setInterval(() => { if (PL.ready || !S.cur || S.cur.videoId !== v.videoId || ++n > 40) { clearInterval(iv); return; } listen(); }, 250);
+  if (!TOUCH) [400, 900, 1600, 2600, 4000].forEach(t => setTimeout(() => { if (S.cur && S.cur.videoId === v.videoId && PL.unmuteTries < 20) { unm(); PL.unmuteTries++; } }, t));
 }
 /* FLIP-Animation zwischen Vollbild und Miniplayer */
 function flipPlayer(changeState) {
@@ -627,7 +631,7 @@ function minCore() {
   flipPlayer(() => { B.classList.remove('w'); B.classList.add('m'); });
 }
 function expand() {
-  if (!S.cur) return; B.classList.remove('mo');
+  if (!S.cur) return; if (B.classList.contains('mo')) { B.classList.remove('mo'); cmd('playVideo'); PL.st = 1; }
   flipPlayer(() => { B.classList.remove('m'); B.classList.add('w'); });
   pushH('watch'); setTimeout(showC, 320);
 }
@@ -636,16 +640,16 @@ function killPl() { saveProg(true); fr.src = 'about:blank'; S.cur = null; PL.st 
 window.addEventListener('message', e => {
   if (e.origin !== 'https://www.youtube.com' || e.source !== fr.contentWindow) return;
   let d = e.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch { return; } }
-  if (!d || !S.cur) return;
-  if (d.event === 'onStateChange') { const st = typeof d.info === 'number' ? d.info : (d.info && d.info.playerState); if (st != null) { PL.st = st; if (st === 1) { cmd('unMute'); cmd('setVolume', [100]); showC(); } if (st === 0) onEnd(); upd(); } }
-  else if (d.event === 'onReady' || d.event === 'initialDelivery') { listen(); if (d.event === 'onReady') { if (PL.t > 0) cmd('seekTo', [PL.t, true]); cmd('unMute'); cmd('setVolume', [100]); cmd('playVideo'); } }
+  if (!d || !S.cur) return; PL.ready = true;
+  if (d.event === 'onStateChange') { const st = typeof d.info === 'number' ? d.info : (d.info && d.info.playerState); if (st != null) { PL.st = st; if (st === 1) { if (!TOUCH) unm(); showC(); } if (st === 0) onEnd(); upd(); } }
+  else if (d.event === 'onReady' || d.event === 'initialDelivery') { listen(); if (d.event === 'onReady') { if (!TOUCH) unm(); cmd('playVideo'); } }
   else if (d.event === 'infoDelivery' && d.info) {
     const i = d.info;
     if (i.currentTime != null && !PL.drag) PL.t = i.currentTime;
     if (i.duration > 0) PL.d = i.duration;
     if (i.playerState != null) PL.st = i.playerState;
     if (i.videoLoadedFraction != null) PL.b = i.videoLoadedFraction;
-    if (i.muted === true && PL.unmuteTries < 20) { cmd('unMute'); cmd('setVolume', [100]); PL.unmuteTries++; }
+    if (!TOUCH && i.muted === true && PL.unmuteTries < 20) { unm(); PL.unmuteTries++; }
     saveProg(); upd();
   }
 });
